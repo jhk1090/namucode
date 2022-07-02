@@ -1,0 +1,110 @@
+{
+  "name": "namucode",
+  "displayName": "NamuCode",
+  "description": "나무위키 VSCode 기능성 확장",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.68.0"
+  },
+  "categories": [
+    "Snippets",
+    "Themes",
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:namucode.paragraphLevelDown",
+    "onCommand:namucode.paragraphLevelUp",
+    "onCommand:namucode.linkify",
+    "onCommand:namucode.toggleComment"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "namucode.paragraphLevelDown",
+        "title": "문단 한단계 낮추기"
+      },
+      {
+        "command": "namucode.paragraphLevelUp",
+        "title": "문단 한단계 높이기"
+      },
+      {
+        "command": "namucode.linkify",
+        "title": "문자 링크화하기"
+      },
+      {
+        "command": "namucode.toggleComment",
+        "title": "현재 줄 주석화"
+      }
+    ],
+    "languages": [
+      {
+        "id": "namu",
+        "aliases": [
+          "Namuwiki Code"
+        ],
+        "extensions": [
+          "namu"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "images/Logo.svg",
+          "dark": "images/Logo.svg"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "namu",
+        "scopeName": "source.namu",
+        "path": "./syntaxes/key.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "namu",
+        "path": "./snippets.json"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "namucode.paragraphLevelDown",
+        "key": "ctrl+down",
+        "mac": "cmd+down",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "namucode.paragraphLevelUp",
+        "key": "ctrl+up",
+        "mac": "cmd+up",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "namucode.toggleComment",
+        "key": "ctrl+/",
+        "when": "editorTextFocus"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "yarn run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "yarn run compile && yarn run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.68.0",
+    "@types/glob": "^7.2.0",
+    "@types/mocha": "^9.1.1",
+    "@types/node": "16.x",
+    "@typescript-eslint/eslint-plugin": "^5.27.0",
+    "@typescript-eslint/parser": "^5.27.0",
+    "eslint": "^8.16.0",
+    "glob": "^8.0.3",
+    "mocha": "^10.0.0",
+    "typescript": "^4.7.2",
+    "@vscode/test-electron": "^2.1.3"
+  }
+}

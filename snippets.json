@@ -1,0 +1,79 @@
+{
+	"넘겨주기(리다이렉트)": {
+		"prefix": "redirect",
+		"body": [
+			"#redirect ${1:문서명}"
+		],
+		"description": "`문서명`으로 문서를 넘겨줍니다."
+	},
+	"링크 삽입": {
+		"prefix": "link",
+		"body": [
+			"[[${1:문서명}|${2:보여지는 이름}]]"
+		],
+		"description": "문서명과 따로 보여지는 명칭이 있는 링크를 생성합니다."
+	},
+	"틀 삽입": {
+		"prefix": "include",
+		"body": [
+			"[include(틀:${1:틀 이름})]"
+		],
+		"description": "`틀 이름` 틀을 삽입합니다."
+	},
+	"상위 문서 틀": {
+		"prefix": "parent",
+		"body": [
+			"[include(틀:상위 문서, top1=${1:문서명})]"
+		],
+		"description": "상위 문서 틀을 삽입합니다."
+	},
+	"관련 문서 틀": {
+		"prefix": "relate",
+		"body": [
+			"[include(틀:관련 문서, top1=${1:문서명})]"
+		],
+		"description": "관련 문서 틀을 삽입합니다."
+	},
+	"하위 문서 틀": {
+		"prefix": "child",
+		"body": [
+			"[include(틀:하위 문서, top1=${1:문서명})]"
+		],
+		"description": "하위 문서 틀을 삽입합니다."
+	},
+	"상세 내용 틀": {
+		"prefix": "detail",
+		"body": [
+			"[include(틀:상세 내용, 문서명=${1:문서명}]"
+		],
+		"description": "상세 내용 틀을 삽입합니다. 위키 내에서는 자세한 내용은 <문서명>을 참고하십시오. 라고 표시됩니다."
+	},
+	"상세 내용 틀 문단": {
+		"prefix":"detailparagraph",
+		"body": [
+			"[include(틀:상세 내용, 문서명=${1:문서명}, 문단=${2:문단 번호}]"
+		],
+		"description": "상세 내용 틀을 문단 번호와 함께 삽입합니다. 위키 내에서는 자세한 내용은 <문서명>을 참고하십시오. 라고 표시됩니다."
+	},
+	"상세 내용 틀 앵커": {
+		"prefix":"detailanchor",
+		"body": [
+			"[include(틀:상세 내용, 문서명=${1:문서명}, 앵커=${2:앵커 이름}]"
+		],
+		"description": "상세 내용 틀을 앵커와 함께 삽입합니다. 위키 내에서는 자세한 내용은 <문서명>을 참고하십시오. 라고 표시됩니다."
+	},
+	"유튜브 영상 삽입": {
+		"prefix":"youtube",
+		"body": [
+			"[youtube(${1:아이디})]"
+		],
+		"description": "유튜브 영상을 삽입합니다."
+	},
+	"네이버TV 영상 삽입": {
+		"prefix":"navertv",
+		"body": [
+			"[navertv(${1:아이디})]"
+		],
+		"description": "네이버TV 영상을 삽입합니다."
+	}
+}

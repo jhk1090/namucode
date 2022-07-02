@@ -1,0 +1,178 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Namuwiki Code",
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#links"
+    },
+    {
+      "include": "#includes"
+    },
+    {
+      "include": "#rubys"
+    },
+    {
+      "include": "#anchors"
+    },
+    {
+      "include": "#macros"
+    },
+    {
+      "include": "#titles"
+    },
+    {
+      "include": "#markups"
+    },
+    {
+      "include": "#lists"
+    },
+    {
+      "include": "#brackets"
+    },
+    {
+      "include": "#footnotes"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-quote.namu",
+          "match": "#{2,}.*"
+        }
+      ]
+    },
+    "titles": {
+      "name": "keyword.control.namu",
+      "match": "(^== .* ==$|^=== .* ===$|^==== .* ====$|^===== .* =====$|^====== .* ======$)"
+    },
+    "links": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.namu",
+          "match": "(?<=\\[\\[)[^|\\]\\]\\[\\[]*(?=(\\||\\]\\]))"
+        },
+        {
+          "name": "support.constant.namu",
+          "match": "(?<=\\|)[^\\]\\]]*(?=\\]\\])"
+        }
+      ]
+    },
+    "includes": {
+      "begin": "\\[(?=include)",
+      "end": "\\]",
+      "patterns": [
+        {
+          "name": "keyword.control.namu",
+          "match": "include(?=\\(틀:)"
+        },
+        {
+          "name": "string.quoted.double.namu",
+          "match": "틀:[^\\,|^\\)]*"
+        },
+        {
+          "name": "variable.parameter.namu",
+          "match": "(?<=,).[^,][^=]*(?=(=))"
+        },
+        {
+          "name": "string.quoted.double.namu",
+          "match": "(?<=\\=).[^,]*(?=(,|\\)))"
+        }
+      ]
+    },
+    "rubys": {
+      "begin": "\\[(?=ruby)",
+      "end": "\\]",
+      "patterns": [
+        {
+          "name": "keyword.control.namu",
+          "match": "ruby(?=\\()"
+        },
+        {
+          "name": "string.quoted.double.namu",
+          "match": "(?<=ruby\\().[^\\,]*(\\){1,})?(?=,)"
+        },
+        {
+          "name": "variable.parameter.namu",
+          "match": "(?<=\\,)[^\\=]*(?=\\=)"
+        },
+        {
+          "name": "string.quoted.double.namu",
+          "match": "(?<=ruby\\=)[^\\)\\]]*(\\){1,})?(?=\\)\\])"
+        }
+      ]
+    },
+    "anchors": {
+      "begin": "\\[(?=(anchor|dday|age))",
+      "end": "\\]",
+      "patterns": [
+        {
+          "name": "keyword.control.namu",
+          "match": "(anchor|dday|age)(?=\\()"
+        },
+        {
+          "name": "string.quoted.double.namu",
+          "match": "(?<=(anchor|dday|age)\\().[^\\)]*(\\){1,})?(?=\\))"
+        }
+      ]
+    },
+    "macros": {
+      "begin": "\\[(?=clearfix|date|datetime|목차|tableofcontents|각주|footnote|br)",
+      "end": "\\]",
+      "patterns": [
+        {
+          "name": "keyword.control.namu",
+          "match": "clearfix|date|datetime|목차|tableofcontents|각주|footnote|br"
+        }
+      ]
+    },
+    "markups": {
+      "patterns": [
+        {
+          "name": "markup.bold.namu",
+          "match": "'''[^']*'''"
+        },
+        {
+          "name": "markup.italic.namu",
+          "match": "(''[^']*''|__[^_]*__)"
+        }
+      ]
+    },
+    "lists": {
+      "patterns": [
+        {
+          "name": "keyword.control.namu",
+          "match": "(?<=^ *)(\\*|1.|a.|A.|i.|I.(#[0-9][0-9])?)(?= )"
+        }
+      ]
+    },
+    "brackets": {
+      "patterns": [
+        {
+          "name": "keyword.control.namu",
+          "match": "{{{"
+        },
+        {
+          "name": "string.quoted.double",
+          "match": "(?<={{{)(\\+[0-9](?= )|#[A-Fa-f0-9]{3,6}(\\,#[A-Fa-f0-9]{3,6})?(?= ))"
+        },
+        {
+          "name": "keyword.control.namu",
+          "match": "}}}"
+        }
+      ]
+    },
+    "footnotes": {
+      "patterns": [
+        {
+          "name": "string.quoted.double",
+          "match": "(?<=\\[)\\*([^ ]*)?(?=(]| ))"
+        }
+      ]
+    }
+  },
+  "scopeName": "source.namu"
+}
