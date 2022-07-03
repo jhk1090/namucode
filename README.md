@@ -3,6 +3,7 @@
 [나무위키](https://namu.wiki)의 Monaco 편집기의 VSCode 확장 프로그램 버전입니다. 많은 기능이 추가될 예정입니다.
 
 - [설치](#설치)
+- [사용법](#사용법)
 - [기능](#기능)
     - [텍스트 강조 기능](#텍스트-강조-기능-syntax-highlighting)
     - [자동완성 기능](#자동완성-기능-snippet)
@@ -13,14 +14,19 @@
 ![namucode_oneditor](https://user-images.githubusercontent.com/72603240/177030474-b7355ad7-83a2-4c6c-a39c-54ed28ead3f2.jpg)
 
 ## 설치
-나무코드는 VSCode 확장 프로그램으로, VSCode Marketplace에서 다운받을 수 있습니다.
+~~나무코드는 VSCode 확장 프로그램으로, VSCode Marketplace에서 다운받을 수 있습니다.~~
 
-링크: https://marketplace.visualstudio.com/items?itemName=null
+~~링크: https://marketplace.visualstudio.com/items?itemName=null~~
 
 ## 사용법
 1. 나무코드를 설치합니다. (상단 설치 링크)
-1. 설치 후 언어칸에서 Namuwiki Code를 선택하거나 파일 확장자를 .namu로 바꿔줍니다.
-1. 설정이 끝났으며 나무마크 문법을 사용해보세요!
+1. 설치 후 언어칸에서 Namuwiki Code를 선택하거나 파일 확장자를 `.namu`로 바꿔줍니다.
+1. 설정이 끝났으며 나무마크 문법을 사용해보세요!\
+\
+예시: [나무위키(namuwiki.namu) 문서](https://github.com/jhk1090/namucode/blob/main/src/namuwiki.namu)
+
+![namucode_onlanguageselect](https://user-images.githubusercontent.com/72603240/177031047-5ac630d1-f218-4a92-88bb-68a8453d8a35.png)
+_▲ 선택란_
 
 ## 기능
 ### 텍스트 강조 기능 (Syntax Highlighting)
