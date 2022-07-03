@@ -34,6 +34,9 @@
     },
     {
       "include": "#footnotes"
+    },
+    {
+      "include": "#redirect"
     }
   ],
   "repository": {
@@ -46,15 +49,16 @@
       "match": "(^== .* ==$|^=== .* ===$|^==== .* ====$|^===== .* =====$|^====== .* ======$)"
     },
     "links": {
-      "match": "\\[\\[([^|\\]\\[]*)(\\|([^|\\]\\[]*))?\\]\\]",
-      "captures": {
-        "1": {
-          "name": "string.quoted.double.namu"
+      "patterns": [
+        {
+          "name": "string.quoted.double.namu",
+          "match": "(?<=\\[{2})([^|\\]\\[]*)"
         },
-        "3": {
-          "name": "support.constant.namu"
+        {
+          "name": "support.constant.namu",
+          "match": "(?<=\\|)([^|\\]\\[]*)(?=\\]\\])"
         }
-      }
+      ]
     },
     "includes": {
       "begin": "\\[(?=include)",
@@ -101,18 +105,21 @@
       ]
     },
     "anchors": {
-      "begin": "\\[(?=(anchor|dday|age))",
-      "end": "\\]",
-      "patterns": [
-        {
-          "name": "keyword.control.namu",
-          "match": "(anchor|dday|age)(?=\\()"
+      "match": "\\[((anchor|age|dday|math)\\(([^\\)]*(\\){1,})?)\\)|(pagecount)(\\(([^\\)]*(\\){1,})?)\\))?)\\]",
+      "captures": {
+        "2": {
+          "name": "keyword.control.namu"
         },
-        {
-          "name": "variable.parameter.namu",
-          "match": "(?<=(anchor|dday|age)\\().[^\\)]*(\\){1,})?(?=\\))"
+        "3": {
+          "name": "variable.parameter.namu"
+        },
+        "5": {
+          "name": "keyword.control.namu"
+        },
+        "7": {
+          "name": "variable.parameter.namu"
         }
-      ]
+      }
     },
     "macros": {
       "begin": "\\[(?=clearfix|date|datetime|목차|tableofcontents|각주|footnote|br)",
@@ -149,6 +156,10 @@
         {
           "name": "keyword.control.namu",
           "match": "\\|\\|"
+        },
+        {
+          "name": "keyword.control.namu",
+          "match": "\\}{3}"
         }
       ]
     },
@@ -161,49 +172,55 @@
       ]
     },
     "brackets": {
-      "patterns": [
-        {
-          "name": "keyword.control.namu",
-          "match": "{{{"
+      "match": "({{{)((\\+[0-9]|#[A-Fa-f0-9]{3,6}(\\,#[A-Fa-f0-9]{3,6})?)( )|((#!folding )(.*)|(#!wiki) (style)=(\"[^\"]*\")|(#!html) ))",
+      "captures": {
+        "1": {
+          "name": "keyword.control.namu"
         },
-        {
-          "name": "support.constant.namu",
-          "match": "(?<={{{)(\\+[0-9](?= )|#[A-Fa-f0-9]{3,6}(\\,#[A-Fa-f0-9]{3,6})?(?= )|(#!folding|#!wiki|#!html)(?= ))"
+        "3": {
+          "name": "support.constant.namu"
         },
-        {
-          "name": "string.quoted.double.namu",
-          "match": "(?<=#!folding).*$"
+        "5": {
+          "name": "keyword.control.namu"
         },
-        {
-          "match": "{{{#!wiki (style)=(\")([^\"]*)(\")",
-          "captures": {
-            "1": {
-              "name": "string.quoted.double.namu"
-            },
-            "2": {
-              "name": "string.quoted.double.namu"
-            },
-            "3": {
-              "name": "meta.embedded.block.css"
-            },
-            "4": {
-              "name": "string.quoted.double.namu"
-            }
-          }
+        "7": {
+          "name": "support.constant.namu"
         },
-        {
-          "name": "keyword.control.namu",
-          "match": "}}}"
+        "8": {
+          "name": "string.quoted.double.namu"
+        },
+        "9": {
+          "name": "support.constant.namu"
+        },
+        "10": {
+          "name": "variable.parameter.namu"
+        },
+        "11": {
+          "name": "string.quoted.double.namu"
+        },
+        "12": {
+          "name": "support.constant.namu"
         }
-      ]
+      }
     },
     "footnotes": {
       "patterns": [
         {
-          "name": "string.quoted.double.namu",
+          "name": "keyword.operator.namu",
           "match": "(?<=\\[)\\*([^ ]*)?(?=(]| ))"
         }
       ]
+    },
+    "redirect": {
+      "match": "^(#redirect) (.*)",
+      "captures": {
+        "1": {
+          "name": "keyword.control.namu"
+        },
+        "2": {
+          "name": "string.quoted.double.namu"
+        }
+      }
     }
   },
   "scopeName": "source.namu"

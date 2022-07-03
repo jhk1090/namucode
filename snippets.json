@@ -1,11 +1,4 @@
 {
-	"넘겨주기(리다이렉트)": {
-		"prefix": "redirect",
-		"body": [
-			"#redirect ${1:문서명}"
-		],
-		"description": "`문서명`으로 문서를 넘겨줍니다."
-	},
 	"링크 삽입": {
 		"prefix": "link",
 		"body": [
