@@ -10,6 +10,8 @@
 - [업데이트 로그](#업데이트-로그)
 - [참고](#참고)
 
+![namucode_oneditor](https://user-images.githubusercontent.com/72603240/177030474-b7355ad7-83a2-4c6c-a39c-54ed28ead3f2.jpg)
+
 ## 설치
 나무코드는 VSCode 확장 프로그램으로, VSCode Marketplace에서 다운받을 수 있습니다.
 
@@ -22,7 +24,10 @@
 
 ------
 나무위키의 '나무위키' 문서 비교샷
-
+* 나무위키 내부 편집기
+![namucode_origin](https://user-images.githubusercontent.com/72603240/177030481-020df8da-1b36-4b11-b1c2-f3ecf6e7c32a.jpg)
+* 나무코드
+![namucode_vscode](https://user-images.githubusercontent.com/72603240/177030487-f90f862d-e264-49d6-b935-137fb6154905.png)
 ### 자동완성 기능 (Snippet)
 나무코드는 편의를 위한 자동완성을 지원합니다.\
 쉽게 `ctrl+space`로 자동완성 목록을 볼 수 있습니다.\
