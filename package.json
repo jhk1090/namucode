@@ -7,8 +7,10 @@
     "vscode": "^1.68.0"
   },
   "categories": [
-    "Snippets",
+    "Keymaps",
+    "Programming Languages",
     "Themes",
+    "Snippets",
     "Other"
   ],
   "activationEvents": [

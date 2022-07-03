@@ -1,6 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
   "name": "Namuwiki Code",
+  "scopeName": "source.namu",
   "patterns": [
     {
       "include": "#comments"
@@ -19,6 +20,9 @@
     },
     {
       "include": "#macros"
+    },
+    {
+      "include": "#tables"
     },
     {
       "include": "#titles"
@@ -105,7 +109,7 @@
       ]
     },
     "anchors": {
-      "match": "\\[((anchor|age|dday|math)\\(([^\\)]*(\\){1,})?)\\)|(pagecount)(\\(([^\\)]*(\\){1,})?)\\))?)\\]",
+      "match": "\\[((anchor|age|dday|math|youtube|kakaotv|niconicovideo|vimeo|navertv)\\(([^\\)]*(\\){1,})?)\\)|(pagecount)(\\(([^\\)]*(\\){1,})?)\\))?)\\]",
       "captures": {
         "2": {
           "name": "keyword.control.namu"
@@ -131,6 +135,20 @@
         }
       ]
     },
+    "tables": {
+      "match": "(\\|\\||(?<=\\>))(\\<(.[^\\>|\\=]*)(\\=(.[^\\>|]*))?\\>)?( )?",
+      "captures": {
+        "1": {
+          "name": "keyword.control.namu"
+        },
+        "3": {
+          "name": "variable.parameter.namu"
+        },
+        "5": {
+          "name": "string.quoted.double.namu"
+        }
+      }
+    },
     "markups": {
       "patterns": [
         {
@@ -155,10 +173,6 @@
         },
         {
           "name": "keyword.control.namu",
-          "match": "\\|\\|"
-        },
-        {
-          "name": "keyword.control.namu",
           "match": "\\}{3}"
         }
       ]
@@ -167,7 +181,7 @@
       "patterns": [
         {
           "name": "keyword.operator.namu",
-          "match": "(?<=^ *)(\\*|1\\.|a\\.|A\\.|i\\.|I\\.(#[0-9][0-9])?)"
+          "match": "(?<=^ ( )*)(\\*|1\\.|a\\.|A\\.|i\\.|I\\.(\\#[0-9][0-9]?)?)"
         }
       ]
     },
@@ -228,6 +242,5 @@
         }
       }
     }
-  },
-  "scopeName": "source.namu"
+  }
 }

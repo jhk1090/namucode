@@ -1,70 +1,66 @@
-# namucode README
+# 나무코드 Namucode
 
-This is the README for your extension "namucode". After writing up a brief description, we recommend including the following sections.
+[나무위키](https://namu.wiki)의 Monaco 편집기의 VSCode 확장 프로그램 버전입니다. 많은 기능이 추가될 예정입니다.
 
-## Features
+- [설치](#설치)
+- [기능](#기능)
+    - [텍스트 강조 기능](#텍스트-강조-기능-syntax-highlighting)
+    - [자동완성 기능](#자동완성-기능-snippet)
+    - [커맨드 기능](#커맨드-기능-command-palette)
+- [업데이트 로그](#업데이트-로그)
+- [참고](#참고)
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+## 설치
+나무코드는 VSCode 확장 프로그램으로, VSCode Marketplace에서 다운받을 수 있습니다.
 
-For example if there is an image subfolder under your extension project workspace:
+링크: https://marketplace.visualstudio.com/items?itemName=null
 
-\!\[feature X\]\(images/feature-x.png\)
+## 기능
+### 텍스트 강조 기능 (Syntax Highlighting)
+나무코드는 텍스트 강조를 지원합니다.\
+기존 에디터보다 더 세세한 강조가 지원됩니다.
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+------
+나무위키의 '나무위키' 문서 비교샷
 
-## Requirements
+### 자동완성 기능 (Snippet)
+나무코드는 편의를 위한 자동완성을 지원합니다.\
+쉽게 `ctrl+space`로 자동완성 목록을 볼 수 있습니다.\
+현재 자동완성 목록은 다음과 같습니다.
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+ - **child** - 하위 문서 틀을 삽입합니다.
+ - **detail** - 상세 내용 틀을 삽입합니다.
+ - **detailanchor** - 상세 내용 틀을 앵커와 함께 삽입합니다.
+ - **detailparagraph** - 상세 내용 틀을 문단 번호와 함께 삽입합니다.
+ - **file** - 파일을 삽입합니다.
+ - **folding** - [ 펼치기 · 접기 ] 문법을 삽입합니다.
+ - **include** - 틀을 삽입합니다.
+ - **link** - 링크할 문서명과 문서에서 보여지는 명칭이 있는 링크를 생성합니다.
+ - **navertv** - 네이버TV 영상을 삽입합니다.
+ - **parent** - 상위 문서 틀을 삽입합니다.
+ - **relate** - 관련 문서 틀을 삽입합니다.
+ - **youtube** - 유튜브 영상을 삽입합니다.
 
-## Extension Settings
+### 커맨드 기능 (Command Palette)
+여기서 커맨드는 `F1`시 나오는 커맨드 팔레트의 커맨드들을 지칭합니다.\
+`F1`을 눌러 아래의 목록을 검색하거나 단축키를 이용하면 적용됩니다.\
+커맨드 목록은 다음과 같습니다.
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+ - **문단 한단계 높이기** `ctrl+↑(up)` - 선택한 범위 내에서 문단을 한단계 높인다.\
+ == 개요 == → === 개요 ===
+ - **문단 한단계 낮추기** `ctrl+↓(down)` - 선택한 범위 내에서 문단을 한단계 낮춘다.\
+ === 개요 === → == 개요 ==
+ - **문자 링크화하기** - 선택한 문자를 링크로 만든다.
+ 선택 -> [[선택]]
 
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: enable/disable this extension
-* `myExtension.thing`: set to `blah` to do something
-
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
------------------------------------------------------------------------------------------------------------
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-**Note:** You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+CMD+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (macOS) to see a list of Markdown snippets
-
-### For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+## 업데이트 로그
+### 1.0
+**2022.07.03**
+- 텍스트 강조 추가
+- 자동완성 추가 (12개)
+- 커맨드 추가 (3개)
+- 기타 등등
+## 참고
+ - 나무위키 문법 도움말 - https://namu.wiki/w/나무위키:문법%20도움말
+ - Textmate Grammar - https://macromates.com/manual/en/language_grammars
+ - VSCode Extension Sample - https://github.com/microsoft/vscode-extension-samples
