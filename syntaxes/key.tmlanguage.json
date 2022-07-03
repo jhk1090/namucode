@@ -156,7 +156,7 @@
           "match": "{{{"
         },
         {
-          "name": "string.quoted.double",
+          "name": "string.quoted.double.namu",
           "match": "(?<={{{)(\\+[0-9](?= )|#[A-Fa-f0-9]{3,6}(\\,#[A-Fa-f0-9]{3,6})?(?= ))"
         },
         {
@@ -168,7 +168,7 @@
     "footnotes": {
       "patterns": [
         {
-          "name": "string.quoted.double",
+          "name": "string.quoted.double.namu",
           "match": "(?<=\\[)\\*([^ ]*)?(?=(]| ))"
         }
       ]

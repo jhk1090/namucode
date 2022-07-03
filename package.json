@@ -84,7 +84,54 @@
         "key": "ctrl+/",
         "when": "editorTextFocus"
       }
-    ]
+    ],
+    "configurationDefaults": {
+      "editor.tokenColorCustomizations": {
+        "[*Dark*]": {
+          "textMateRules": [
+            {
+              "scope": "string.quoted.double.namu",
+              "settings": {
+                "foreground": "#CE9178"
+              }
+            },
+            {
+              "scope": "markup.bold.namu",
+              "settings": {
+                "foreground": "#ffffff",
+                "fontStyle": "bold"
+              }
+            },
+            {
+              "scope": "markup.italic.namu",
+              "settings": {
+                "foreground": "#ffffff",
+                "fontStyle": "italic"
+              }
+            },
+            {
+              "scope": "markup.deleted.namu",
+              "settings": {
+                "foreground": "#ffffff",
+                "fontStyle": "strikethrough"
+              }
+            },
+            {
+              "scope": "my-extension.translations",
+              "settings": {
+                "foreground": "#64a1f1"
+              }
+            },
+            {
+              "scope": "my-extension.store",
+              "settings": {
+                "foreground": "#b3b6b9"
+              }
+            }
+          ]
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "yarn run compile",
