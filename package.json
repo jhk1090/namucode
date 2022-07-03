@@ -14,8 +14,7 @@
   "activationEvents": [
     "onCommand:namucode.paragraphLevelDown",
     "onCommand:namucode.paragraphLevelUp",
-    "onCommand:namucode.linkify",
-    "onCommand:namucode.toggleComment"
+    "onCommand:namucode.linkify"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -31,10 +30,6 @@
       {
         "command": "namucode.linkify",
         "title": "문자 링크화하기"
-      },
-      {
-        "command": "namucode.toggleComment",
-        "title": "현재 줄 주석화"
       }
     ],
     "languages": [
@@ -57,10 +52,7 @@
       {
         "language": "namu",
         "scopeName": "source.namu",
-        "path": "./syntaxes/key.tmLanguage.json",
-        "embeddedLanguages": {
-          "meta.embedded.block.css": "css"
-        }
+        "path": "./syntaxes/key.tmLanguage.json"
       }
     ],
     "snippets": [
@@ -80,11 +72,6 @@
         "command": "namucode.paragraphLevelUp",
         "key": "ctrl+up",
         "mac": "cmd+up",
-        "when": "editorTextFocus"
-      },
-      {
-        "command": "namucode.toggleComment",
-        "key": "ctrl+/",
         "when": "editorTextFocus"
       }
     ],

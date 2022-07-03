@@ -172,7 +172,7 @@
       ]
     },
     "brackets": {
-      "match": "({{{)((\\+[0-9]|#[A-Fa-f0-9]{3,6}(\\,#[A-Fa-f0-9]{3,6})?)( )|((#!folding )(.*)|(#!wiki) (style)=(\"[^\"]*\")|(#!html) ))",
+      "match": "({{{)((\\+[0-9]|#[A-Fa-f0-9]{3,6}(\\,#[A-Fa-f0-9]{3,6})?)( )|((#!folding )(.*)|(#!wiki) (style)=(\"[^\"]*\")|(#!html) )|(#!syntax) (basic|cpp|csharp|css|erlang|go|java|javascript|json|kotlin|lisp|lua|markdown|objectivec|perl|php|powershell|python|ruby|rust|sh|sql|swift|typescript|xml))",
       "captures": {
         "1": {
           "name": "keyword.control.namu"
@@ -200,6 +200,12 @@
         },
         "12": {
           "name": "support.constant.namu"
+        },
+        "13": {
+          "name": "support.constant.namu"
+        },
+        "14": {
+          "name": "string.quoted.double.namu"
         }
       }
     },

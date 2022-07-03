@@ -86,29 +86,6 @@ export function activate(context: vscode.ExtensionContext) {
       });
     }
   });
-
-  const toggleComment = vscode.commands.registerCommand(
-    "namucode.toggleComment",
-    () => {
-      const editor = vscode.window.activeTextEditor;
-      if (editor) {
-        const document = editor.document.lineAt(editor.selection.active.line).text;
-        const line = editor.selection.active.line;
-        const pos1 = new vscode.Position(line, 0);
-        const pos2 = new vscode.Position(line, 2);
-        const range = new vscode.Range(pos1, pos2);
-        if (document.startsWith("##")) {
-          editor.edit((editBuilder) => {
-            editBuilder.delete(range);
-          });
-        } else {
-          editor.edit((editBuilder) => {
-            editBuilder.insert(pos1, "##");
-          });
-        }
-      }
-    }
-  );
 }
 
 export function deactivate() {}
