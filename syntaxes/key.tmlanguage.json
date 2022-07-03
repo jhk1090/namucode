@@ -38,28 +38,23 @@
   ],
   "repository": {
     "comments": {
-      "patterns": [
-        {
-          "name": "comment.line.double-quote.namu",
-          "match": "#{2,}.*"
-        }
-      ]
+      "name": "comment.line.double-quote.namu",
+      "match": "#{2,}.*"
     },
     "titles": {
       "name": "keyword.control.namu",
       "match": "(^== .* ==$|^=== .* ===$|^==== .* ====$|^===== .* =====$|^====== .* ======$)"
     },
     "links": {
-      "patterns": [
-        {
-          "name": "string.quoted.double.namu",
-          "match": "(?<=\\[\\[)[^|\\]\\]\\[\\[]*(?=(\\||\\]\\]))"
+      "match": "\\[\\[([^|\\]\\[]*)(\\|([^|\\]\\[]*))?\\]\\]",
+      "captures": {
+        "1": {
+          "name": "string.quoted.double.namu"
         },
-        {
-          "name": "support.constant.namu",
-          "match": "(?<=\\|)[^\\]\\]]*(?=\\]\\])"
+        "3": {
+          "name": "support.constant.namu"
         }
-      ]
+      }
     },
     "includes": {
       "begin": "\\[(?=include)",
@@ -70,7 +65,7 @@
           "match": "include(?=\\(틀:)"
         },
         {
-          "name": "string.quoted.double.namu",
+          "name": "variable.parameter.namu",
           "match": "틀:[^\\,|^\\)]*"
         },
         {
@@ -114,7 +109,7 @@
           "match": "(anchor|dday|age)(?=\\()"
         },
         {
-          "name": "string.quoted.double.namu",
+          "name": "variable.parameter.namu",
           "match": "(?<=(anchor|dday|age)\\().[^\\)]*(\\){1,})?(?=\\))"
         }
       ]
@@ -138,14 +133,30 @@
         {
           "name": "markup.italic.namu",
           "match": "(''[^']*''|__[^_]*__)"
+        },
+        {
+          "name": "markup.deleted.namu",
+          "match": "~~[^~]*~~"
+        },
+        {
+          "name": "keyword.control.namu",
+          "match": "-{4,9}"
+        },
+        {
+          "name": "keyword.operator.namu",
+          "match": "^>"
+        },
+        {
+          "name": "keyword.control.namu",
+          "match": "\\|\\|"
         }
       ]
     },
     "lists": {
       "patterns": [
         {
-          "name": "keyword.control.namu",
-          "match": "(?<=^ *)(\\*|1.|a.|A.|i.|I.(#[0-9][0-9])?)(?= )"
+          "name": "keyword.operator.namu",
+          "match": "(?<=^ *)(\\*|1\\.|a\\.|A\\.|i\\.|I\\.(#[0-9][0-9])?)"
         }
       ]
     },
@@ -156,8 +167,29 @@
           "match": "{{{"
         },
         {
+          "name": "support.constant.namu",
+          "match": "(?<={{{)(\\+[0-9](?= )|#[A-Fa-f0-9]{3,6}(\\,#[A-Fa-f0-9]{3,6})?(?= )|(#!folding|#!wiki|#!html)(?= ))"
+        },
+        {
           "name": "string.quoted.double.namu",
-          "match": "(?<={{{)(\\+[0-9](?= )|#[A-Fa-f0-9]{3,6}(\\,#[A-Fa-f0-9]{3,6})?(?= ))"
+          "match": "(?<=#!folding).*$"
+        },
+        {
+          "match": "{{{#!wiki (style)=(\")([^\"]*)(\")",
+          "captures": {
+            "1": {
+              "name": "string.quoted.double.namu"
+            },
+            "2": {
+              "name": "string.quoted.double.namu"
+            },
+            "3": {
+              "name": "meta.embedded.block.css"
+            },
+            "4": {
+              "name": "string.quoted.double.namu"
+            }
+          }
         },
         {
           "name": "keyword.control.namu",

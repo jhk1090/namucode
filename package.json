@@ -57,7 +57,10 @@
       {
         "language": "namu",
         "scopeName": "source.namu",
-        "path": "./syntaxes/key.tmLanguage.json"
+        "path": "./syntaxes/key.tmLanguage.json",
+        "embeddedLanguages": {
+          "meta.embedded.block.css": "css"
+        }
       }
     ],
     "snippets": [
@@ -105,27 +108,48 @@
             {
               "scope": "markup.italic.namu",
               "settings": {
-                "foreground": "#ffffff",
+                "foreground": "#D4D4D4",
                 "fontStyle": "italic"
               }
             },
             {
               "scope": "markup.deleted.namu",
               "settings": {
-                "foreground": "#ffffff",
+                "foreground": "#D4D4D4",
                 "fontStyle": "strikethrough"
               }
             },
             {
-              "scope": "my-extension.translations",
+              "scope": "variable.parameter.namu",
               "settings": {
-                "foreground": "#64a1f1"
+                "foreground": "#89DDFF"
               }
             },
             {
-              "scope": "my-extension.store",
+              "scope": "keyword.control.namu",
               "settings": {
-                "foreground": "#b3b6b9"
+                "foreground": "#569CD6",
+                "fontStyle": ""
+              }
+            },
+            {
+              "scope": "support.constant.namu",
+              "settings": {
+                "foreground": "#fa7f5a"
+              }
+            },
+            {
+              "scope": "keyword.operator.namu",
+              "settings": {
+                "foreground": "#6A9955",
+                "fontStyle": "bold"
+              }
+            },
+            {
+              "scope": "comment.line.double-quote.namu",
+              "settings": {
+                "foreground": "#6d6d6d",
+                "fontStyle": "italic"
               }
             }
           ]
