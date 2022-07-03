@@ -17,6 +17,11 @@
 
 링크: https://marketplace.visualstudio.com/items?itemName=null
 
+## 사용법
+1. 나무코드를 설치합니다. (상단 설치 링크)
+1. 설치 후 언어칸에서 Namuwiki Code를 선택하거나 파일 확장자를 .namu로 바꿔줍니다.
+1. 설정이 끝났으며 나무마크 문법을 사용해보세요!
+
 ## 기능
 ### 텍스트 강조 기능 (Syntax Highlighting)
 나무코드는 텍스트 강조를 지원합니다.\
