@@ -1,6 +1,5 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import { title } from "process";
 import * as vscode from "vscode";
 
 export function activate(context: vscode.ExtensionContext) {
@@ -15,7 +14,7 @@ export function activate(context: vscode.ExtensionContext) {
     if (editor) {
       const document = editor.document;
       const selection = editor.selection;
-      const titleRegex = /^={2,6} .* ={2,6}$/gm;
+      const titleRegex = /(^== .* ==$|^=== .* ===$|^==== .* ====$|^===== .* =====$|^====== .* ======$)/gm;
       // 최소 문단 레벨
       const titleLeastRegex = /^== .* ==$/gm;
       // 최대 문단 레벨
@@ -87,11 +86,12 @@ export function activate(context: vscode.ExtensionContext) {
       });
     }
   });
-  const toc = vscode.commands.registerCommand("namucode.refresh", async () => {
+
+  const organizeToc = async () => {
     const editor = vscode.window.activeTextEditor;
     if (editor) {
       const document = editor.document;
-      const titleRegex = /^={2,6} .* ={2,6}$/gm;
+      const titleRegex = /(^== .* ==$|^=== .* ===$|^==== .* ====$|^===== .* =====$|^====== .* ======$)/gm;
       const titles = [...document.getText().matchAll(titleRegex)];
       const titleLevelCountRegex = /^={2,6}/gm;
       const titleTextRegex = /(?<=^\={2,6} ).[^=]*(?=\={2,6}$)/gm;
@@ -149,8 +149,9 @@ export function activate(context: vscode.ExtensionContext) {
               break;
           }
         } catch (error) {
-            vscode.window.showErrorMessage('문단 조직이 잘못되어 목차가 표시되지 않았습니다. (최상위 문단은 2단계 문단입니다.)');
-            return;
+          // 오류 발생 시 Welcome 스크린 표시
+          dataObject = [];
+          break;
         }
       }
 
@@ -159,13 +160,17 @@ export function activate(context: vscode.ExtensionContext) {
         new OutlineProvider(dataObject)
       );
     }
-  });
+  }
+  
+  vscode.window.onDidChangeActiveTextEditor(organizeToc)
+  vscode.workspace.onDidOpenTextDocument(organizeToc)
+  vscode.workspace.onDidChangeTextDocument(organizeToc)
 
   class OutlineProvider implements vscode.TreeDataProvider<TreeItem> {
     constructor(private outline: any) {
-      console.log(outline);
-    }
 
+    }
+  
     getTreeItem(item: any): vscode.TreeItem {
       return new vscode.TreeItem(
         item.label,

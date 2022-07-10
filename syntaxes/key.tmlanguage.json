@@ -163,6 +163,10 @@
         {
           "name": "keyword.control.namu",
           "match": "\\{{3}"
+        },
+        {
+          "name": "keyword.control.namu",
+          "match": "\\|{2}"
         }
       ]
     },
@@ -232,15 +236,12 @@
       }
     },
     "tables": {
-      "match": "(\\|\\||(?<=\\>))(\\<(.[^>|=]*)(\\=(.[^>|]*))?\\>)?( )?",
+      "match": "(?<=(\\|\\||\\>))\\<(.[^>|=]*)(\\=(.[^>|]*))?\\>",
       "captures": {
-        "1": {
-          "name": "keyword.control.namu"
-        },
-        "3": {
+        "2": {
           "name": "variable.parameter.namu"
         },
-        "5": {
+        "4": {
           "name": "string.quoted.double.namu"
         }
       }
