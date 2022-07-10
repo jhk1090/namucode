@@ -22,9 +22,6 @@
       "include": "#macros"
     },
     {
-      "include": "#tables"
-    },
-    {
       "include": "#titles"
     },
     {
@@ -41,6 +38,9 @@
     },
     {
       "include": "#redirect"
+    },
+    {
+      "include": "#tables"
     }
   ],
   "repository": {
@@ -135,20 +135,6 @@
         }
       ]
     },
-    "tables": {
-      "match": "(\\|\\||(?<=\\>))(\\<(.[^\\>|\\=]*)(\\=(.[^\\>|]*))?\\>)?( )?",
-      "captures": {
-        "1": {
-          "name": "keyword.control.namu"
-        },
-        "3": {
-          "name": "variable.parameter.namu"
-        },
-        "5": {
-          "name": "string.quoted.double.namu"
-        }
-      }
-    },
     "markups": {
       "patterns": [
         {
@@ -174,6 +160,10 @@
         {
           "name": "keyword.control.namu",
           "match": "\\}{3}"
+        },
+        {
+          "name": "keyword.control.namu",
+          "match": "\\{{3}"
         }
       ]
     },
@@ -186,7 +176,7 @@
       ]
     },
     "brackets": {
-      "match": "({{{)((\\+[0-9]|#[A-Fa-f0-9]{3,6}(\\,#[A-Fa-f0-9]{3,6})?)( )|((#!folding )(.*)|(#!wiki) (style)=(\"[^\"]*\")|(#!html) )|(#!syntax) (basic|cpp|csharp|css|erlang|go|java|javascript|json|kotlin|lisp|lua|markdown|objectivec|perl|php|powershell|python|ruby|rust|sh|sql|swift|typescript|xml))",
+      "match": "((?<=\\{{3}))((\\+[0-9]|#[A-Fa-f0-9]{3,6}(\\,#[A-Fa-f0-9]{3,6})?)( )|((#!folding )(.*)|(#!wiki) (style)=(\"[^\"]*\")|(#!html) )|(#!syntax) (basic|cpp|csharp|css|erlang|go|java|javascript|json|kotlin|lisp|lua|markdown|objectivec|perl|php|powershell|python|ruby|rust|sh|sql|swift|typescript|xml))",
       "captures": {
         "1": {
           "name": "keyword.control.namu"
@@ -238,6 +228,20 @@
           "name": "keyword.control.namu"
         },
         "2": {
+          "name": "string.quoted.double.namu"
+        }
+      }
+    },
+    "tables": {
+      "match": "(\\|\\||(?<=\\>))(\\<(.[^>|=]*)(\\=(.[^>|]*))?\\>)?( )?",
+      "captures": {
+        "1": {
+          "name": "keyword.control.namu"
+        },
+        "3": {
+          "name": "variable.parameter.namu"
+        },
+        "5": {
           "name": "string.quoted.double.namu"
         }
       }
