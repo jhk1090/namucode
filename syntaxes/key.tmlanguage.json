@@ -53,16 +53,15 @@
       "match": "(^== .* ==$|^=== .* ===$|^==== .* ====$|^===== .* =====$|^====== .* ======$)"
     },
     "links": {
-      "patterns": [
-        {
-          "name": "string.quoted.double.namu",
-          "match": "(?<=\\[{2})([^|\\]\\[]*)"
+      "match": "\\[{2}([^|\\]\\[]*)((\\|)([^|\\]\\[]*))?\\]{2}",
+      "captures": {
+        "1": {
+          "name": "string.quoted.double.namu"
         },
-        {
-          "name": "support.constant.namu",
-          "match": "(?<=\\|)([^|\\]\\[]*)(?=\\]\\])"
+        "4": {
+          "name": "support.constant.namu"
         }
-      ]
+      }
     },
     "includes": {
       "begin": "\\[(?=include)",
@@ -214,12 +213,12 @@
       }
     },
     "footnotes": {
-      "patterns": [
-        {
-          "name": "keyword.operator.namu",
-          "match": "(?<=\\[)\\*([^ ]*)?(?=(]| ))"
+      "match": "\\[(\\*)",
+      "captures": {
+        "1": {
+          "name": "keyword.operator.namu"
         }
-      ]
+      }
     },
     "redirect": {
       "match": "^(#redirect) (.*)",
