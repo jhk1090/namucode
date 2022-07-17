@@ -14,11 +14,11 @@ export function activate(context: vscode.ExtensionContext) {
     if (editor) {
       const document = editor.document;
       const selection = editor.selection;
-      const titleRegex = /(^== .* ==$|^=== .* ===$|^==== .* ====$|^===== .* =====$|^====== .* ======$)/gm;
+      const titleRegex = /(^== .* ==$|^=== .* ===$|^==== .* ====$|^===== .* =====$|^====== .* ======$|^==# .* #==$|^===# .* #===$|^====# .* #====$|^=====# .* #=====$|^======# .* #======$)/gm;
       // 최소 문단 레벨
-      const titleLeastRegex = /^== .* ==$/gm;
+      const titleLeastRegex = /(^== .* ==$|^==# .* #==)/gm;
       // 최대 문단 레벨
-      const titleMostRegex = /^====== .* ======$/gm;
+      const titleMostRegex = /(^====== .* ======$|^======# .* #======$)/gm;
       // 문단 레벨 카운트용
       const titleLevelCountRegex = /^={2,6}/gm;
       // 문단 얻기
@@ -91,11 +91,10 @@ export function activate(context: vscode.ExtensionContext) {
     const editor = vscode.window.activeTextEditor;
     if (editor) {
       const document = editor.document;
-      const titleRegex = /(^== .* ==$|^=== .* ===$|^==== .* ====$|^===== .* =====$|^====== .* ======$)/gm;
+      const titleRegex = /(^== .* ==$|^=== .* ===$|^==== .* ====$|^===== .* =====$|^====== .* ======$|^==# .* #==$|^===# .* #===$|^====# .* #====$|^=====# .* #=====$|^======# .* #======$)/gm;
       const titles = [...document.getText().matchAll(titleRegex)];
       const titleLevelCountRegex = /^={2,6}/gm;
-      const titleTextRegex = /(?<=^\={2,6} ).[^=]*(?=\={2,6}$)/gm;
-
+      const titleTextRegex = /(?<=^\={2,6}(#)? ).[^=]*(?= (#)?\={2,6}$)/gm;
       let dataObject: TreeItem[] = [];
       function bstr(labelname: string): TreeItem {
         return {
