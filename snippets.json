@@ -76,6 +76,13 @@
 		],
 		"description": "파일을 삽입합니다."
 	},
+	"문서 가져옴": {
+		"prefix":"contentmoved",
+		"body": [
+			"[include(틀:문서 가져옴, title=${1:이전 문서명}, version=${2:버전})]"
+		],
+		"description": "파일을 삽입합니다."
+	},
 	"펼치기 접기 문법 삽입": {
 		"prefix":"folding",
 		"body": [
