@@ -14,7 +14,8 @@ export function activate(context: vscode.ExtensionContext) {
     if (editor) {
       const document = editor.document;
       const selection = editor.selection;
-      const titleRegex = /(^== .* ==$|^=== .* ===$|^==== .* ====$|^===== .* =====$|^====== .* ======$|^==# .* #==$|^===# .* #===$|^====# .* #====$|^=====# .* #=====$|^======# .* #======$)/gm;
+      const titleRegex =
+        /(^== .* ==$|^=== .* ===$|^==== .* ====$|^===== .* =====$|^====== .* ======$|^==# .* #==$|^===# .* #===$|^====# .* #====$|^=====# .* #=====$|^======# .* #======$)/gm;
       // 최소 문단 레벨
       const titleLeastRegex = /(^== .* ==$|^==# .* #==)/gm;
       // 최대 문단 레벨
@@ -59,21 +60,15 @@ export function activate(context: vscode.ExtensionContext) {
     }
   };
 
-  const paragraphLevelDown = vscode.commands.registerCommand(
-    "namucode.paragraphLevelDown",
-    () => {
-      paragraphLeveling(Level.DOWN);
-    }
-  );
+  vscode.commands.registerCommand("namucode.paragraphLevelDown", () => {
+    paragraphLeveling(Level.DOWN);
+  });
 
-  const paragraphLevelUp = vscode.commands.registerCommand(
-    "namucode.paragraphLevelUp",
-    () => {
-      paragraphLeveling(Level.UP);
-    }
-  );
+  vscode.commands.registerCommand("namucode.paragraphLevelUp", () => {
+    paragraphLeveling(Level.UP);
+  });
 
-  const linkify = vscode.commands.registerCommand("namucode.linkify", () => {
+  vscode.commands.registerCommand("namucode.linkify", () => {
     const editor = vscode.window.activeTextEditor;
 
     if (editor) {
@@ -87,19 +82,34 @@ export function activate(context: vscode.ExtensionContext) {
     }
   });
 
-  const organizeToc = async () => {
+  vscode.commands.registerCommand("namucode.gotoLine", (line: number) => {
+    vscode.commands.executeCommand("revealLine", {
+      lineNumber: line,
+      at: 'top'
+    });
+  });
+
+  const organizeToc = () => {
     const editor = vscode.window.activeTextEditor;
     if (editor) {
       const document = editor.document;
-      const titleRegex = /(^== .* ==$|^=== .* ===$|^==== .* ====$|^===== .* =====$|^====== .* ======$|^==# .* #==$|^===# .* #===$|^====# .* #====$|^=====# .* #=====$|^======# .* #======$)/gm;
+      const titleRegex =
+        /(^== .* ==$|^=== .* ===$|^==== .* ====$|^===== .* =====$|^====== .* ======$|^==# .* #==$|^===# .* #===$|^====# .* #====$|^=====# .* #=====$|^======# .* #======$)/gm;
       const titles = [...document.getText().matchAll(titleRegex)];
       const titleLevelCountRegex = /^={2,6}/gm;
       const titleTextRegex = /(?<=^\={2,6}(#)? ).[^=]*(?= (#)?\={2,6}$)/gm;
       let dataObject: TreeItem[] = [];
-      function bstr(labelname: string): TreeItem {
+      function bstr(labelname: string, index: number): TreeItem {
         return {
           label: labelname,
           children: [],
+          command: {
+            command: "namucode.gotoLine",
+            title: "문단으로 이동",
+            arguments: [
+              editor?.document.positionAt(index).line as number,
+            ],
+          },
         };
       }
       let step1 = -1;
@@ -108,6 +118,7 @@ export function activate(context: vscode.ExtensionContext) {
       let step4 = -1;
       for (let i = 0; i < titles.length; i++) {
         const original = titles[i][0];
+        const index = titles[i]["index"] as number;
         const level = (
           original.match(titleLevelCountRegex) as RegExpMatchArray
         )[0].length;
@@ -116,32 +127,42 @@ export function activate(context: vscode.ExtensionContext) {
         try {
           switch (level) {
             case 2:
-              dataObject.push(bstr(name));
+              dataObject.push(bstr(name, index));
               break;
             case 3:
               if ("children" in dataObject[step1]) {
-                dataObject[step1].children?.push(bstr(name));
+                dataObject[step1].children?.push(bstr(name, index));
                 step2 = (dataObject[step1].children?.length as number) - 1;
               }
               break;
             case 4:
-              const propertyp4 = (dataObject[step1].children as TreeItem[])[step2]
+              const propertyp4 = (dataObject[step1].children as TreeItem[])[
+                step2
+              ];
               if ("children" in propertyp4) {
-                propertyp4.children?.push(bstr(name));
+                propertyp4.children?.push(bstr(name, index));
                 step3 = (propertyp4.children?.length as number) - 1;
               }
               break;
             case 5:
-              const propertyp5 = ((dataObject[step1].children as TreeItem[])[step2].children as TreeItem[])[step3]
+              const propertyp5 = (
+                (dataObject[step1].children as TreeItem[])[step2]
+                  .children as TreeItem[]
+              )[step3];
               if ("children" in propertyp5) {
-                propertyp5.children?.push(bstr(name));
+                propertyp5.children?.push(bstr(name, index));
                 step4 = (propertyp5.children?.length as number) - 1;
               }
               break;
             case 6:
-              const propertyp6 = (((dataObject[step1].children as TreeItem[])[step2].children as TreeItem[])[step3].children as TreeItem[])[step4]
+              const propertyp6 = (
+                (
+                  (dataObject[step1].children as TreeItem[])[step2]
+                    .children as TreeItem[]
+                )[step3].children as TreeItem[]
+              )[step4];
               if ("children" in propertyp6) {
-                propertyp6.children?.push(bstr(name));
+                propertyp6.children?.push(bstr(name, index));
               }
               break;
             default:
@@ -159,24 +180,24 @@ export function activate(context: vscode.ExtensionContext) {
         new OutlineProvider(dataObject)
       );
     }
-  }
-  
-  vscode.window.onDidChangeActiveTextEditor(organizeToc)
-  vscode.workspace.onDidOpenTextDocument(organizeToc)
-  vscode.workspace.onDidChangeTextDocument(organizeToc)
+  };
 
-  class OutlineProvider implements vscode.TreeDataProvider<TreeItem> {
-    constructor(private outline: any) {
+  vscode.window.onDidChangeActiveTextEditor(organizeToc);
+  vscode.workspace.onDidOpenTextDocument(organizeToc);
+  vscode.workspace.onDidChangeTextDocument(organizeToc);
 
-    }
-  
+  class OutlineProvider implements vscode.TreeDataProvider<any> {
+    constructor(private outline: any) {}
+
     getTreeItem(item: any): vscode.TreeItem {
-      return new vscode.TreeItem(
+      const treeitem = new vscode.TreeItem(
         item.label,
         item.children.length > 0
           ? vscode.TreeItemCollapsibleState.Expanded
           : vscode.TreeItemCollapsibleState.None
       );
+      treeitem.command = item.command
+      return treeitem
     }
 
     getChildren(element?: any): Thenable<[]> {
