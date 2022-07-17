@@ -15,9 +15,9 @@
 ![namucode_oneditor](https://user-images.githubusercontent.com/72603240/177030474-b7355ad7-83a2-4c6c-a39c-54ed28ead3f2.jpg)
 
 ## 설치
-~~나무코드는 VSCode 확장 프로그램으로, VSCode Marketplace에서 다운받을 수 있습니다.~~
+나무코드는 VSCode 확장 프로그램으로, VSCode Marketplace에서 다운받을 수 있습니다.
 
-~~링크: https://marketplace.visualstudio.com/items?itemName=null~~
+링크: https://marketplace.visualstudio.com/items?itemName=jhk1090.namucode
 
 ## 사용법
 1. 나무코드를 설치합니다. (상단 설치 링크)

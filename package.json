@@ -3,8 +3,7 @@
   "displayName": "Namucode",
   "description": "나무위키 VSCode 확장 프로그램",
   "publisher": "jhk1090",
-  "icon": "https://github.com/jhk1090/namucode/blob/main/images/Logo.png",
-  "version": "1.2",
+  "version": "1.2.0",
   "engines": {
     "vscode": "^1.68.0"
   },
