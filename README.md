@@ -8,7 +8,7 @@
     - [텍스트 강조 기능](#텍스트-강조-기능-syntax-highlighting)
     - [자동완성 기능](#자동완성-기능-snippet)
     - [커맨드 기능](#커맨드-기능-command-palette)
-    - [목차 표시 기능](#목차-표시-기능-table-of-contents-experiment)
+    - [목차 표시 기능](#목차-표시-기능-table-of-contents)
 - [업데이트 로그](#업데이트-로그)
 - [참고](#참고)
 
