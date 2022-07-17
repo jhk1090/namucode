@@ -1,8 +1,10 @@
 {
   "name": "namucode",
-  "displayName": "NamuCode",
-  "description": "나무위키 VSCode 기능성 확장",
-  "version": "0.0.1",
+  "displayName": "Namucode",
+  "description": "나무위키 VSCode 확장 프로그램",
+  "publisher": "jhk1090",
+  "icon": "https://github.com/jhk1090/namucode/blob/main/images/Logo.png",
+  "version": "1.2",
   "engines": {
     "vscode": "^1.68.0"
   },
