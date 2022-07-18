@@ -1,9 +1,28 @@
-# Change Log
+# 업데이트 로그
 
-All notable changes to the "namucode" extension will be documented in this file.
+### [1.2.1 ~ 1.2.3] - 2022.07.17 ~ 2022.07.18
+- 라이센스 설정
+- VSCode 확장 프로그램 관련 정보 추가
+- 목차 도움말 추가
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
+### [1.2] - 2022.07.17
+#### 추가
+- 목차 문단 클릭 시 클릭한 목차로 이동하는 ClickEvent 제작 완료
+- 문서 가져옴 틀 자동완성 추가
+#### 수정
+- 숨겨진 목차가 강조 안되는 오류 수정
 
-## [Unreleased]
 
-- Initial release
+### [1.1] - 2022.07.11 (Github)
+#### 추가
+- 목차 추가 (Experiment)
+- 목차 도움말 추가
+#### 수정
+- 텍스트 강조 오류 수정
+
+### [1.0] - 2022.07.03 (Github)
+#### 추가
+- 텍스트 강조 추가
+- 자동완성 추가 (12개)
+- 커맨드 추가 (3개)
+- 기타 등등
