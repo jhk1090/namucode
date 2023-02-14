@@ -2,6 +2,8 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 
+var isDocumentPerfect = true;
+
 export function activate(context: vscode.ExtensionContext) {
   modifyParagraph();
 
@@ -22,7 +24,7 @@ export function activate(context: vscode.ExtensionContext) {
   vscode.commands.registerCommand("namucode.gotoLine", (line: number) => {
     vscode.commands.executeCommand("revealLine", {
       lineNumber: line,
-      at: 'top'
+      at: "top",
     });
   });
   vscode.window.onDidChangeActiveTextEditor(organizeToc);
@@ -42,7 +44,7 @@ function modifyParagraph() {
     if (editor) {
       const document = editor.document;
       const selection = editor.selection;
-      
+
       const titleRegex =
         /(^== .* ==$|^=== .* ===$|^==== .* ====$|^===== .* =====$|^====== .* ======$|^==# .* #==$|^===# .* #===$|^====# .* #====$|^=====# .* #=====$|^======# .* #======$)/gm;
 
@@ -85,21 +87,75 @@ function modifyParagraph() {
 
         selectionStringify = selectionStringify.replace(
           original,
-          originalChanged.replaceAll('=', '#')
+          originalChanged.replaceAll("=", "#")
         );
       }
 
       // 동일한 목차일시 타이틀이 하나로 인식이 되는 문제가 있음
-      const fakeTitle = [...selectionStringify.matchAll(fakeTitleRegex)]
+      const fakeTitle = [...selectionStringify.matchAll(fakeTitleRegex)];
       for (let i = 0; i < fakeTitle.length; i++) {
         selectionStringify = selectionStringify.replace(
           fakeTitle[i][0],
-          fakeTitle[i][0].replaceAll('#', '=')
-        )
+          fakeTitle[i][0].replaceAll("#", "=")
+        );
       }
       editor.edit((editBuilder) => {
         editBuilder.replace(selection, selectionStringify);
       });
+    }
+  };
+  
+  interface typeTreeStruct {
+    title: string;
+    range: number[];
+    children: typeTreeStruct[];
+  }
+
+  const treeStruct = (name: string, range1: string, range2: string, children?: []) => {
+    const length = Number(range2) - Number(range1)
+    let child: typeTreeStruct[] = [];
+    if (children != undefined) child = children;
+    return {title: name, range: [...Array(length).keys()].map((e)=>e+Number(range1)), children: child}
+  }
+  const paragraphSort = () => {
+    const editor = vscode.window.activeTextEditor;
+
+    if (!isDocumentPerfect) return
+
+    if (editor) {
+      const document = editor.document;
+      const titleRegex_Two = /^#(.*)#== (.*) ==$|^#(.*)#==# (.*) #==$/gm;
+      const titleRegex_Three = /^#(.*)#=== (.*) ===$|^#(.*)#===# (.*) #===$/gm;
+      const titleRegex_Four = /^#(.*)#==== (.*) ====$|^#(.*)#====# (.*) #====$/gm;
+      const titleRegex_Five = /^#(.*)#===== (.*) =====$|^#(.*)#=====# (.*) #=====$/gm;
+      const titleRegex_Six = /^#(.*)#====== (.*) ======$|^#(.*)#======# (.*) #======$/gm;
+
+      let content: string = ''
+      const splitter = document.getText().split('\n').map((elem, idx) => `#${String(idx).padStart(7, "0")}#` + elem)
+      splitter.forEach((elem) => content += elem + "\n")
+      let paragraph: typeTreeStruct[] = []
+      const analysis_two = [...content.matchAll(titleRegex_Two)]
+      analysis_two.forEach((element, idx) => {
+        if (idx < analysis_two.length - 1) {
+          paragraph.push(treeStruct(element[2], analysis_two[idx][1], analysis_two[idx+1][1]))
+        } else {
+          paragraph.push(treeStruct(element[2], analysis_two[idx][1], String(splitter.length)))
+        }
+      });
+      // const analysis_three = [...content.matchAll(titleRegex_Three)]
+      // analysis_three.forEach((element, idx) => {
+      //   let pindex = 0;
+      //   paragraph.forEach((e, i)=>{
+      //     if (e['range'].includes(Number(element))) {
+      //       pindex = i
+      //     }
+      //   })
+      //   if (idx < analysis_three.length - 1) {
+      //     paragraph[pindex].children.push(treeStruct(element[2], analysis_three[idx][1], analysis_three[idx+1][1]))
+      //   } else {
+      //     paragraph[pindex].children.push(treeStruct(element[2], analysis_three[idx][1], String(splitter.length)))
+      //   }
+      // })
     }
   };
 
@@ -111,6 +167,7 @@ function modifyParagraph() {
     paragraphLeveling(Level.UP);
   });
 
+  vscode.commands.registerCommand("namucode.paragraphSort", paragraphSort);
 }
 
 const organizeToc = () => {
@@ -130,9 +187,7 @@ const organizeToc = () => {
         command: {
           command: "namucode.gotoLine",
           title: "문단으로 이동",
-          arguments: [
-            editor?.document.positionAt(index).line as number,
-          ],
+          arguments: [editor?.document.positionAt(index).line as number],
         },
       };
     }
@@ -200,6 +255,10 @@ const organizeToc = () => {
       // console.log(step1, step2, step3, step4, Date.now()+Math.random())
       // console.log(dataObject)
     }
+
+    if (dataObject.length == 0) isDocumentPerfect = false;
+    else isDocumentPerfect = true;
+
     vscode.window.registerTreeDataProvider(
       "tableOfContent",
       new OutlineProvider(dataObject)
@@ -217,8 +276,8 @@ class OutlineProvider implements vscode.TreeDataProvider<any> {
         ? vscode.TreeItemCollapsibleState.Expanded
         : vscode.TreeItemCollapsibleState.None
     );
-    treeitem.command = item.command
-    return treeitem
+    treeitem.command = item.command;
+    return treeitem;
   }
 
   getChildren(element?: any): Thenable<[]> {

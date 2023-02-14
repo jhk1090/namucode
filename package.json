@@ -28,6 +28,7 @@
     "onCommand:namucode.paragraphLevelDown",
     "onCommand:namucode.paragraphLevelUp",
     "onCommand:namucode.linkify",
+    "onCommand:namucode.paragraphSort",
     "onView:tableOfContent"
   ],
   "main": "./out/extension.js",
@@ -60,6 +61,10 @@
       {
         "command": "namucode.linkify",
         "title": "문자 링크화하기"
+      },
+      {
+        "command": "namucode.paragraphSort",
+        "title": "문단 자동 정렬"
       }
     ],
     "languages": [
