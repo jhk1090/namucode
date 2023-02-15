@@ -5,7 +5,7 @@ import * as vscode from "vscode";
 var isDocumentPerfect = true;
 
 export function activate(context: vscode.ExtensionContext) {
-  modifyParagraph();
+  modifyParagraph(context);
 
   vscode.commands.registerCommand("namucode.linkify", () => {
     const editor = vscode.window.activeTextEditor;
@@ -27,12 +27,11 @@ export function activate(context: vscode.ExtensionContext) {
       at: "top",
     });
   });
-  vscode.window.onDidChangeActiveTextEditor(organizeToc);
-  vscode.workspace.onDidOpenTextDocument(organizeToc);
+  
   vscode.workspace.onDidChangeTextDocument(organizeToc);
 }
 
-function modifyParagraph() {
+function modifyParagraph(context: vscode.ExtensionContext) {
   enum Level {
     UP,
     DOWN,
@@ -45,11 +44,9 @@ function modifyParagraph() {
       const document = editor.document;
       const selection = editor.selection;
 
-      const titleRegex =
-        /(^== .* ==$|^=== .* ===$|^==== .* ====$|^===== .* =====$|^====== .* ======$|^==# .* #==$|^===# .* #===$|^====# .* #====$|^=====# .* #=====$|^======# .* #======$)/gm;
+      const titleRegex = /(^== .* ==$|^=== .* ===$|^==== .* ====$|^===== .* =====$|^====== .* ======$|^==# .* #==$|^===# .* #===$|^====# .* #====$|^=====# .* #=====$|^======# .* #======$)/gm;
 
-      const fakeTitleRegex =
-        /(^## .* ##$|^### .* ###$|^#### .* ####$|^##### .* #####$|^###### .* ######$|^### .* ###$|^#### .* ####$|^##### .* #####$|^###### .* ######$|^####### .* #######$)/gm;
+      const fakeTitleRegex = /(^№№ .* №№$|^№№№ .* №№№$|^№№№№ .* №№№№$|^№№№№№ .* №№№№№$|^№№№№№№ .* №№№№№№$|^№№# .* #№№$|^№№№# .* #№№№$|^№№№№# .* #№№№№$|^№№№№№# .* #№№№№№$|^№№№№№№# .* #№№№№№№$)/gm;
       // 최소 문단 레벨
       const titleLeastRegex = /(^== .* ==$|^==# .* #==)/gm;
       // 최대 문단 레벨
@@ -64,40 +61,27 @@ function modifyParagraph() {
         // 원본
         const original = titles[i][0];
         let originalChanged = "";
-        let originalLevel = (
-          original.match(titleLevelCountRegex) as RegExpMatchArray
-        )[0];
+        let originalLevel = (original.match(titleLevelCountRegex) as RegExpMatchArray)[0];
 
         // 문단 레벨 Down 시
         if (type == Level.DOWN && original.match(titleLeastRegex) == null) {
-          originalChanged = original.replaceAll(
-            originalLevel,
-            originalLevel.replace("=", "")
-          );
+          originalChanged = original.replaceAll(originalLevel, originalLevel.replace("=", ""));
         }
         // 문단 레벨 UP 시
         else if (type == Level.UP && original.match(titleMostRegex) == null) {
-          originalChanged = original.replaceAll(
-            originalLevel,
-            originalLevel.replace("=", "==")
-          );
+          originalChanged = original.replaceAll(originalLevel, originalLevel.replace("=", "=="));
         } else {
           originalChanged = original;
         }
 
-        selectionStringify = selectionStringify.replace(
-          original,
-          originalChanged.replaceAll("=", "#")
-        );
+        selectionStringify = selectionStringify.replace(original, originalChanged.replaceAll("=", "№"));
       }
 
       // 동일한 목차일시 타이틀이 하나로 인식이 되는 문제가 있음
       const fakeTitle = [...selectionStringify.matchAll(fakeTitleRegex)];
       for (let i = 0; i < fakeTitle.length; i++) {
-        selectionStringify = selectionStringify.replace(
-          fakeTitle[i][0],
-          fakeTitle[i][0].replaceAll("#", "=")
-        );
+        console.log(i, fakeTitle[i][0])
+        selectionStringify = selectionStringify.replace(fakeTitle[i][0], fakeTitle[i][0].replaceAll("№", "="));
       }
       editor.edit((editBuilder) => {
         editBuilder.replace(selection, selectionStringify);
@@ -111,12 +95,9 @@ function modifyParagraph() {
     children: typeTreeStruct[];
   }
 
-  const treeStruct = (
-    name: string,
-    range1: string,
-    range2: string,
-    children?: []
-  ) => {
+  var paragraph: typeTreeStruct[] = [];
+
+  const treeStruct = (name: string, range1: string, range2: string, children?: []) => {
     const length = Number(range2) - Number(range1);
     let child: typeTreeStruct[] = [];
     if (children != undefined) child = children;
@@ -126,21 +107,283 @@ function modifyParagraph() {
       children: child,
     };
   };
+
+  const analyzeThree = (content: string) => {
+    const titleRegexThree = /^#(.*)#=== (.*) ===$|^#(.*)#===# (.*) #===$/gm;
+    let queue: { [k: string]: RegExpMatchArray[] } = {};
+    const analysisThree = [...content.matchAll(titleRegexThree)];
+
+    if (analysisThree.length == 0) return;
+
+    analysisThree.forEach((element) => {
+      let pindex = 0;
+      for (const [k, v] of paragraph.entries()) {
+        if (v.range.includes(Number(element[1]))) {
+          pindex = k;
+          break;
+        }
+      }
+      if (queue[String(pindex)] == undefined) {
+        queue[String(pindex)] = [];
+      }
+
+      queue[String(pindex)].push(element);
+    });
+    for (const [key, value] of Object.entries(queue)) {
+      value.forEach((e, i) => {
+        // 뒤에 3단계 문장 있음
+        if (i < value.length - 1) paragraph[Number(key)].children.push(treeStruct(e[2], e[1], value[i + 1][1]));
+        else if (Number(key) < paragraph.length - 1)
+          // 뒤에 3단계 문장 없음 = 다음 2단계 문장의 첫 index 기준 && 뒤에 2단계 문장 있음
+          paragraph[Number(key)].children.push(treeStruct(e[2], e[1], String(paragraph[Number(key) + 1].range[0])));
+        // 뒤에 2, 3단계 문장 없음 = 현재 2단계 문장의 끝 index 기준
+        else paragraph[Number(key)].children.push(treeStruct(e[2], e[1], String(Number(paragraph[Number(key)].range.at(-1)) + 1)));
+      });
+    }
+
+    queue = {};
+    analyzeFour(content);
+    return;
+  };
+
+  const analyzeFour = (content: string) => {
+    const titleRegexFour = /^#(.*)#==== (.*) ====$|^#(.*)#====# (.*) #====$/gm;
+    let queue: { [k: string]: { [k: string]: RegExpMatchArray[] } } = {};
+    const analysisFour = [...content.matchAll(titleRegexFour)];
+
+    if (analysisFour.length == 0) return;
+
+    analysisFour.forEach((element) => {
+      let twoIndex = 0;
+      let threeIndex = 0;
+      for (const [k, v] of paragraph.entries()) {
+        if (v.range.includes(Number(element[1]))) {
+          twoIndex = k;
+          for (const [kThree, vThree] of v.children.entries()) {
+            if (vThree.range.includes(Number(element[1]))) {
+              threeIndex = kThree;
+              break;
+            }
+          }
+          break;
+        }
+      }
+      if (queue[String(twoIndex)] == undefined) queue[String(twoIndex)] = {};
+      if (queue[String(twoIndex)][String(threeIndex)] == undefined) queue[String(twoIndex)][String(threeIndex)] = [];
+
+      queue[String(twoIndex)][String(threeIndex)].push(element);
+    });
+    for (const [keyTwo, valueTwo] of Object.entries(queue)) {
+      for (const [keyThree, valueThree] of Object.entries(valueTwo)) {
+        const k2 = Number(keyTwo);
+        const k3 = Number(keyThree);
+        let target = paragraph[k2].children[k3].children;
+        valueThree.forEach((e, i) => {
+          // 뒤에 4단계 문장 있음
+          if (i < valueThree.length - 1) {
+            target.push(treeStruct(e[2], e[1], valueThree[i + 1][1]));
+            return;
+          } else if (k3 < paragraph[k2].children.length - 1) {
+            // 뒤에 4단계 문장 없음 = 다음 3단계 문장의 첫 index 기준 && 뒤에 3단계 문장 있음
+            target.push(treeStruct(e[2], e[1], String(paragraph[k2].children[k3 + 1].range[0])));
+            return;
+          } else if (k2 < paragraph.length - 1) {
+            // 뒤에 3, 4단계 문장 없음 = 다음 2단계 문장의 첫 index 기준 && 뒤에 2단계 문장 있음
+            target.push(treeStruct(e[2], e[1], String(Number(paragraph[k2 + 1].range[0]))));
+            return;
+          } else {
+            // 뒤에 2, 3, 4단계 문장 없음 = 다음 2단계 문장의 끝 index 기준
+            target.push(treeStruct(e[2], e[1], String(Number(paragraph[k2].range.at(-1)) + 1)));
+            return;
+          }
+        });
+      }
+    }
+
+    queue = {};
+    analyzeFive(content);
+    return;
+  };
+
+  const analyzeFive = (content: string) => {
+    const titleRegexFive = /^#(.*)#===== (.*) =====$|^#(.*)#=====# (.*) #=====$/gm;
+    let queue: {
+      [k: string]: { [k: string]: { [k: string]: RegExpMatchArray[] } };
+    } = {};
+    const analysisFive = [...content.matchAll(titleRegexFive)];
+
+    if (analysisFive.length == 0) return;
+
+    analysisFive.forEach((element) => {
+      let twoIndex = 0;
+      let threeIndex = 0;
+      let fourIndex = 0;
+      for (const [k, v] of paragraph.entries()) {
+        if (v.range.includes(Number(element[1]))) {
+          twoIndex = k;
+          for (const [kThree, vThree] of v.children.entries()) {
+            if (vThree.range.includes(Number(element[1]))) {
+              threeIndex = kThree;
+              for (const [kFour, vFour] of vThree.children.entries()) {
+                if (vFour.range.includes(Number(element[1]))) {
+                  fourIndex = kFour;
+                  break;
+                }
+              }
+              break;
+            }
+          }
+          break;
+        }
+      }
+      if (queue[String(twoIndex)] == undefined) queue[String(twoIndex)] = {};
+      if (queue[String(twoIndex)][String(threeIndex)] == undefined) queue[String(twoIndex)][String(threeIndex)] = {};
+      if (queue[String(twoIndex)][String(threeIndex)][String(fourIndex)] == undefined) queue[String(twoIndex)][String(threeIndex)][String(fourIndex)] = [];
+
+      queue[String(twoIndex)][String(threeIndex)][String(fourIndex)].push(element);
+    });
+    for (const [keyTwo, valueTwo] of Object.entries(queue)) {
+      for (const [keyThree, valueThree] of Object.entries(valueTwo)) {
+        for (const [keyFour, valueFour] of Object.entries(valueThree)) {
+          const k2 = Number(keyTwo);
+          const k3 = Number(keyThree);
+          const k4 = Number(keyFour);
+          let target = paragraph[k2].children[k3].children[k4].children;
+          valueFour.forEach((e, i) => {
+            // 뒤에 5단계 문장 있음
+            if (i < valueFour.length - 1) {
+              target.push(treeStruct(e[2], e[1], valueFour[i + 1][1]));
+              return;
+            }
+            // 뒤에 5단계 문장 없음 = 다음 4단계 문장의 첫 index 기준 && 뒤에 4단계 문장 있음
+            else if (k4 < paragraph[k2].children[k3].children.length - 1) {
+              target.push(treeStruct(e[2], e[1], String(paragraph[k2].children[k3].children[k4 + 1].range[0])));
+              return;
+            } else if (k3 < paragraph[k2].children.length - 1) {
+              // 뒤에 4, 5단계 문장 없음 = 다음 3단계 문장의 첫 index 기준 && 뒤에 3단계 문장 있음
+              target.push(treeStruct(e[2], e[1], String(paragraph[k2].children[k3 + 1].range[0])));
+              return;
+            } else if (k2 < paragraph.length - 1) {
+              // 뒤에 3, 4, 5단계 문장 없음 = 다음 2단계 문장의 첫 index 기준 && 뒤에 2단계 문장 있음
+              target.push(treeStruct(e[2], e[1], String(Number(paragraph[k2 + 1].range[0]))));
+              return;
+            } else {
+              // 뒤에 2, 3, 4, 5단계 문장 없음 = 다음 2단계 문장의 끝 index 기준
+              target.push(treeStruct(e[2], e[1], String(Number(paragraph[k2].range.at(-1)) + 1)));
+              return;
+            }
+          });
+        }
+      }
+    }
+
+    queue = {};
+    analyzeSix(content)
+    return;
+  };
+
+  const analyzeSix = (content: string) => {
+    const titleRegexSix = /^#(.*)#====== (.*) ======$|^#(.*)#======# (.*) #======$/gm;
+    let queue: {
+      [k: string]: {
+        [k: string]: { [k: string]: { [k: string]: RegExpMatchArray[] } };
+      };
+    } = {};
+    const analysisSix = [...content.matchAll(titleRegexSix)];
+
+    if (analysisSix.length == 0) return;
+
+    analysisSix.forEach((element) => {
+      let twoIndex = 0;
+      let threeIndex = 0;
+      let fourIndex = 0;
+      let fiveIndex = 0;
+      for (const [k, v] of paragraph.entries()) {
+        if (v.range.includes(Number(element[1]))) {
+          twoIndex = k;
+          for (const [kThree, vThree] of v.children.entries()) {
+            if (vThree.range.includes(Number(element[1]))) {
+              threeIndex = kThree;
+              for (const [kFour, vFour] of vThree.children.entries()) {
+                if (vFour.range.includes(Number(element[1]))) {
+                  fourIndex = kFour;
+                  for (const [kFive, vFive] of vFour.children.entries()) {
+                    if (vFive.range.includes(Number(element[1]))) {
+                      fiveIndex = kFive;
+                      break;
+                    }
+                  }
+                  break;
+                }
+              }
+              break;
+            }
+          }
+          break;
+        }
+      }
+      if (queue[String(twoIndex)] == undefined) queue[String(twoIndex)] = {};
+      if (queue[String(twoIndex)][String(threeIndex)] == undefined) queue[String(twoIndex)][String(threeIndex)] = {};
+      if (queue[String(twoIndex)][String(threeIndex)][String(fourIndex)] == undefined) queue[String(twoIndex)][String(threeIndex)][String(fourIndex)] = {};
+      if (queue[String(twoIndex)][String(threeIndex)][String(fourIndex)][String(fiveIndex)] == undefined) queue[String(twoIndex)][String(threeIndex)][String(fourIndex)][String(fiveIndex)] = [];
+
+      queue[String(twoIndex)][String(threeIndex)][String(fourIndex)][String(fiveIndex)].push(element);
+    });
+    for (const [keyTwo, valueTwo] of Object.entries(queue)) {
+      for (const [keyThree, valueThree] of Object.entries(valueTwo)) {
+        for (const [keyFour, valueFour] of Object.entries(valueThree)) {
+          for (const [keyFive, valueFive] of Object.entries(valueFour)) {
+            const k2 = Number(keyTwo);
+            const k3 = Number(keyThree);
+            const k4 = Number(keyFour);
+            const k5 = Number(keyFive);
+            let target = paragraph[k2].children[k3].children[k4].children[k5].children;
+            valueFive.forEach((e, i) => {
+              if (i < valueFive.length - 1) {
+                // 뒤에 6단계 문장 있음
+                target.push(treeStruct(e[2], e[1], valueFive[i + 1][1]))
+                return;
+              }else if (k5 < paragraph[k2].children[k3].children[k4].children.length - 1) {
+                // 뒤에 6단계 문장 없음 = 다음 5단계 문장의 첫 index 기준 && 뒤에 5단계 문장 있음
+                target.push(treeStruct(e[2], e[1], String(paragraph[k2].children[k3].children[k4].children[k5 + 1].range[0])));
+                return;
+              }else if (k4 < paragraph[k2].children[k3].children.length - 1) {
+                // 뒤에 5, 6단계 문장 없음 = 다음 4단계 문장의 첫 index 기준 && 뒤에 4단계 문장 있음
+                target.push(treeStruct(e[2], e[1], String(paragraph[k2].children[k3].children[k4 + 1].range[0])));
+                return;
+              } else if (k3 < paragraph[k2].children.length - 1) {
+                // 뒤에 4, 5, 6단계 문장 없음 = 다음 3단계 문장의 첫 index 기준 && 뒤에 3단계 문장 있음
+                target.push(treeStruct(e[2], e[1], String(paragraph[k2].children[k3 + 1].range[0])));
+                return;
+              } else if (k2 < paragraph.length - 1) {
+                // 뒤에 3, 4, 5, 6단계 문장 없음 = 다음 2단계 문장의 첫 index 기준 && 뒤에 2단계 문장 있음
+                target.push(treeStruct(e[2], e[1], String(Number(paragraph[k2 + 1].range[0]))));
+                return;
+              } else {
+                // 뒤에 2, 3, 4, 5, 6단계 문장 없음 = 다음 2단계 문장의 끝 index 기준
+                target.push(treeStruct(e[2], e[1], String(Number(paragraph[k2].range.at(-1)) + 1)));
+                return;
+              }
+            });
+          }
+        }
+      }
+    }
+    queue = {}
+    return;
+  };
+
   const paragraphSort = () => {
     const editor = vscode.window.activeTextEditor;
 
-    if (!isDocumentPerfect) return;
+    if (!isDocumentPerfect) {
+      vscode.window.showErrorMessage('문단 구성이 잘못되어 정렬할 수 없습니다. 구성이 올바른지 확인하세요.');
+      return
+    };
 
     if (editor) {
       const document = editor.document;
       const titleRegexTwo = /^#(.*)#== (.*) ==$|^#(.*)#==# (.*) #==$/gm;
-      const titleRegexThree = /^#(.*)#=== (.*) ===$|^#(.*)#===# (.*) #===$/gm;
-      const titleRegexFour =
-        /^#(.*)#==== (.*) ====$|^#(.*)#====# (.*) #====$/gm;
-      const titleRegexFive =
-        /^#(.*)#===== (.*) =====$|^#(.*)#=====# (.*) #=====$/gm;
-      const titleRegexSix =
-        /^#(.*)#====== (.*) ======$|^#(.*)#======# (.*) #======$/gm;
 
       let content: string = "";
       const splitter = document
@@ -148,278 +391,22 @@ function modifyParagraph() {
         .split("\n")
         .map((elem, idx) => `#${String(idx).padStart(7, "0")}#` + elem);
       splitter.forEach((elem) => (content += elem + "\n"));
-      let paragraph: typeTreeStruct[] = [];
       const analysisTwo = [...content.matchAll(titleRegexTwo)];
       analysisTwo.forEach((element, idx) => {
         // 뒤에 2단계 문단이 존재
         if (idx < analysisTwo.length - 1) {
-          paragraph.push(
-            treeStruct(element[2], element[1], analysisTwo[idx + 1][1])
-          );
+          paragraph.push(treeStruct(element[2], element[1], analysisTwo[idx + 1][1]));
         } // 뒤에 2단계 문단 없음 = 끝 문장의 index 기준
         else {
-          paragraph.push(
-            treeStruct(element[2], element[1], String(splitter.length))
-          );
+          paragraph.push(treeStruct(element[2], element[1], String(splitter.length)));
         }
       });
-      var queue: { [k: string]: RegExpMatchArray[] } = {};
-      const analysisThree = [...content.matchAll(titleRegexThree)];
-      if (analysisThree.length != 0) {
-        analysisThree.forEach((element) => {
-          var pindex = 0;
-          for (const [k, v] of paragraph.entries()) {
-            if (v.range.includes(Number(element[1]))) {
-              pindex = k;
-              break;
-            }
-          }
-          if (queue[String(pindex)] == undefined) {
-            queue[String(pindex)] = [];
-          }
 
-          queue[String(pindex)].push(element);
-        });
-        for (const [key, value] of Object.entries(queue)) {
-          value.forEach((e, i) => {
-            // 뒤에 3단계 문장 있음
-            if (i < value.length - 1)
-              paragraph[Number(key)].children.push(
-                treeStruct(e[2], e[1], value[i + 1][1])
-              );
-            else if (Number(key) < paragraph.length - 1)
-              // 뒤에 3단계 문장 없음 = 다음 2단계 문장의 첫 index 기준 && 뒤에 2단계 문장 있음
-              paragraph[Number(key)].children.push(
-                treeStruct(
-                  e[2],
-                  e[1],
-                  String(paragraph[Number(key) + 1].range[0])
-                )
-              );
-            // 뒤에 2, 3단계 문장 없음 = 현재 2단계 문장의 끝 index 기준
-            else
-              paragraph[Number(key)].children.push(
-                treeStruct(
-                  e[2],
-                  e[1],
-                  String(Number(paragraph[Number(key)].range.at(-1)) + 1)
-                )
-              );
-          });
-        }
-        queue = {};
-        var queue2: { [k: string]: { [k: string]: RegExpMatchArray[] } } = {};
-        const analysisFour = [...content.matchAll(titleRegexFour)];
-        if (analysisFour.length != 0) {
-          analysisFour.forEach((element) => {
-            var twoIndex = 0;
-            var threeIndex = 0;
-            for (const [k, v] of paragraph.entries()) {
-              if (v.range.includes(Number(element[1]))) {
-                twoIndex = k;
-                for (const [kThree, vThree] of v.children.entries()) {
-                  if (vThree.range.includes(Number(element[1]))) {
-                    threeIndex = kThree;
-                    break;
-                  }
-                }
-                break;
-              }
-            }
-            if (queue2[String(twoIndex)] == undefined)
-              queue2[String(twoIndex)] = {};
-            if (queue2[String(twoIndex)][String(threeIndex)] == undefined)
-              queue2[String(twoIndex)][String(threeIndex)] = [];
+      analyzeThree(content);
 
-            queue2[String(twoIndex)][String(threeIndex)].push(element);
-          });
-          for (const [keyTwo, valueTwo] of Object.entries(queue2)) {
-            for (const [keyThree, valueThree] of Object.entries(valueTwo)) {
-              valueThree.forEach((e, i) => {
-                // 뒤에 4단계 문장 있음
-                if (i < valueThree.length - 1) {
-                  paragraph[Number(keyTwo)].children[
-                    Number(keyThree)
-                  ].children.push(treeStruct(e[2], e[1], valueThree[i + 1][1]));
-                  return;
-                } else if (
-                  Number(keyThree) <
-                  paragraph[Number(keyTwo)].children.length - 1
-                ) {
-                  // 뒤에 4단계 문장 없음 = 다음 3단계 문장의 첫 index 기준 && 뒤에 3단계 문장 있음
-                  paragraph[Number(keyTwo)].children[
-                    Number(keyThree)
-                  ].children.push(
-                    treeStruct(
-                      e[2],
-                      e[1],
-                      String(
-                        paragraph[Number(keyTwo)].children[Number(keyThree) + 1]
-                          .range[0]
-                      )
-                    )
-                  );
-                  return;
-                } else if (Number(keyTwo) < paragraph.length - 1) {
-                  // 뒤에 3, 4단계 문장 없음 = 다음 2단계 문장의 첫 index 기준 && 뒤에 2단계 문장 있음
-                  paragraph[Number(keyTwo)].children[
-                    Number(keyThree)
-                  ].children.push(
-                    treeStruct(
-                      e[2],
-                      e[1],
-                      String(Number(paragraph[Number(keyTwo) + 1].range[0]))
-                    )
-                  );
-                  return;
-                } else {
-                  // 뒤에 2, 3, 4단계 문장 없음 = 다음 2단계 문장의 끝 index 기준
-                  paragraph[Number(keyTwo)].children[
-                    Number(keyThree)
-                  ].children.push(
-                    treeStruct(
-                      e[2],
-                      e[1],
-                      String(Number(paragraph[Number(keyTwo)].range.at(-1)) + 1)
-                    )
-                  );
-                  return;
-                }
-              });
-            }
-          }
-          queue2 = {};
-          var queue3: {
-            [k: string]: { [k: string]: { [k: string]: RegExpMatchArray[] } };
-          } = {};
-          const analysisFive = [...content.matchAll(titleRegexFive)];
-          if (analysisFive.length != 0) {
-            analysisFive.forEach((element) => {
-              var twoIndex = 0;
-              var threeIndex = 0;
-              var fourIndex = 0;
-              for (const [k, v] of paragraph.entries()) {
-                if (v.range.includes(Number(element[1]))) {
-                  twoIndex = k;
-                  for (const [kThree, vThree] of v.children.entries()) {
-                    if (vThree.range.includes(Number(element[1]))) {
-                      threeIndex = kThree;
-                      for (const [kFour, vFour] of vThree.children.entries()) {
-                        if (vFour.range.includes(Number(element[1]))) {
-                          fourIndex = kFour;
-                          break;
-                        }
-                      }
-                      break;
-                    }
-                  }
-                  break;
-                }
-              }
-              if (queue3[String(twoIndex)] == undefined)
-                queue3[String(twoIndex)] = {};
-              if (queue3[String(twoIndex)][String(threeIndex)] == undefined)
-                queue3[String(twoIndex)][String(threeIndex)] = {};
-              if (
-                queue3[String(twoIndex)][String(threeIndex)][
-                  String(fourIndex)
-                ] == undefined
-              )
-                queue3[String(twoIndex)][String(threeIndex)][
-                  String(fourIndex)
-                ] = [];
-
-              queue3[String(twoIndex)][String(threeIndex)][
-                String(fourIndex)
-              ].push(element);
-            });
-            for (const [keyTwo, valueTwo] of Object.entries(queue3)) {
-              for (const [keyThree, valueThree] of Object.entries(valueTwo)) {
-                for (const [keyFour, valueFour] of Object.entries(valueThree)) {
-                  valueFour.forEach((e, i) => {
-                    // 뒤에 5단계 문장 있음
-                    if (i < valueFour.length - 1) {
-                      paragraph[Number(keyTwo)].children[
-                        Number(keyThree)
-                      ].children[Number(keyFour)].children.push(
-                        treeStruct(e[2], e[1], valueFour[i + 1][1])
-                      );
-                      return;
-                    }
-                    // 뒤에 5단계 문장 없음 = 다음 4단계 문장의 첫 index 기준 && 뒤에 4단계 문장 있음
-                    else if (
-                      Number(keyFour) <
-                      paragraph[Number(keyTwo)].children[Number(keyThree)]
-                        .children.length -
-                        1
-                    ) {
-                      paragraph[Number(keyTwo)].children[
-                        Number(keyThree)
-                      ].children[Number(keyFour)].children.push(
-                        treeStruct(
-                          e[2],
-                          e[1],
-                          String(
-                            paragraph[Number(keyTwo)].children[Number(keyThree)]
-                              .children[Number(keyFour) + 1].range[0]
-                          )
-                        )
-                      );
-                      return;
-                    } else if (
-                      Number(keyThree) <
-                      paragraph[Number(keyTwo)].children.length - 1
-                    ) {
-                      // 뒤에 4, 5단계 문장 없음 = 다음 3단계 문장의 첫 index 기준 && 뒤에 3단계 문장 있음
-                      paragraph[Number(keyTwo)].children[
-                        Number(keyThree)
-                      ].children[Number(keyFour)].children.push(
-                        treeStruct(
-                          e[2],
-                          e[1],
-                          String(
-                            paragraph[Number(keyTwo)].children[
-                              Number(keyThree) + 1
-                            ].range[0]
-                          )
-                        )
-                      );
-                      return;
-                    } else if (Number(keyTwo) < paragraph.length - 1) {
-                      // 뒤에 3, 4, 5단계 문장 없음 = 다음 2단계 문장의 첫 index 기준 && 뒤에 2단계 문장 있음
-                      paragraph[Number(keyTwo)].children[
-                        Number(keyThree)
-                      ].children[Number(keyFour)].children.push(
-                        treeStruct(
-                          e[2],
-                          e[1],
-                          String(Number(paragraph[Number(keyTwo) + 1].range[0]))
-                        )
-                      );
-                      return;
-                    } else {
-                      // 뒤에 2, 3, 4, 5단계 문장 없음 = 다음 2단계 문장의 끝 index 기준
-                      paragraph[Number(keyTwo)].children[
-                        Number(keyThree)
-                      ].children[Number(keyFour)].children.push(
-                        treeStruct(
-                          e[2],
-                          e[1],
-                          String(
-                            Number(paragraph[Number(keyTwo)].range.at(-1)) + 1
-                          )
-                        )
-                      );
-                      return;
-                    }
-                  });
-                }
-              }
-            }
-          }
-        }
-      }
       console.log(paragraph);
+      vscode.window.showInformationMessage('성공적으로 정렬되었습니다!');
+      paragraph = [];
     }
   };
 
@@ -431,15 +418,16 @@ function modifyParagraph() {
     paragraphLeveling(Level.UP);
   });
 
-  vscode.commands.registerCommand("namucode.paragraphSort", paragraphSort);
+  const sort = vscode.commands.registerCommand("namucode.paragraphSort", paragraphSort);
+
+  context.subscriptions.push(sort)
 }
 
 const organizeToc = () => {
   const editor = vscode.window.activeTextEditor;
   if (editor) {
     const document = editor.document;
-    const titleRegex =
-      /(^== .* ==$|^=== .* ===$|^==== .* ====$|^===== .* =====$|^====== .* ======$|^==# .* #==$|^===# .* #===$|^====# .* #====$|^=====# .* #=====$|^======# .* #======$)/gm;
+    const titleRegex = /(^== .* ==$|^=== .* ===$|^==== .* ====$|^===== .* =====$|^====== .* ======$|^==# .* #==$|^===# .* #===$|^====# .* #====$|^=====# .* #=====$|^======# .* #======$)/gm;
     const titles = [...document.getText().matchAll(titleRegex)];
     const titleLevelCountRegex = /^={2,6}/gm;
     const titleTextRegex = /(?<=^\={2,6}(#)? ).[^=]*(?= (#)?\={2,6}$)/gm;
@@ -462,9 +450,7 @@ const organizeToc = () => {
     for (let i = 0; i < titles.length; i++) {
       const original = titles[i][0];
       const index = titles[i]["index"] as number;
-      const level = (
-        original.match(titleLevelCountRegex) as RegExpMatchArray
-      )[0].length;
+      const level = (original.match(titleLevelCountRegex) as RegExpMatchArray)[0].length;
       const name = (original.match(titleTextRegex) as RegExpMatchArray)[0];
       step1 = dataObject.length - 1;
       try {
@@ -479,31 +465,21 @@ const organizeToc = () => {
             }
             break;
           case 4:
-            const propertyp4 = (dataObject[step1].children as TreeItem[])[
-              step2
-            ];
+            const propertyp4 = (dataObject[step1].children as TreeItem[])[step2];
             if ("children" in propertyp4) {
               propertyp4.children?.push(bstr(name, index));
               step3 = (propertyp4.children?.length as number) - 1;
             }
             break;
           case 5:
-            const propertyp5 = (
-              (dataObject[step1].children as TreeItem[])[step2]
-                .children as TreeItem[]
-            )[step3];
+            const propertyp5 = ((dataObject[step1].children as TreeItem[])[step2].children as TreeItem[])[step3];
             if ("children" in propertyp5) {
               propertyp5.children?.push(bstr(name, index));
               step4 = (propertyp5.children?.length as number) - 1;
             }
             break;
           case 6:
-            const propertyp6 = (
-              (
-                (dataObject[step1].children as TreeItem[])[step2]
-                  .children as TreeItem[]
-              )[step3].children as TreeItem[]
-            )[step4];
+            const propertyp6 = (((dataObject[step1].children as TreeItem[])[step2].children as TreeItem[])[step3].children as TreeItem[])[step4];
             if ("children" in propertyp6) {
               propertyp6.children?.push(bstr(name, index));
             }
@@ -526,10 +502,7 @@ const organizeToc = () => {
       isDocumentPerfect = true;
     }
 
-    vscode.window.registerTreeDataProvider(
-      "tableOfContent",
-      new OutlineProvider(dataObject)
-    );
+    vscode.window.registerTreeDataProvider("tableOfContent", new OutlineProvider(dataObject));
   }
 };
 
@@ -537,12 +510,7 @@ class OutlineProvider implements vscode.TreeDataProvider<any> {
   constructor(private outline: any) {}
 
   getTreeItem(item: any): vscode.TreeItem {
-    const treeitem = new vscode.TreeItem(
-      item.label,
-      item.children.length > 0
-        ? vscode.TreeItemCollapsibleState.Expanded
-        : vscode.TreeItemCollapsibleState.None
-    );
+    const treeitem = new vscode.TreeItem(item.label, item.children.length > 0 ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.None);
     treeitem.command = item.command;
     return treeitem;
   }
@@ -560,12 +528,7 @@ class TreeItem extends vscode.TreeItem {
   children: TreeItem[] | undefined;
 
   constructor(label: string, children?: TreeItem[]) {
-    super(
-      label,
-      children === undefined
-        ? vscode.TreeItemCollapsibleState.None
-        : vscode.TreeItemCollapsibleState.Expanded
-    );
+    super(label, children === undefined ? vscode.TreeItemCollapsibleState.None : vscode.TreeItemCollapsibleState.Expanded);
     this.children = children;
   }
 }
