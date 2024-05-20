@@ -5,7 +5,7 @@
   "publisher": "jhk1090",
   "version": "1.2.3",
   "engines": {
-    "vscode": "^1.68.0"
+    "vscode": "^1.75"
   },
   "icon": "images/Logo.png",
   "bugs": {
@@ -24,13 +24,7 @@
     "Snippets",
     "Other"
   ],
-  "activationEvents": [
-    "onCommand:namucode.paragraphLevelDown",
-    "onCommand:namucode.paragraphLevelUp",
-    "onCommand:namucode.linkify",
-    "onCommand:namucode.paragraphSort",
-    "onView:tableOfContent"
-  ],
+  "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
     "views": {
