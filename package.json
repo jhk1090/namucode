@@ -5,7 +5,7 @@
   "publisher": "jhk1090",
   "version": "1.2.3",
   "engines": {
-    "vscode": "^1.75"
+    "vscode": "^1.75.0"
   },
   "icon": "images/Logo.png",
   "bugs": {
@@ -25,7 +25,7 @@
     "Other"
   ],
   "activationEvents": [],
-  "main": "./out/extension.js",
+  "main": "./client/out/extension.js",
   "contributes": {
     "views": {
       "explorer": [
@@ -65,6 +65,7 @@
       {
         "id": "namu",
         "aliases": [
+          "나무마크",
           "Namuwiki Code"
         ],
         "extensions": [
@@ -171,6 +172,29 @@
           ]
         }
       }
+    },
+    "configuration": {
+      "type": "object",
+      "title": "Example configuration",
+      "properties": {
+        "languageServerExample.maxNumberOfProblems": {
+          "scope": "resource",
+          "type": "number",
+          "default": 100,
+          "description": "Controls the maximum number of problems produced by the server."
+        },
+        "languageServerExample.trace.server": {
+          "scope": "window",
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Traces the communication between VS Code and the language server."
+        }
+      }
     }
   },
   "scripts": {
@@ -183,16 +207,16 @@
   },
   "devDependencies": {
     "@types/glob": "^7.2.0",
-    "@types/mocha": "^9.1.1",
-    "@types/node": "16.x",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^18.14.6",
     "@types/vscode": "^1.68.0",
-    "@typescript-eslint/eslint-plugin": "^5.27.0",
-    "@typescript-eslint/parser": "^5.27.0",
+    "@typescript-eslint/eslint-plugin": "^7.1.0",
+    "@typescript-eslint/parser": "^7.1.0",
     "@vscode/test-electron": "^2.1.3",
-    "eslint": "^8.16.0",
+    "eslint": "^8.57.0",
     "glob": "^8.0.3",
-    "mocha": "^10.0.0",
-    "typescript": "^4.7.2"
+    "mocha": "^10.3.0",
+    "typescript": "^5.3.3"
   },
   "dependencies": {}
 }
