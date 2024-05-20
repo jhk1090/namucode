@@ -53,12 +53,32 @@
         "title": "문단 한단계 높이기"
       },
       {
-        "command": "namucode.linkify",
-        "title": "문자 링크화하기"
-      },
-      {
         "command": "namucode.paragraphSort",
         "title": "문단 자동 정렬"
+      },
+      {
+        "command": "namucode.linkify",
+        "title": "텍스트 링크"
+      },
+      {
+        "command": "namucode.textBold",
+        "title": "텍스트 굵게"
+      },
+      {
+        "command": "namucode.textItalic",
+        "title": "텍스트 기울임"
+      },
+      {
+        "command": "namucode.textUnderline",
+        "title": "텍스트 밑줄"
+      },
+      {
+        "command": "namucode.textSuperscript",
+        "title": "텍스트 위첨자"
+      },
+      {
+        "command": "namucode.textSubscript",
+        "title": "텍스트 아래첨자"
       }
     ],
     "languages": [
@@ -105,22 +125,40 @@
         "when": "editorTextFocus"
       },
       {
+        "command": "namucode.linkify",
+        "key": "ctrl+shift+K",
+        "mac": "cmd+shift+K",
+        "when": "editorHasSelection"
+      },
+      {
         "command": "namucode.textBold",
         "key": "ctrl+B",
         "mac": "cmd+B",
-        "when": "editorTextFocus"
+        "when": "editorHasSelection"
       },
       {
         "command": "namucode.textItalic",
         "key": "ctrl+I",
         "mac": "cmd+I",
-        "when": "editorTextFocus"
+        "when": "editorHasSelection"
       },
       {
         "command": "namucode.textUnderline",
         "key": "ctrl+U",
         "mac": "cmd+U",
-        "when": "editorTextFocus"
+        "when": "editorHasSelection"
+      },
+      {
+        "command": "namucode.textSuperscript",
+        "key": "ctrl+shift+U",
+        "mac": "cmd+shift+U",
+        "when": "editorHasSelection"
+      },
+      {
+        "command": "namucode.textSubscript",
+        "key": "ctrl+shift+Y",
+        "mac": "cmd+shift+Y",
+        "when": "editorHasSelection"
       }
     ],
     "configurationDefaults": {

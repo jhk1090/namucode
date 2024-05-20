@@ -166,14 +166,17 @@ async function validateTextDocument(
   // In this simple example we get the settings for every validate run.
   const settings = await getDocumentSettings(textDocument.uri);
 
-  // The validator creates diagnostics for all uppercase words length 2 and more
   const text = textDocument.getText();
-  const pattern = /(^= [^=]* =$|^=# [^=]* #=$)/gm;
+  const h1Checker = /(^= [^=]* =$|^=# [^=]* #=$)/gm; // 1단계 문단 검사
+  const commentChecker = /^##@(.*)/gm; // 1단계 문단 검사
   let m: RegExpExecArray | null;
 
   let problems = 0;
   const diagnostics: Diagnostic[] = [];
-  while ((m = pattern.exec(text)) && problems < settings.maxNumberOfProblems) {
+  while (
+    (m = h1Checker.exec(text)) &&
+    problems < settings.maxNumberOfProblems
+  ) {
     problems++;
     const diagnostic: Diagnostic = {
       severity: DiagnosticSeverity.Warning,
@@ -195,6 +198,18 @@ async function validateTextDocument(
         },
       ];
     }
+    diagnostics.push(diagnostic);
+  }
+  while ((m = commentChecker.exec(text))) {
+    const diagnostic: Diagnostic = {
+      severity: DiagnosticSeverity.Information,
+      range: {
+        start: textDocument.positionAt(m.index),
+        end: textDocument.positionAt(m.index + m[0].length),
+      },
+      message: m[0],
+      source: "",
+    };
     diagnostics.push(diagnostic);
   }
   return diagnostics;

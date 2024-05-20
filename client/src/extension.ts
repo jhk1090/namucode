@@ -21,17 +21,27 @@ export function activate(context: ExtensionContext) {
   modifyParagraph(context);
 
   vscode.commands.registerCommand("namucode.linkify", () => {
-    const editor = vscode.window.activeTextEditor;
+    wrapByChar("[[", "]]");
+  });
 
-    if (editor) {
-      const document = editor.document;
-      const selection = editor.selection;
-      const word = document.getText(selection);
-      const linkify = `[[${word}]]`;
-      editor.edit((editBuilder) => {
-        editBuilder.replace(selection, linkify);
-      });
-    }
+  vscode.commands.registerCommand("namucode.textBold", () => {
+    wrapByChar("'''", "'''");
+  });
+
+  vscode.commands.registerCommand("namucode.textItalic", () => {
+    wrapByChar("''", "''");
+  });
+
+  vscode.commands.registerCommand("namucode.textUnderline", () => {
+    wrapByChar("__", "__");
+  });
+
+  vscode.commands.registerCommand("namucode.textSuperscript", () => {
+    wrapByChar("^^", "^^");
+  });
+
+  vscode.commands.registerCommand("namucode.textSubscript", () => {
+    wrapByChar(",,", ",,");
   });
 
   vscode.commands.registerCommand("namucode.gotoLine", (line: number) => {
@@ -724,6 +734,29 @@ const organizeToc = () => {
       "tableOfContent",
       new OutlineProvider(dataObject)
     );
+  }
+};
+
+const wrapByChar = (prefix, postfix) => {
+  //FIXME: 굵게 기울임의 경우 오류 발생
+  //FIXME: 위첨자와 아래첨자처럼 상충되는 경우에 대해 처리 필요
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) return;
+
+  const document = editor.document;
+  const selection = editor.selection;
+  const word = document.getText(selection);
+  const l = prefix.length;
+
+  if (word.slice(0, l) == prefix && word.slice(-l) == postfix) {
+    // 이미 씌워진 경우
+    editor.edit((editBuilder) => {
+      editBuilder.replace(selection, word.slice(l, -l));
+    });
+  } else {
+    editor.edit((editBuilder) => {
+      editBuilder.replace(selection, `${prefix}${word}${postfix}`);
+    });
   }
 };
 
