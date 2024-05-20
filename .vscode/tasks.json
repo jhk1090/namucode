@@ -16,16 +16,16 @@
     {
       "type": "npm",
       "script": "watch",
-      "problemMatcher": "$tsc-watch",
       "isBackground": true,
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
       "presentation": {
         "panel": "dedicated",
         "reveal": "never"
       },
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      }
+      "problemMatcher": ["$tsc-watch"]
     }
   ]
 }

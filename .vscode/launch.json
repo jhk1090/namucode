@@ -6,7 +6,6 @@
 {
   "version": "0.2.0",
   "configurations": [
-    
     {
       "name": "Run Extension",
       "type": "extensionHost",
@@ -17,20 +16,24 @@
         "${workspaceRoot}/client/out/**/*.js",
         "${workspaceRoot}/server/out/**/*.js"
       ],
-      "preLaunchTask": "${defaultBuildTask}"
+      "autoAttachChildProcesses": true,
+      "preLaunchTask": {
+        "type": "npm",
+        "script": "watch"
+      }
     },
 
     {
       "name": "Extension Tests",
       "type": "extensionHost",
       "request": "launch",
+      "runtimeExecutable": "${execPath}",
       "args": [
         "--extensionDevelopmentPath=${workspaceFolder}",
-        "--extensionTestsPath=${workspaceFolder}/out/test/suite/index"
+        "--extensionTestsPath=${workspaceFolder}/out/test/suite/index",
+        "${workspaceRoot}/client/testFixture"
       ],
-			"autoAttachChildProcesses": true,
-      "outFiles": ["${workspaceFolder}/out/test/**/*.js"],
-      "preLaunchTask": "${defaultBuildTask}"
+      "outFiles": ["${workspaceFolder}/out/test/**/*.js"]
     }
-  ],
+  ]
 }

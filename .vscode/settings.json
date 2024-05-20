@@ -8,5 +8,7 @@
   },
   // Turn off tsc task auto detection since we have the necessary tasks as npm scripts
   "typescript.tsc.autoDetect": "off",
-  "cmake.configureOnOpen": false
+  "cmake.configureOnOpen": false,
+  "editor.insertSpaces": false,
+  "typescript.preferences.quoteStyle": "single"
 }
