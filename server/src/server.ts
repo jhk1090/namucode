@@ -168,7 +168,7 @@ async function validateTextDocument(
 
   // The validator creates diagnostics for all uppercase words length 2 and more
   const text = textDocument.getText();
-  const pattern = /\b[A-Z]{2,}\b/g;
+  const pattern = /(^= [^=]* =$|^=# [^=]* #=$)/gm;
   let m: RegExpExecArray | null;
 
   let problems = 0;
@@ -181,8 +181,8 @@ async function validateTextDocument(
         start: textDocument.positionAt(m.index),
         end: textDocument.positionAt(m.index + m[0].length),
       },
-      message: `${m[0]} is all uppercase.`,
-      source: "ex",
+      message: `1단계 문단은 비권장 문법입니다.`,
+      source: ``,
     };
     if (hasDiagnosticRelatedInformationCapability) {
       diagnostic.relatedInformation = [
@@ -191,14 +191,7 @@ async function validateTextDocument(
             uri: textDocument.uri,
             range: Object.assign({}, diagnostic.range),
           },
-          message: "Spelling matters",
-        },
-        {
-          location: {
-            uri: textDocument.uri,
-            range: Object.assign({}, diagnostic.range),
-          },
-          message: "Particularly for names",
+          message: "2단계 문단 이상으로 변경할 것을 권장합니다.",
         },
       ];
     }

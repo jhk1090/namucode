@@ -1,94 +1,84 @@
 {
-	"링크 삽입": {
-		"prefix": "link",
-		"body": [
-			"[[${1:문서명}|${2:보여지는 이름}]]"
-		],
-		"description": "링크할 문서명과 문서에서 보여지는 명칭이 있는 링크를 생성합니다."
-	},
-	"틀 삽입": {
-		"prefix": "include",
-		"body": [
-			"[include(틀:${1:틀 이름})]"
-		],
-		"description": "`틀 이름` 틀을 삽입합니다."
-	},
-	"상위 문서 틀": {
-		"prefix": "parent",
-		"body": [
-			"[include(틀:상위 문서, top1=${1:문서명})]"
-		],
-		"description": "상위 문서 틀을 삽입합니다."
-	},
-	"관련 문서 틀": {
-		"prefix": "relate",
-		"body": [
-			"[include(틀:관련 문서, top1=${1:문서명})]"
-		],
-		"description": "관련 문서 틀을 삽입합니다."
-	},
-	"하위 문서 틀": {
-		"prefix": "child",
-		"body": [
-			"[include(틀:하위 문서, top1=${1:문서명})]"
-		],
-		"description": "하위 문서 틀을 삽입합니다."
-	},
-	"상세 내용 틀": {
-		"prefix": "detail",
-		"body": [
-			"[include(틀:상세 내용, 문서명=${1:문서명}]"
-		],
-		"description": "상세 내용 틀을 삽입합니다. 위키 내에서는 자세한 내용은 <문서명>을 참고하십시오. 라고 표시됩니다."
-	},
-	"상세 내용 틀 문단": {
-		"prefix":"detailparagraph",
-		"body": [
-			"[include(틀:상세 내용, 문서명=${1:문서명}, 문단=${2:문단 번호}]"
-		],
-		"description": "상세 내용 틀을 문단 번호와 함께 삽입합니다. 위키 내에서는 자세한 내용은 <문서명>을 참고하십시오. 라고 표시됩니다."
-	},
-	"상세 내용 틀 앵커": {
-		"prefix":"detailanchor",
-		"body": [
-			"[include(틀:상세 내용, 문서명=${1:문서명}, 앵커=${2:앵커 이름}]"
-		],
-		"description": "상세 내용 틀을 앵커와 함께 삽입합니다. 위키 내에서는 자세한 내용은 <문서명>을 참고하십시오. 라고 표시됩니다."
-	},
-	"유튜브 영상 삽입": {
-		"prefix":"youtube",
-		"body": [
-			"[youtube(${1:아이디})]"
-		],
-		"description": "유튜브 영상을 삽입합니다."
-	},
-	"네이버TV 영상 삽입": {
-		"prefix":"navertv",
-		"body": [
-			"[navertv(${1:아이디})]"
-		],
-		"description": "네이버TV 영상을 삽입합니다."
-	},
-	"파일 삽입": {
-		"prefix":"file",
-		"body": [
-			"[[파일:${1:파일명}]]"
-		],
-		"description": "파일을 삽입합니다."
-	},
-	"문서 가져옴": {
-		"prefix":"contentmoved",
-		"body": [
-			"[include(틀:문서 가져옴, title=${1:이전 문서명}, version=${2:버전})]"
-		],
-		"description": "파일을 삽입합니다."
-	},
-	"펼치기 접기 문법 삽입": {
-		"prefix":"folding",
-		"body": [
-			"{{{#!folding [ 펼치기 · 접기 ]",
-			"${1:내용}",
-			"}}}"
-		]
-	}
+  "링크 삽입": {
+    "prefix": "link",
+    "body": ["[[${1:문서명}|${2:보여지는 이름}]]"],
+    "description": "링크할 문서명과 문서에서 보여지는 명칭이 있는 링크를 생성합니다."
+  },
+  "틀 삽입": {
+    "prefix": ["include", "xmf"],
+    "body": ["[include(틀:${1:틀 이름})]"],
+    "description": "`틀 이름` 틀을 삽입합니다."
+  },
+  "상위 문서 틀": {
+    "prefix": "parent",
+    "body": ["[include(틀:상위 문서, top1=${1:문서명})]"],
+    "description": "상위 문서 틀을 삽입합니다."
+  },
+  "관련 문서 틀": {
+    "prefix": "relate",
+    "body": ["[include(틀:관련 문서, top1=${1:문서명})]"],
+    "description": "관련 문서 틀을 삽입합니다."
+  },
+  "하위 문서 틀": {
+    "prefix": "child",
+    "body": ["[include(틀:하위 문서, top1=${1:문서명})]"],
+    "description": "하위 문서 틀을 삽입합니다."
+  },
+  "상세 내용 틀": {
+    "prefix": "detail",
+    "body": ["[include(틀:상세 내용, 문서명=${1:문서명}]"],
+    "description": "상세 내용 틀을 삽입합니다. 위키 내에서는 자세한 내용은 <문서명>을 참고하십시오. 라고 표시됩니다."
+  },
+  "상세 내용 틀 문단": {
+    "prefix": "detailparagraph",
+    "body": ["[include(틀:상세 내용, 문서명=${1:문서명}, 문단=${2:문단 번호}]"],
+    "description": "상세 내용 틀을 문단 번호와 함께 삽입합니다. 위키 내에서는 자세한 내용은 <문서명>을 참고하십시오. 라고 표시됩니다."
+  },
+  "상세 내용 틀 앵커": {
+    "prefix": "detailanchor",
+    "body": ["[include(틀:상세 내용, 문서명=${1:문서명}, 앵커=${2:앵커 이름}]"],
+    "description": "상세 내용 틀을 앵커와 함께 삽입합니다. 위키 내에서는 자세한 내용은 <문서명>을 참고하십시오. 라고 표시됩니다."
+  },
+  "유튜브 영상 삽입": {
+    "prefix": ["youtube", "yt"],
+    "body": ["[youtube(${1:아이디})]"],
+    "description": "유튜브 영상을 삽입합니다."
+  },
+  "네이버TV 영상 삽입": {
+    "prefix": "navertv",
+    "body": ["[navertv(${1:아이디})]"],
+    "description": "네이버TV 영상을 삽입합니다."
+  },
+  "파일 삽입": {
+    "prefix": "file",
+    "body": ["[[파일:${1:파일명}]]"],
+    "description": "파일을 삽입합니다."
+  },
+  "문서 가져옴": {
+    "prefix": "contentmoved",
+    "body": [
+      "[include(틀:문서 가져옴, title=${1:이전 문서명}, version=${2:버전})]"
+    ],
+    "description": "파일을 삽입합니다."
+  },
+  "펼치기 · 접기": {
+    "prefix": "folding",
+    "body": ["{{{#!folding [ 펼치기 · 접기 ]", "${1:내용}", "}}}"]
+  },
+  "위키스타일": {
+    "prefix": "wikistyle",
+    "body": ["{{{#!wiki style=\"${1:스타일}\"", "${2:내용}", "}}}"]
+  },
+  "다크모드 위키스타일": {
+    "prefix": "wikistyled",
+    "body": ["{{{#!wiki style=\"${1:스타일}\" dark-style=\"${2:다크모드 스타일}\"", "${3:내용}", "}}}"]
+  },
+  "문법 강조": {
+    "prefix": "syntax",
+    "body": ["{{{#!syntax=\"${1:언어명}\"", "${2:내용}", "}}}"]
+  },
+  "HTML": {
+    "prefix": "html",
+    "body": ["{{{#!html ${1:내용}}}}"]
+  }
 }

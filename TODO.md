@@ -1,7 +1,18 @@
 # TODOs
 
+- 단축키 폭넓게 추가 (현재 굵게도 미구현!!)
 - prebuild 시 typescript compile 안 되는 오류 수정
   - 현재는 (client 경로와 server 경로에서 각각 `tsc -p ./`를 실행한다.)
-- 제한적인 linting 구현 (1단계 문단 경고 등)
+- 제한적인 linting 구현 (1단계 문단 경고, 리스트 들여쓰기 경고, 자주 틀리는 맞춤법 등. 고정 주석 강조)
+- 중첩 인용문, 목록이 담긴 인용문 강조 수정
+- 수평줄 서식
 - Snippet 더 추가 (표, 기타 매크로, wiki-style 단축어 등)
+- 파일, 문서 링크와 리다이렉트, 유튜브 문법의 링크 URL 연결
+- 표, 파일 매개변수 자동 완성
 - repository 정보들 수정
+- math, syntax, html 문법 내에서 문법 강조
+- VSCode 내 inline 미리보기 지원
+- 다양한 Code Actions 지원
+- 폭넓은 option 지원
+- 색상 입력 시 색상 피커 지원, 헥스코드 도감 내장
+- ..

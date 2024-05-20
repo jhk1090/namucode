@@ -103,6 +103,24 @@
         "key": "ctrl+up",
         "mac": "cmd+up",
         "when": "editorTextFocus"
+      },
+      {
+        "command": "namucode.textBold",
+        "key": "ctrl+B",
+        "mac": "cmd+B",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "namucode.textItalic",
+        "key": "ctrl+I",
+        "mac": "cmd+I",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "namucode.textUnderline",
+        "key": "ctrl+U",
+        "mac": "cmd+U",
+        "when": "editorTextFocus"
       }
     ],
     "configurationDefaults": {
