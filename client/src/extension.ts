@@ -12,7 +12,7 @@ import {
   ServerOptions,
   TransportKind,
 } from "vscode-languageclient/node";
-import { EXTENSION_NAME, getConfig } from "./config";
+import { EXTENSION_NAME, getConfig } from "./linkmap";
 import { LinkDefinitionProvider } from "./linkdef";
 
 var isDocumentPerfect = true;

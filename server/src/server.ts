@@ -19,14 +19,9 @@ import {
   DocumentDiagnosticReportKind,
   type DocumentDiagnosticReport,
 } from "vscode-languageserver/node";
-
 import { TextDocument } from "vscode-languageserver-textdocument";
 
-// Create a connection for the server, using Node's IPC as a transport.
-// Also include all preview / proposed LSP features.
 const connection = createConnection(ProposedFeatures.all);
-
-// Create a simple text document manager.
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 
 let hasConfigurationCapability = false;
@@ -71,7 +66,6 @@ connection.onInitialize((params: InitializeParams) => {
   }
   return result;
 });
-
 connection.onInitialized(() => {
   if (hasConfigurationCapability) {
     // Register for all configuration changes.
@@ -91,7 +85,6 @@ connection.onInitialized(() => {
 interface Settings {
   maxNumberOfProblems: number;
 }
-
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
 // Please note that this is not the case when using this server with the client provided in this example
 // but could happen with other clients.
@@ -116,7 +109,7 @@ connection.onDidChangeConfiguration((change) => {
   connection.languages.diagnostics.refresh();
 });
 
-function getDocumentSettings(resource: string): Thenable<Settings> {
+const getDocumentSettings = (resource: string): Thenable<Settings> => {
   if (!hasConfigurationCapability) {
     return Promise.resolve(globalSettings);
   }
@@ -129,7 +122,7 @@ function getDocumentSettings(resource: string): Thenable<Settings> {
     documentSettings.set(resource, result);
   }
   return result;
-}
+};
 
 // Only keep settings for open documents
 documents.onDidClose((e) => {
@@ -162,63 +155,29 @@ documents.onDidChangeContent((change) => {
 async function validateTextDocument(
   textDocument: TextDocument
 ): Promise<Diagnostic[]> {
-  // In this simple example we get the settings for every validate run.
-  const settings = await getDocumentSettings(textDocument.uri);
-
   const text = textDocument.getText();
-  const h1Checker = /(^= [^=]* =$|^=# [^=]* #=$)/gm; // 1단계 문단 검사
-  const commentChecker = /^##@(.*)/gm; // 고정 주석 검사
-  let m: RegExpExecArray | null;
-
-  let problems = 0;
   const diagnostics: Diagnostic[] = [];
-  while (
-    (m = h1Checker.exec(text)) &&
-    problems < settings.maxNumberOfProblems
-  ) {
-    problems++;
-    const diagnostic: Diagnostic = {
-      severity: DiagnosticSeverity.Warning,
-      range: {
-        start: textDocument.positionAt(m.index),
-        end: textDocument.positionAt(m.index + m[0].length),
-      },
-      message: `1단계 문단은 비권장 문법입니다.`,
-      source: ``,
-    };
-    if (hasDiagnosticRelatedInformationCapability) {
-      diagnostic.relatedInformation = [
-        {
-          location: {
-            uri: textDocument.uri,
-            range: Object.assign({}, diagnostic.range),
-          },
-          message: "2단계 문단 이상으로 변경할 것을 권장합니다.",
-        },
-      ];
-    }
-    diagnostics.push(diagnostic);
-  }
-  while ((m = commentChecker.exec(text))) {
-    const diagnostic: Diagnostic = {
-      severity: DiagnosticSeverity.Information,
-      range: {
-        start: textDocument.positionAt(m.index),
-        end: textDocument.positionAt(m.index + m[0].length),
-      },
-      message: m[0],
-      source: "",
-    };
-    diagnostics.push(diagnostic);
-  }
+
+  lintCode({
+    re: /(^= [^=]* =$|^=# [^=]* #=$)/gm,
+    msg: `1단계 문단은 비권장 문법입니다. 2단계 문단 이상으로 변경할 것을 권장합니다.`,
+    severe: DiagnosticSeverity.Warning,
+    text,
+    textDocument,
+    diagnostics,
+  });
+  lintCode({
+    re: /^##@(.*)/gm,
+    msg: null,
+    severe: DiagnosticSeverity.Information,
+    text,
+    textDocument,
+    diagnostics,
+  });
   return diagnostics;
 }
 
-connection.onDidChangeWatchedFiles((_change) => {
-  // Monitored files have change in VSCode
-  connection.console.log("We received a file change event");
-});
-
+// TODO: 필요한 경우 자동완성 구현
 // This handler provides the initial list of the completion items.
 connection.onCompletion(
   (_textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
@@ -239,7 +198,6 @@ connection.onCompletion(
     ];
   }
 );
-
 // This handler resolves additional information for the item selected in
 // the completion list.
 connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
@@ -252,10 +210,35 @@ connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
   }
   return item;
 });
-
-// Make the text document manager listen on the connection
-// for open, change and close text document events
 documents.listen(connection);
-
-// Listen on the connection
 connection.listen();
+
+function lintCode({
+  re,
+  msg,
+  severe,
+  text,
+  textDocument,
+  diagnostics,
+}: {
+  re: RegExp;
+  msg: string | null;
+  severe: DiagnosticSeverity | undefined;
+  text: string;
+  textDocument: TextDocument;
+  diagnostics: Diagnostic[];
+}) {
+  const m = re.exec(text);
+  while (m) {
+    const diagnostic: Diagnostic = {
+      severity: severe,
+      range: {
+        start: textDocument.positionAt(m.index),
+        end: textDocument.positionAt(m.index + m[0].length),
+      },
+      message: msg ?? m[0],
+      source: ``,
+    };
+    diagnostics.push(diagnostic);
+  }
+}
