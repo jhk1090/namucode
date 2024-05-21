@@ -7,6 +7,7 @@
   - [사용법](#사용법)
   - [기능](#기능)
     - [텍스트 강조 기능 (Syntax Highlighting)](#텍스트-강조-기능-syntax-highlighting)
+    - [코드 분석 기능 (Linting)](#코드-분석-기능-linting)
     - [자동완성 기능 (Snippet)](#자동완성-기능-snippet)
     - [커맨드 기능 (Command Palette)](#커맨드-기능-command-palette)
     - [목차 표시 기능 (Table of Contents)](#목차-표시-기능-table-of-contents)
@@ -17,9 +18,7 @@
 
 ## 설치
 
-나무코드는 VSCode 확장 프로그램으로, VSCode Marketplace에서 다운받을 수 있습니다.
-
-링크: https://marketplace.visualstudio.com/items?itemName=jhk1090.namucode
+나무코드는 VSCode 확장 프로그램으로, [VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=jhk1090.namucode)에서 다운받을 수 있습니다.
 
 ## 사용법
 
@@ -47,6 +46,15 @@ _▲ 선택란_
   ![namucode_origin](https://user-images.githubusercontent.com/72603240/177030481-020df8da-1b36-4b11-b1c2-f3ecf6e7c32a.jpg)
 - 나무코드
   ![namucode_vscode](https://user-images.githubusercontent.com/72603240/177030487-f90f862d-e264-49d6-b935-137fb6154905.png)
+
+### 코드 분석 기능 (Linting)
+
+간단한 분석을 통해 교정할 수 있는 문법 등을 강조 표시합니다.
+현재 코드 분석을 통해 강조를 지원하는 구문은 다음과 같습니다.
+
+- **고정 주석 강조** - `##@`를 사용한 고정 주석을 강조합니다.
+- **비권장 문법 경고 표시** - 나무위키에서 권장하지 않는 문법을 사용한 경우 경고 표시합니다.
+  - 1단계 문단 경고
 
 ### 자동완성 기능 (Snippet)
 

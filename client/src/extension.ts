@@ -12,13 +12,16 @@ import {
   ServerOptions,
   TransportKind,
 } from "vscode-languageclient/node";
+import { EXTENSION_NAME, getConfig } from "./config";
+import { LinkDefinitionProvider } from "./linkdef";
 
 var isDocumentPerfect = true;
-
 let client: LanguageClient;
+let activeRules: vscode.Disposable[] = [];
 
 export function activate(context: ExtensionContext) {
   modifyParagraph(context);
+  provideLink(context);
 
   vscode.commands.registerCommand("namucode.linkify", () => {
     wrapByChar("[[", "]]");
@@ -629,7 +632,6 @@ function modifyParagraph(context: vscode.ExtensionContext) {
   vscode.commands.registerCommand("namucode.paragraphLevelUp", () => {
     paragraphLeveling(Level.UP);
   });
-
   const sort = vscode.commands.registerCommand(
     "namucode.paragraphSort",
     paragraphSort
@@ -757,6 +759,29 @@ const wrapByChar = (prefix, postfix) => {
     editor.edit((editBuilder) => {
       editBuilder.replace(selection, `${prefix}${word}${postfix}`);
     });
+  }
+};
+
+const provideLink = (context: vscode.ExtensionContext): void => {
+  const config = getConfig();
+
+  for (const rule of activeRules) {
+    rule.dispose();
+  }
+
+  activeRules = config.rules.map((rule) => {
+    return vscode.languages.registerDocumentLinkProvider(
+      rule.languages.map((language) => ({ language })),
+      new LinkDefinitionProvider(
+        rule.linkPattern,
+        rule.linkPatternFlags,
+        rule.linkTarget
+      )
+    );
+  });
+
+  for (const rule of activeRules) {
+    context.subscriptions.push(rule);
   }
 };
 
