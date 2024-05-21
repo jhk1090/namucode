@@ -16,6 +16,9 @@ export class LinkDefinitionProvider implements vscode.DocumentLinkProvider {
     if (!this.flags?.includes("g")) {
       this.flags = `${this.flags || ""}g`;
     }
+    if (!this.flags.includes("d")) {
+      this.flags = `${this.flags}d`;
+    }
   }
 
   public provideDocumentLinks(
@@ -27,8 +30,9 @@ export class LinkDefinitionProvider implements vscode.DocumentLinkProvider {
 
     let match: RegExpExecArray | null;
     while ((match = regEx.exec(text))) {
-      const startPos = document.positionAt(match.index);
-      const endPos = document.positionAt(match.index + match[0].length);
+      console.log(match.indices);
+      const startPos = document.positionAt(match.indices[1][0]);
+      const endPos = document.positionAt(match.indices[1][1]);
       const range = new vscode.Range(startPos, endPos);
       // Replace:
       // - $0 with match[0]

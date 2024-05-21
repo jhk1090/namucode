@@ -149,6 +149,12 @@
         "when": "editorHasSelection"
       },
       {
+        "command": "namucode.textStrike",
+        "key": "ctrl+D",
+        "mac": "cmd+D",
+        "when": "editorHasSelection"
+      },
+      {
         "command": "namucode.textSuperscript",
         "key": "ctrl+shift+U",
         "mac": "cmd+shift+U",
@@ -159,6 +165,21 @@
         "key": "ctrl+shift+Y",
         "mac": "cmd+shift+Y",
         "when": "editorHasSelection"
+      },
+      {
+        "command": "namucode.newParagraph",
+        "key": "ctrl+=",
+        "mac": "cmd+=",
+        "when": "editorHasSelection"
+      },
+      {
+        "command": "editor.action.insertSnippet",
+        "key": "ctrl+alt+I",
+        "mac": "cmd+shift+I",
+        "args": {
+          "langId": "namu",
+          "name": "파일 삽입"
+        }
       }
     ],
     "configurationDefaults": {

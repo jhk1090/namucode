@@ -24,27 +24,46 @@ export function activate(context: ExtensionContext) {
   provideLink(context);
 
   vscode.commands.registerCommand("namucode.linkify", () => {
+    if (tryUnwrapChar("[[", "]]")) return;
     wrapByChar("[[", "]]");
   });
 
   vscode.commands.registerCommand("namucode.textBold", () => {
+    if (tryUnwrapChar("'''", "'''")) return;
     wrapByChar("'''", "'''");
   });
 
   vscode.commands.registerCommand("namucode.textItalic", () => {
+    if (tryUnwrapChar("''", "''")) return;
     wrapByChar("''", "''");
   });
 
   vscode.commands.registerCommand("namucode.textUnderline", () => {
+    if (tryUnwrapChar("__", "__")) return;
     wrapByChar("__", "__");
   });
 
   vscode.commands.registerCommand("namucode.textSuperscript", () => {
+    if (tryUnwrapChar("^^", "^^")) return;
+    tryUnwrapChar(",,", ",,");
     wrapByChar("^^", "^^");
   });
 
   vscode.commands.registerCommand("namucode.textSubscript", () => {
+    if (tryUnwrapChar(",,", ",,")) return;
+    tryUnwrapChar("^^", "^^");
     wrapByChar(",,", ",,");
+  });
+
+  vscode.commands.registerCommand("namucode.textStrike", () => {
+    if (tryUnwrapChar("~~", "~~")) return;
+    if (tryUnwrapChar("--", "--")) return;
+    wrapByChar("~~", "~~");
+  });
+
+  vscode.commands.registerCommand("namucode.newParagraph", () => {
+    if (tryUnwrapChar("== ", " ==")) return;
+    wrapByChar("== ", " ==");
   });
 
   vscode.commands.registerCommand("namucode.gotoLine", (line: number) => {
@@ -168,6 +187,7 @@ function modifyParagraph(context: vscode.ExtensionContext) {
       }
 
       // 동일한 목차일시 타이틀이 하나로 인식이 되는 문제가 있음
+      // FIXME: fakeTitle 없이 인식 문제 해결하기
       const fakeTitle = [...selectionStringify.matchAll(fakeTitleRegex)];
       for (let i = 0; i < fakeTitle.length; i++) {
         console.log(i, fakeTitle[i][0]);
@@ -740,25 +760,41 @@ const organizeToc = () => {
 };
 
 const wrapByChar = (prefix, postfix) => {
-  //FIXME: 굵게 기울임의 경우 오류 발생
-  //FIXME: 위첨자와 아래첨자처럼 상충되는 경우에 대해 처리 필요
   const editor = vscode.window.activeTextEditor;
   if (!editor) return;
 
   const document = editor.document;
   const selection = editor.selection;
   const word = document.getText(selection);
-  const l = prefix.length;
 
-  if (word.slice(0, l) == prefix && word.slice(-l) == postfix) {
-    // 이미 씌워진 경우
+  // 굵게, 기울임 구분용 공백 삽입
+  if (word.match(/^'/) && (prefix == "''" || prefix == "'''"))
+    prefix = `${prefix} `;
+  if (word.match(/'$/) && (postfix == "''" || postfix == "'''"))
+    postfix = ` ${postfix}`;
+
+  editor.edit((editBuilder) => {
+    editBuilder.replace(selection, `${prefix}${word}${postfix}`);
+  });
+};
+
+const tryUnwrapChar = (prefix, postfix) => {
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) return false;
+
+  const document = editor.document;
+  const selection = editor.selection;
+  const word = document.getText(selection);
+  const re = new RegExp(
+    `^ *${escapeRegex(prefix)}([^'].*?[^'])${escapeRegex(postfix)} *$`
+  );
+  const matched = word.match(re);
+
+  if (matched) {
     editor.edit((editBuilder) => {
-      editBuilder.replace(selection, word.slice(l, -l));
+      editBuilder.replace(selection, matched[1]);
     });
-  } else {
-    editor.edit((editBuilder) => {
-      editBuilder.replace(selection, `${prefix}${word}${postfix}`);
-    });
+    return true;
   }
 };
 
@@ -783,6 +819,10 @@ const provideLink = (context: vscode.ExtensionContext): void => {
   for (const rule of activeRules) {
     context.subscriptions.push(rule);
   }
+};
+
+const escapeRegex = (string) => {
+  return string.replace(/[/\-\\^$*+?.()|[\]{}]/g, "\\$&");
 };
 
 class OutlineProvider implements vscode.TreeDataProvider<any> {

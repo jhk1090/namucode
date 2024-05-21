@@ -17,12 +17,12 @@ export function getConfig(): Config {
     rules: [
       // FIXME: def all link patterns
       {
-        linkPattern: "\\[\\[(.*?)\\]\\]",
-        linkTarget: "https://namu.wiki/w/$0",
+        linkPattern: "\\[\\[([^:].*?)(\\|.*?\\]\\]|\\]\\])", // [[링크]] 및 [[링크|내용]]
+        linkTarget: "https://namu.wiki/w/$1",
       },
       {
-        linkPattern: "\\[\\[(.*?)\\]\\]",
-        linkTarget: "https://namu.wiki/w/$0",
+        linkPattern: "\\[\\[:(.*?)(\\|.*?\\]\\]|\\]\\])", // [[:링크]] 및 [[:링크|내용]]
+        linkTarget: "https://namu.wiki/w/$1",
       },
     ],
   };
