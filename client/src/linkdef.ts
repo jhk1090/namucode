@@ -30,7 +30,6 @@ export class LinkDefinitionProvider implements vscode.DocumentLinkProvider {
 
     let match: RegExpExecArray | null;
     while ((match = regEx.exec(text))) {
-      console.log(match.indices);
       const startPos = document.positionAt(match.indices[1][0]);
       const endPos = document.positionAt(match.indices[1][1]);
       const range = new vscode.Range(startPos, endPos);
