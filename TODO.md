@@ -5,11 +5,10 @@
   - TODO: 현재 링크 초안만 구현된 상태. FIXME: 하이퍼링크 오류 수정
 - TODO: prebuild 시 typescript compile 안 되는 오류 수정
   - 현재는 (client 경로와 server 경로에서 각각 `tsc -p ./`를 실행한다.)
-- 제한적인 linting 구현 - FIXME: linting rebase
+- 제한적인 linting 구현
   - 수평줄 옆에 문자오면 경고
   - 문단/리스트 상하 관계가 이상한 경우 경고
   - 자주 틀리는 맞춤법 경고
-  - 고정 주석 강조 (FIXME: `##@` 제외할 방안 마련)
 - 중첩 인용문, 목록이 담긴 인용문 강조 수정
 - View docs: 문법 도움말 페이지로 연결
 - Snippet 더 추가 (표, 기타 매크로, wiki-style 단축어 등)
@@ -20,4 +19,5 @@
 - 폭넓은 option 지원
 - 색상 입력 시 색상 피커 지원, 헥스코드 도감 내장
 - math, syntax, html 문법 내에서 문법 강조
-- ..
+- 문단 분석 오류 해결
+- 문단 단계 변경할 때 문단 전체를 선택하지 않아도 되도록 수정

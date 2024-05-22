@@ -163,54 +163,43 @@ async function validateTextDocument(
   textDocument: TextDocument
 ): Promise<Diagnostic[]> {
   // In this simple example we get the settings for every validate run.
-  const settings = await getDocumentSettings(textDocument.uri);
+  // const settings = await getDocumentSettings(textDocument.uri);
 
   const text = textDocument.getText();
-  const h1Checker = /(^= [^=]* =$|^=# [^=]* #=$)/gm; // 1단계 문단 검사
-  const commentChecker = /^##@(.*)/gm; // 고정 주석 검사
   let m: RegExpExecArray | null;
 
-  let problems = 0;
   const diagnostics: Diagnostic[] = [];
-  while (
-    (m = h1Checker.exec(text)) &&
-    problems < settings.maxNumberOfProblems
-  ) {
-    problems++;
-    const diagnostic: Diagnostic = {
-      severity: DiagnosticSeverity.Warning,
-      range: {
-        start: textDocument.positionAt(m.index),
-        end: textDocument.positionAt(m.index + m[0].length),
-      },
-      message: `1단계 문단은 비권장 문법입니다.`,
-      source: ``,
-    };
-    if (hasDiagnosticRelatedInformationCapability) {
-      diagnostic.relatedInformation = [
-        {
-          location: {
-            uri: textDocument.uri,
-            range: Object.assign({}, diagnostic.range),
-          },
-          message: "2단계 문단 이상으로 변경할 것을 권장합니다.",
+
+  const createDiagnostics = (
+    regex: RegExp,
+    severity: DiagnosticSeverity,
+    messageFn: (match: RegExpExecArray) => string
+  ): void => {
+    let m: RegExpExecArray | null;
+    while ((m = regex.exec(text))) {
+      const diagnostic: Diagnostic = {
+        severity,
+        range: {
+          start: textDocument.positionAt(m.index),
+          end: textDocument.positionAt(m.index + m[0].length),
         },
-      ];
+        message: messageFn(m),
+        source: ``,
+      };
+      diagnostics.push(diagnostic);
     }
-    diagnostics.push(diagnostic);
-  }
-  while ((m = commentChecker.exec(text))) {
-    const diagnostic: Diagnostic = {
-      severity: DiagnosticSeverity.Information,
-      range: {
-        start: textDocument.positionAt(m.index),
-        end: textDocument.positionAt(m.index + m[0].length),
-      },
-      message: m[0],
-      source: "",
-    };
-    diagnostics.push(diagnostic);
-  }
+  };
+
+  createDiagnostics(
+    /(^= [^=]* =$|^=# [^=]* #=$)/gm,
+    DiagnosticSeverity.Warning,
+    () =>
+      `1단계 문단은 비권장 문법입니다. 2단계 문단 이상으로 변경할 것을 권장합니다.`
+  );
+  createDiagnostics(/^##@(.*)/gm, DiagnosticSeverity.Information, (m) =>
+    m[0].substring(3)
+  );
+
   return diagnostics;
 }
 

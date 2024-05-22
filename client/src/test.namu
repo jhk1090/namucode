@@ -1,17 +1,13 @@
-##@||<tablewidth=100%><tablebordercolor=#2e8b57><bgcolor=#2e8b57> {{{#fff '''토론 합의사항'''}}} ||
-##@||<bgcolor=#fff,#1c1d1f> {{{#!wiki style="margin:0 -10px -5px; min-height:calc(1.5em + 5px); word-break: keep-all"
-##@{{{#!folding [ 펼치기 · 접기 ]
-##@{{{#!wiki style="margin:-5px -1px -11px"
-##@||<tablewidth=100%><bgcolor=#fff,#1c1d1f><color=#000,#eaeaea>
-##@ * [[https://namu.wiki/thread/ApatheticEvilShortCarriage|#]] 리다이렉트 문법도움말, 나무위키 표, 접기 문법, 펼접, 펼치기 접기, 특수색, 헥스코드(나무위키)를 삭제한다. ||}}}}}}}}} ||
-##@
+##@ 주석은 이렇게
+##@ 주석은 이렇게
+##@ 주석은 이렇게
+##@ 주석은 이렇게
 [include(틀:나무위키)]
 [include(틀:나무위키 도움말)]
 [목차]
 [clearfix]
-= ro =
-
 == 개요 ==
+
 나무위키의 문법 도움말입니다. [[the seed|나무위키가 사용하는 위키 엔진]]이 제공하는 문법이라 하여 '나무마크'라고도 합니다.
 
 이 문서에서는 기본적인 수준의 위키 문법들을 정리했으며, [[나무위키:문법 도움말/심화]] 문서에서 고급 문법을 확인하실 수 있습니다. [[나무위키:문법 도움말/개발]] 문서에서는 위키 문법을 처리하는 원리 등을 설명합니다.
