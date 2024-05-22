@@ -1,23 +1,32 @@
 # TODOs
 
-- 단축키 폭넓게 추가
-- TODO: 문단 분석 오류 해결
+## Progress
+
+- FIXME: 추가한 단축키와 스니펫 모두 README.md로 업데이트
 - 파일, 문서 링크와 리다이렉트, 유튜브 문법의 링크 URL 연결
-  - TODO: 현재 링크 초안만 구현된 상태. FIXME: 하이퍼링크 오류 수정
+  - TODO: 현재 링크 초안만 구현된 상태.
+  - https:// / http:// 링크 지원
+  - include, 유튜브 문법 지원
 - TODO: prebuild 시 typescript compile 안 되는 오류 수정
   - 현재는 (client 경로와 server 경로에서 각각 `tsc -p ./`를 실행한다.)
+- repository 정보들 수정
 - 제한적인 linting 구현
   - 수평줄 옆에 문자오면 경고
   - 문단/리스트 상하 관계가 이상한 경우 경고
   - 자주 틀리는 맞춤법 경고
+- 단축키 폭넓게 추가
+
+## Soon
+
 - 중첩 인용문, 목록이 담긴 인용문 강조 수정
 - View docs: 문법 도움말 페이지로 연결
 - Snippet 더 추가 (표, 기타 매크로, wiki-style 단축어 등)
 - 표, 파일 매개변수 자동 완성
-- repository 정보들 수정
-- VSCode 내 inline 미리보기 지원
 - 다양한 Code Actions 지원
+
+## Undecided
+
+- VSCode 내 inline 미리보기 지원
 - 폭넓은 option 지원
 - 색상 입력 시 색상 피커 지원, 헥스코드 도감 내장
-- math, syntax, html 문법 내에서 문법 강조
-- 문단 단계 변경할 때 문단 전체를 선택하지 않아도 되도록 수정
+- math, syntax, html 문법 내에서 타 언어 문법 강조

@@ -645,8 +645,9 @@ const paragraphLeveling = (type: Level) => {
 
   if (editor) {
     const document = editor.document;
-    const selection = editor.selection;
-    let lines = document.getText(selection).split("\n");
+    const lineRange = getSelectedLineRange();
+
+    let lines = document.getText(lineRange).split("\n");
     if (type == Level.UP) {
       for (let i = 0; i < lines.length; i++) {
         if (lines[i].match(/(^(={1,5})(#?) (.*) (\2)(\1)$)/)) {
@@ -662,7 +663,7 @@ const paragraphLeveling = (type: Level) => {
     }
 
     editor.edit((editBuilder) => {
-      editBuilder.replace(selection, lines.join("\n"));
+      editBuilder.replace(lineRange, lines.join("\n"));
     });
   }
 };
@@ -731,6 +732,28 @@ const provideLink = (context: vscode.ExtensionContext): void => {
   }
 };
 
+// Code of module function
+
 const escapeRegex = (string) => {
   return string.replace(/[/\-\\^$*+?.()|[\]{}]/g, "\\$&");
+};
+
+const getSelectedLineRange = (): vscode.Range | null => {
+  const editor = vscode.window.activeTextEditor;
+
+  if (!editor) {
+    return null;
+  }
+
+  const selection = editor.selection;
+  const startLine = selection.start.line;
+  const endLine = selection.end.line;
+
+  const start = new vscode.Position(startLine, 0);
+  const end = new vscode.Position(
+    endLine,
+    editor.document.lineAt(endLine).text.length
+  );
+
+  return new vscode.Range(start, end);
 };
