@@ -14,6 +14,7 @@
       "problemMatcher": ["$tsc"]
     },
     {
+      "label": "Watch",
       "type": "npm",
       "script": "watch",
       "isBackground": true,
@@ -26,6 +27,16 @@
         "reveal": "never"
       },
       "problemMatcher": ["$tsc-watch"]
+    },
+    {
+      "label": "customTasks",
+      "type": "shell",
+      "command": "cd client && tsc -p ./ && cd ../server && tsc -p ./", // 원하는 터미널 명령어를 입력해야 해
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "dependsOn": ["Watch"]
     }
   ]
 }
