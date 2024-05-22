@@ -91,13 +91,11 @@ _▲ 선택란_
 
 ### 목차 표시 기능 (Table of Contents)
 
-편집기 왼쪽 탐색기 탭에서 확인할 수 있으며, 문단 제목의 내용을 그대로 가져와 표시합니다.\
+편집기 왼쪽 탐색기 탭에서 확인할 수 있으며, 문단 제목의 내용을 그대로 가져와 '개요' 란에 표시합니다.\
 목차 클릭시 클릭한 목차로 이동됩니다.
 
 ![namucode_tableofcontent](https://user-images.githubusercontent.com/72603240/178151612-0395c438-57f3-4789-a497-b4cd6331bc91.png)
 _▲ 나무위키:문법 도움말_
-
-만약 목차가 제대로 표시되지 않는 경우에는 [문단 도움말](https://github.com/jhk1090/namucode/blob/main/TOC_ERROR.md)을 참고하세요.
 
 ## 업데이트 로그
 

@@ -32,7 +32,7 @@
         {
           "id": "tableOfContent",
           "name": "목차",
-          "when": "resourceExtname == .namu"
+          "when": "editorLangId == namu || resourceExtname == .namu || true"
         }
       ]
     },
@@ -40,7 +40,7 @@
       {
         "view": "tableOfContent",
         "contents": "표시할 목차가 없습니다.\n목차 자체가 없거나 목차 조직이 잘못되었을수도 있습니다.\n[자세히 알아보기](https://github.com/jhk1090/namucode/blob/main/TOC_ERROR.md)",
-        "when": "resourceExtname == .namu"
+        "when": "editorLangId == namu || resourceExtname == .namu || true"
       }
     ],
     "commands": [

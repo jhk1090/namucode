@@ -73,7 +73,12 @@ export function activate(context: ExtensionContext) {
     });
   });
 
-  vscode.workspace.onDidChangeTextDocument(organizeToc);
+  context.subscriptions.push(
+    vscode.languages.registerDocumentSymbolProvider(
+      { language: "namu" },
+      new DocumentSymbolProvider()
+    )
+  );
 
   // Code to connect to sever
   const serverModule = context.asAbsolutePath(
@@ -97,11 +102,7 @@ export function activate(context: ExtensionContext) {
       fileEvents: workspace.createFileSystemWatcher("**/.clientrc"),
     },
   };
-  client = new LanguageClient(
-    "Namucode",
-    serverOptions,
-    clientOptions
-  );
+  client = new LanguageClient("Namucode", serverOptions, clientOptions);
   client.start();
 }
 
@@ -112,8 +113,32 @@ export function deactivate(): Thenable<void> | undefined {
   return client.stop();
 }
 
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
+class DocumentSymbolProvider implements vscode.DocumentSymbolProvider {
+  public provideDocumentSymbols(
+    document: vscode.TextDocument,
+    token: vscode.CancellationToken
+  ): Thenable<vscode.SymbolInformation[]> {
+    return new Promise((resolve, reject) => {
+      let symbols = [];
+
+      for (let i = 0; i < document.lineCount; i++) {
+        let line = document.lineAt(i);
+        const match = line.text.match(/^(={1,6})(#?) (.*) (\2)(\1)$/);
+
+        if (match) {
+          console.log(match);
+          symbols.push({
+            name: match[3],
+            kind: vscode.SymbolKind.TypeParameter,
+            location: new vscode.Location(document.uri, line.range),
+          });
+        }
+      }
+
+      resolve(symbols);
+    });
+  }
+}
 
 function modifyParagraph(context: vscode.ExtensionContext) {
   enum Level {
@@ -648,6 +673,7 @@ function modifyParagraph(context: vscode.ExtensionContext) {
   context.subscriptions.push(sort);
 }
 
+/* FIXME:
 const organizeToc = () => {
   const editor = vscode.window.activeTextEditor;
   if (editor) {
@@ -730,7 +756,6 @@ const organizeToc = () => {
         dataObject = [];
         break;
       }
-      // console.log(step1, step2, step3, step4, Date.now()+Math.random())
       // console.log(dataObject)
     }
 
@@ -745,7 +770,7 @@ const organizeToc = () => {
       new OutlineProvider(dataObject)
     );
   }
-};
+};*/
 
 const wrapByChar = (prefix, postfix) => {
   const editor = vscode.window.activeTextEditor;
