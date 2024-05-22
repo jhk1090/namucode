@@ -7,8 +7,6 @@
   - TODO: 현재 링크 초안만 구현된 상태.
   - https:// / http:// 링크 지원
   - include, 유튜브 문법 지원
-- TODO: prebuild 시 typescript compile 안 되는 오류 수정
-  - 현재는 (client 경로와 server 경로에서 각각 `tsc -p ./`를 실행한다.)
 - repository 정보들 수정
 - 제한적인 linting 구현
   - 수평줄 옆에 문자오면 경고
