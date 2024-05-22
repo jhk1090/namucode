@@ -18,6 +18,10 @@ import { LinkDefinitionProvider } from "./linkdef";
 var isDocumentPerfect = true;
 let client: LanguageClient;
 let activeRules: vscode.Disposable[] = [];
+enum Level {
+  UP,
+  DOWN,
+}
 
 export function activate(context: ExtensionContext) {
   modifyParagraph(context);
@@ -73,11 +77,9 @@ export function activate(context: ExtensionContext) {
     });
   });
 
-  context.subscriptions.push(
-    vscode.languages.registerDocumentSymbolProvider(
-      { language: "namu" },
-      new DocumentSymbolProvider()
-    )
+  vscode.languages.registerDocumentSymbolProvider(
+    "namu",
+    new DocumentSymbolProvider()
   );
 
   // Code to connect to sever
@@ -113,108 +115,71 @@ export function deactivate(): Thenable<void> | undefined {
   return client.stop();
 }
 
+// Code to provide tableofcontents(outline)
+class TreeSymbol extends vscode.DocumentSymbol {
+  depth: number;
+
+  constructor(
+    name: string,
+    detail: string,
+    kind: vscode.SymbolKind,
+    range: vscode.Range,
+    selectionRange: vscode.Range,
+    depth: number
+  ) {
+    super(name, detail, kind, range, selectionRange);
+    this.depth = depth;
+  }
+}
 class DocumentSymbolProvider implements vscode.DocumentSymbolProvider {
   public provideDocumentSymbols(
-    document: vscode.TextDocument,
-    token: vscode.CancellationToken
-  ): Thenable<vscode.SymbolInformation[]> {
+    document: vscode.TextDocument
+  ): Thenable<vscode.DocumentSymbol[]> {
     return new Promise((resolve, reject) => {
-      let symbols = [];
+      let symbols: vscode.DocumentSymbol[] = [];
+      let parents: TreeSymbol[] = [];
 
       for (let i = 0; i < document.lineCount; i++) {
         let line = document.lineAt(i);
         const match = line.text.match(/^(={1,6})(#?) (.*) (\2)(\1)$/);
 
         if (match) {
-          console.log(match);
-          symbols.push({
-            name: match[3],
-            kind: vscode.SymbolKind.TypeParameter,
-            location: new vscode.Location(document.uri, line.range),
-          });
+          const depth = match[1].length;
+          const symbol = new TreeSymbol(
+            match[3],
+            "",
+            vscode.SymbolKind.Field,
+            line.range,
+            line.range,
+            depth
+          );
+          if (depth === 1) {
+            symbols.push(symbol);
+            parents = [symbol];
+          } else {
+            while (
+              parents.length > 0 &&
+              parents[parents.length - 1].depth >= depth
+            ) {
+              parents.pop();
+            }
+            if (parents.length > 0) {
+              let parent = parents[parents.length - 1];
+              parent.children.push(symbol);
+            } else {
+              symbols.push(symbol);
+            }
+            parents.push(symbol);
+          }
         }
       }
-
       resolve(symbols);
     });
   }
 }
 
-function modifyParagraph(context: vscode.ExtensionContext) {
-  enum Level {
-    UP,
-    DOWN,
-  }
-
-  const paragraphLeveling = (type: Level) => {
-    const editor = vscode.window.activeTextEditor;
-
-    if (editor) {
-      const document = editor.document;
-      const selection = editor.selection;
-
-      const titleRegex =
-        /(^== .* ==$|^=== .* ===$|^==== .* ====$|^===== .* =====$|^====== .* ======$|^==# .* #==$|^===# .* #===$|^====# .* #====$|^=====# .* #=====$|^======# .* #======$)/gm;
-
-      const fakeTitleRegex =
-        /(^№№ .* №№$|^№№№ .* №№№$|^№№№№ .* №№№№$|^№№№№№ .* №№№№№$|^№№№№№№ .* №№№№№№$|^№№# .* #№№$|^№№№# .* #№№№$|^№№№№# .* #№№№№$|^№№№№№# .* #№№№№№$|^№№№№№№# .* #№№№№№№$)/gm;
-      // 최소 문단 레벨
-      const titleLeastRegex = /(^== .* ==$|^==# .* #==)/gm;
-      // 최대 문단 레벨
-      const titleMostRegex = /(^====== .* ======$|^======# .* #======$)/gm;
-      // 문단 레벨 카운트용
-      const titleLevelCountRegex = /^={2,6}/gm;
-      // 문단 얻기
-      const titles = [...document.getText(selection).matchAll(titleRegex)];
-      let selectionStringify = document.getText(selection);
-
-      for (let i = 0; i < titles.length; i++) {
-        // 원본
-        const original = titles[i][0];
-        let originalChanged = "";
-        let originalLevel = (
-          original.match(titleLevelCountRegex) as RegExpMatchArray
-        )[0];
-
-        // 문단 레벨 Down 시
-        if (type == Level.DOWN && original.match(titleLeastRegex) == null) {
-          originalChanged = original.replaceAll(
-            originalLevel,
-            originalLevel.replace("=", "")
-          );
-        }
-        // 문단 레벨 UP 시
-        else if (type == Level.UP && original.match(titleMostRegex) == null) {
-          originalChanged = original.replaceAll(
-            originalLevel,
-            originalLevel.replace("=", "==")
-          );
-        } else {
-          originalChanged = original;
-        }
-
-        selectionStringify = selectionStringify.replace(
-          original,
-          originalChanged.replaceAll("=", "№")
-        );
-      }
-
-      // 동일한 목차일시 타이틀이 하나로 인식이 되는 문제가 있음
-      // FIXME: fakeTitle 없이 인식 문제 해결하기
-      const fakeTitle = [...selectionStringify.matchAll(fakeTitleRegex)];
-      for (let i = 0; i < fakeTitle.length; i++) {
-        console.log(i, fakeTitle[i][0]);
-        selectionStringify = selectionStringify.replace(
-          fakeTitle[i][0],
-          fakeTitle[i][0].replaceAll("№", "=")
-        );
-      }
-      editor.edit((editBuilder) => {
-        editBuilder.replace(selection, selectionStringify);
-      });
-    }
-  };
-
+// FIXME: Code to sort paragraph
+const modifyParagraph = (context: vscode.ExtensionContext) => {
   interface typeTreeStruct {
     title: string;
     range: number[];
@@ -671,106 +636,36 @@ function modifyParagraph(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(sort);
-}
+};
 
-/* FIXME:
-const organizeToc = () => {
+// Code to provide shortcuts
+
+const paragraphLeveling = (type: Level) => {
   const editor = vscode.window.activeTextEditor;
+
   if (editor) {
     const document = editor.document;
-    const titleRegex =
-      /(^== .* ==$|^=== .* ===$|^==== .* ====$|^===== .* =====$|^====== .* ======$|^==# .* #==$|^===# .* #===$|^====# .* #====$|^=====# .* #=====$|^======# .* #======$)/gm;
-    const titles = [...document.getText().matchAll(titleRegex)];
-    const titleLevelCountRegex = /^={2,6}/gm;
-    const titleTextRegex = /(?<=^\={2,6}(#)? ).[^=]*(?= (#)?\={2,6}$)/gm;
-    let dataObject: TreeItem[] = [];
-    function bstr(labelname: string, index: number): TreeItem {
-      return {
-        label: labelname,
-        children: [],
-        command: {
-          command: "namucode.gotoLine",
-          title: "문단으로 이동",
-          arguments: [editor?.document.positionAt(index).line as number],
-        },
-      };
-    }
-    let step1 = -1;
-    let step2 = -1;
-    let step3 = -1;
-    let step4 = -1;
-    for (let i = 0; i < titles.length; i++) {
-      const original = titles[i][0];
-      const index = titles[i]["index"] as number;
-      const level = (
-        original.match(titleLevelCountRegex) as RegExpMatchArray
-      )[0].length;
-      const name = (original.match(titleTextRegex) as RegExpMatchArray)[0];
-      step1 = dataObject.length - 1;
-      try {
-        switch (level) {
-          case 2:
-            dataObject.push(bstr(name, index));
-            break;
-          case 3:
-            if ("children" in dataObject[step1]) {
-              dataObject[step1].children?.push(bstr(name, index));
-              step2 = (dataObject[step1].children?.length as number) - 1;
-            }
-            break;
-          case 4:
-            const propertyp4 = (dataObject[step1].children as TreeItem[])[
-              step2
-            ];
-            if ("children" in propertyp4) {
-              propertyp4.children?.push(bstr(name, index));
-              step3 = (propertyp4.children?.length as number) - 1;
-            }
-            break;
-          case 5:
-            const propertyp5 = (
-              (dataObject[step1].children as TreeItem[])[step2]
-                .children as TreeItem[]
-            )[step3];
-            if ("children" in propertyp5) {
-              propertyp5.children?.push(bstr(name, index));
-              step4 = (propertyp5.children?.length as number) - 1;
-            }
-            break;
-          case 6:
-            const propertyp6 = (
-              (
-                (dataObject[step1].children as TreeItem[])[step2]
-                  .children as TreeItem[]
-              )[step3].children as TreeItem[]
-            )[step4];
-            if ("children" in propertyp6) {
-              propertyp6.children?.push(bstr(name, index));
-            }
-            break;
-          default:
-            break;
+    const selection = editor.selection;
+    let lines = document.getText(selection).split("\n");
+    if (type == Level.UP) {
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].match(/(^(={1,5})(#?) (.*) (\2)(\1)$)/)) {
+          lines[i] = `=${lines[i]}=`;
         }
-      } catch (error) {
-        // 오류 발생 시 Welcome 스크린 표시
-        dataObject = [];
-        break;
       }
-      // console.log(dataObject)
+    } else if (type == Level.DOWN) {
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].match(/(^(={2,6})(#?) (.*) (\2)(\1)$)/)) {
+          lines[i] = lines[i].slice(1, -1);
+        }
+      }
     }
 
-    if (dataObject.length === 0) {
-      isDocumentPerfect = false;
-    } else {
-      isDocumentPerfect = true;
-    }
-
-    vscode.window.registerTreeDataProvider(
-      "tableOfContent",
-      new OutlineProvider(dataObject)
-    );
+    editor.edit((editBuilder) => {
+      editBuilder.replace(selection, lines.join("\n"));
+    });
   }
-};*/
+};
 
 const wrapByChar = (prefix, postfix) => {
   const editor = vscode.window.activeTextEditor;
@@ -811,6 +706,8 @@ const tryUnwrapChar = (prefix, postfix) => {
   }
 };
 
+// Code to provide URL
+
 const provideLink = (context: vscode.ExtensionContext): void => {
   const config = getConfig();
 
@@ -837,40 +734,3 @@ const provideLink = (context: vscode.ExtensionContext): void => {
 const escapeRegex = (string) => {
   return string.replace(/[/\-\\^$*+?.()|[\]{}]/g, "\\$&");
 };
-
-class OutlineProvider implements vscode.TreeDataProvider<any> {
-  constructor(private outline: any) {}
-
-  getTreeItem(item: any): vscode.TreeItem {
-    const treeitem = new vscode.TreeItem(
-      item.label,
-      item.children.length > 0
-        ? vscode.TreeItemCollapsibleState.Expanded
-        : vscode.TreeItemCollapsibleState.None
-    );
-    treeitem.command = item.command;
-    return treeitem;
-  }
-
-  getChildren(element?: any): Thenable<[]> {
-    if (element) {
-      return Promise.resolve(element.children);
-    } else {
-      return Promise.resolve(this.outline);
-    }
-  }
-}
-
-class TreeItem extends vscode.TreeItem {
-  children: TreeItem[] | undefined;
-
-  constructor(label: string, children?: TreeItem[]) {
-    super(
-      label,
-      children === undefined
-        ? vscode.TreeItemCollapsibleState.None
-        : vscode.TreeItemCollapsibleState.Expanded
-    );
-    this.children = children;
-  }
-}
