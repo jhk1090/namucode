@@ -77,10 +77,13 @@ export function activate(context: ExtensionContext) {
     });
   });
 
-  vscode.languages.registerDocumentSymbolProvider(
-    "namu",
-    new DocumentSymbolProvider()
-  );
+  const symbolProvider = new DocumentSymbolProvider();
+  vscode.languages.registerDocumentSymbolProvider("namu", symbolProvider);
+
+  //FIXME: vscode.languages.registerFoldingRangeProvider(
+  //   "namu",
+  //   new FoldingRangeProvider(symbolProvider)
+  // );
 
   // Code to connect to sever
   const serverModule = context.asAbsolutePath(
@@ -148,7 +151,7 @@ class DocumentSymbolProvider implements vscode.DocumentSymbolProvider {
           const symbol = new TreeSymbol(
             match[3],
             "",
-            vscode.SymbolKind.Field,
+            vscode.SymbolKind.TypeParameter,
             line.range,
             line.range,
             depth
@@ -178,6 +181,38 @@ class DocumentSymbolProvider implements vscode.DocumentSymbolProvider {
   }
 }
 
+//TODO: Code to provide fold
+/*
+class FoldingRangeProvider implements vscode.FoldingRangeProvider {
+  constructor(private symbolProvider: DocumentSymbolProvider) {}
+
+  provideFoldingRanges(
+    document: vscode.TextDocument,
+    context: vscode.FoldingContext,
+    token: vscode.CancellationToken
+  ): Thenable<vscode.FoldingRange[]> {
+    return this.symbolProvider
+      .provideDocumentSymbols(document)
+      .then((symbols) => {
+        console.log("ES");
+        let ranges: vscode.FoldingRange[] = [];
+
+        const addFoldingRanges = (symbol: vscode.DocumentSymbol) => {
+          const start = symbol.range.start.line;
+          const end = symbol.children[symbol.children.length - 1].range.end.line;
+          ranges.push(new vscode.FoldingRange(start, end));
+          symbol.children.forEach(addFoldingRanges);
+        };
+
+        symbols.forEach((symbol) => {
+          addFoldingRanges(symbol);
+          console.log(ranges);
+        });
+        return ranges;
+      });
+  }
+}
+*/
 // FIXME: Code to sort paragraph
 const modifyParagraph = (context: vscode.ExtensionContext) => {
   interface typeTreeStruct {
@@ -734,9 +769,8 @@ const provideLink = (context: vscode.ExtensionContext): void => {
 
 // Code of module function
 
-const escapeRegex = (string) => {
-  return string.replace(/[/\-\\^$*+?.()|[\]{}]/g, "\\$&");
-};
+const escapeRegex = (string) =>
+  string.replace(/[/\-\\^$*+?.()|[\]{}]/g, "\\$&");
 
 const getSelectedLineRange = (): vscode.Range | null => {
   const editor = vscode.window.activeTextEditor;
