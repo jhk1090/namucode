@@ -18,7 +18,8 @@ export function getConfig(): Config {
       // FIXME: def all link patterns
       // FIXME: 겹친 링크도 정상적으로 연결되도록 regex 다듬기
       {
-        linkPattern: "\\[\\[([^:].*?)(\\|.*?\\]\\]|\\]\\])", // [[링크]] 및 [[링크|내용]]
+        linkPattern:
+          "\\[\\[(?!http:\\/\\/)(?!https:\\/\\/)([^:].*?)(\\|.*?\\]\\]|\\]\\])", // [[링크]] 및 [[링크|내용]]
         linkTarget: "https://namu.wiki/w/$1",
       },
       {
