@@ -191,6 +191,13 @@
               }
             },
             {
+              "scope": "markup.underline.namu",
+              "settings": {
+                "foreground": "#D4D4D4",
+                "fontStyle": "underline"
+              }
+            },
+            {
               "scope": "markup.deleted.namu",
               "settings": {
                 "foreground": "#D4D4D4",

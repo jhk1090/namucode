@@ -154,7 +154,7 @@
         },
         {
           "name": "keyword.operator.namu",
-          "match": "^>"
+          "match": "^(> ?){1,8}"
         },
         {
           "name": "keyword.control.namu",
