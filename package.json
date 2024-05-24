@@ -57,6 +57,10 @@
         "title": "텍스트 밑줄"
       },
       {
+        "command": "namucode.textStrike",
+        "title": "텍스트 취소선"
+      },
+      {
         "command": "namucode.textSuperscript",
         "title": "텍스트 위첨자"
       },
@@ -100,61 +104,61 @@
         "command": "namucode.paragraphLevelDown",
         "key": "ctrl+down",
         "mac": "cmd+down",
-        "when": "editorTextFocus"
+        "when": "editorTextFocus && editorLangId == 'namu'"
       },
       {
         "command": "namucode.paragraphLevelUp",
         "key": "ctrl+up",
         "mac": "cmd+up",
-        "when": "editorTextFocus"
+        "when": "editorTextFocus && editorLangId == 'namu'"
       },
       {
         "command": "namucode.linkify",
         "key": "ctrl+shift+K",
         "mac": "cmd+shift+K",
-        "when": "editorHasSelection"
+        "when": "editorHasSelection && editorLangId == 'namu'"
       },
       {
         "command": "namucode.textBold",
         "key": "ctrl+B",
         "mac": "cmd+B",
-        "when": "editorHasSelection"
+        "when": "editorHasSelection && editorLangId == 'namu'"
       },
       {
         "command": "namucode.textItalic",
         "key": "ctrl+I",
         "mac": "cmd+I",
-        "when": "editorHasSelection"
+        "when": "editorHasSelection && editorLangId == 'namu'"
       },
       {
         "command": "namucode.textUnderline",
         "key": "ctrl+U",
         "mac": "cmd+U",
-        "when": "editorHasSelection"
+        "when": "editorHasSelection && editorLangId == 'namu'"
       },
       {
         "command": "namucode.textStrike",
         "key": "ctrl+D",
         "mac": "cmd+D",
-        "when": "editorHasSelection"
+        "when": "editorHasSelection && editorLangId == 'namu'"
       },
       {
         "command": "namucode.textSuperscript",
         "key": "ctrl+shift+U",
         "mac": "cmd+shift+U",
-        "when": "editorHasSelection"
+        "when": "editorHasSelection && editorLangId == 'namu'"
       },
       {
         "command": "namucode.textSubscript",
         "key": "ctrl+shift+Y",
         "mac": "cmd+shift+Y",
-        "when": "editorHasSelection"
+        "when": "editorHasSelection && editorLangId == 'namu'"
       },
       {
         "command": "namucode.newParagraph",
         "key": "ctrl+=",
         "mac": "cmd+=",
-        "when": "editorHasSelection"
+        "when": "editorHasSelection && editorLangId == 'namu'"
       },
       {
         "command": "editor.action.insertSnippet",
