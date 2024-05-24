@@ -19,6 +19,9 @@
       "include": "#anchors"
     },
     {
+      "include": "#math"
+    },
+    {
       "include": "#macros"
     },
     {
@@ -108,7 +111,7 @@
       ]
     },
     "anchors": {
-      "match": "\\[((anchor|age|dday|math|youtube|kakaotv|niconicovideo|vimeo|navertv)\\(([^\\)]*(\\){1,})?)\\)|(pagecount)(\\(([^\\)]*(\\){1,})?)\\))?)\\]",
+      "match": "\\[((anchor|age|dday|youtube|kakaotv|niconicovideo|vimeo|navertv)\\(([^\\)]*(\\){1,})?)\\)|(pagecount)(\\(([^\\)]*(\\){1,})?)\\))?)\\]",
       "captures": {
         "2": {
           "name": "keyword.control.namu"
@@ -121,6 +124,22 @@
         },
         "7": {
           "name": "variable.parameter.namu"
+        }
+      }
+    },
+    "math": {
+      "match": "\\[((math)\\(([^\\)]*(\\){1,})?)\\))\\]",
+      "captures": {
+        "2": {
+          "name": "keyword.control.namu"
+        },
+        "3": {
+          "name": "variable.parameter.namu",
+          "patterns": [
+            {
+              "include": "source.latex"
+            }
+          ]
         }
       }
     },
