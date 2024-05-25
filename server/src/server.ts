@@ -200,7 +200,7 @@ async function validateTextDocument(
     m[0].substring(3)
   );
   createDiagnostics(
-    /^-{4,9}[^-\n]+$|^[^-\n]+-{4,9}$/gm,
+    /^-{4,9}[^-\r\n]+$|^[^-\r\n]+-{4,9}$/gm,
     DiagnosticSeverity.Error,
     () => `수평줄 문법 옆에 문자가 존재합니다. \n문법을 삭제하거나 개행하세요.`
   );

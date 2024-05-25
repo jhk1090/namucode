@@ -72,7 +72,7 @@
     "description": "wiki style 문법을 삽입합니다."
   },
   "다크모드 위키스타일": {
-    "prefix": ["wikistyled", "wsd"],
+    "prefix": ["wikistyledark", "wsd"],
     "body": [
       "{{{#!wiki style=\"${1:스타일}\" dark-style=\"${2:다크모드 스타일}\"",
       "${3:내용}",
@@ -82,7 +82,7 @@
   },
   "문법 강조": {
     "prefix": "syntax",
-    "body": ["{{{#!syntax=\"${1:언어명}\"", "${2:내용}", "}}}"],
+    "body": ["{{{#!syntax ${1:언어명}", "${2:내용}", "}}}"],
     "description": "문법 강조 구문을 삽입합니다."
   },
   "HTML": {

@@ -684,16 +684,33 @@ const paragraphLeveling = (type: Level) => {
 
     let lines = document.getText(lineRange).split("\n");
     if (type == Level.UP) {
+      const paragraphRegex = /(^(={1,5})(#?) (.*) (\2)(\1)(?<returnChar>\r)?$)/
       for (let i = 0; i < lines.length; i++) {
-        if (lines[i].match(/(^(={1,5})(#?) (.*) (\2)(\1)$)/)) {
-          lines[i] = `=${lines[i]}=`;
+        const execResult = paragraphRegex.exec(lines[i]);
+        console.log(execResult)
+        if (execResult !== null) {
+          if (execResult.groups?.returnChar === "\r") {
+            lines[i] = lines[i].replace("\r", "")
+            lines[i] = `=${lines[i]}=\r`
+          } else {
+            lines[i] = `=${lines[i]}=`
+          }
         }
+        paragraphRegex.lastIndex = 0;
       }
     } else if (type == Level.DOWN) {
+      const paragraphRegex = /(^(={2,6})(#?) (.*) (\2)(\1)(?<returnChar>\r)?$)/
       for (let i = 0; i < lines.length; i++) {
-        if (lines[i].match(/(^(={2,6})(#?) (.*) (\2)(\1)$)/)) {
-          lines[i] = lines[i].slice(1, -1);
+        const execResult = paragraphRegex.exec(lines[i]);
+        if (execResult !== null) {
+          if (execResult.groups?.returnChar === "\r") {
+            lines[i] = lines[i].replace("\r", "")
+            lines[i] = `${lines[i].slice(1, -1)}\r`
+          } else {
+            lines[i] = lines[i].slice(1, -1)
+          }
         }
+        paragraphRegex.lastIndex = 0;
       }
     }
 
