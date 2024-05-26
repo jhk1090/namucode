@@ -128,20 +128,15 @@
       }
     },
     "math": {
-      "match": "\\[((math)\\(([^\\)]*(\\){1,})?)\\))\\]",
-      "captures": {
-        "2": {
-          "name": "keyword.control.namu"
+      "begin": "\\[((?=math))",
+      "end": "\\]",
+      "patterns": [
+        {
+          "name": "keyword.control.namu",
+          "match": "math(?=\\()"
         },
-        "3": {
-          "name": "variable.parameter.namu",
-          "patterns": [
-            {
-              "include": "source.latex"
-            }
-          ]
-        }
-      }
+        { "include": "text.katex" }
+      ]
     },
     "macros": {
       "begin": "\\[(?=clearfix|date|datetime|목차|tableofcontents|각주|footnote|br)",
