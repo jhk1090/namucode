@@ -3,9 +3,9 @@
   "displayName": "Namucode",
   "description": "나무위키 VSCode 확장 프로그램",
   "publisher": "jhk1090",
-  "version": "1.2.3",
+  "version": "1.3.0",
   "engines": {
-    "vscode": "^1.68.0"
+    "vscode": "^1.75.0"
   },
   "icon": "images/Logo.png",
   "bugs": {
@@ -24,31 +24,9 @@
     "Snippets",
     "Other"
   ],
-  "activationEvents": [
-    "onCommand:namucode.paragraphLevelDown",
-    "onCommand:namucode.paragraphLevelUp",
-    "onCommand:namucode.linkify",
-    "onCommand:namucode.paragraphSort",
-    "onView:tableOfContent"
-  ],
-  "main": "./out/extension.js",
+  "activationEvents": [],
+  "main": "./client/out/extension.js",
   "contributes": {
-    "views": {
-      "explorer": [
-        {
-          "id": "tableOfContent",
-          "name": "목차",
-          "when": "resourceExtname == .namu"
-        }
-      ]
-    },
-    "viewsWelcome": [
-      {
-        "view": "tableOfContent",
-        "contents": "표시할 목차가 없습니다.\n목차 자체가 없거나 목차 조직이 잘못되었을수도 있습니다.\n[자세히 알아보기](https://github.com/jhk1090/namucode/blob/main/TOC_ERROR.md)",
-        "when": "resourceExtname == .namu"
-      }
-    ],
     "commands": [
       {
         "command": "namucode.paragraphLevelDown",
@@ -59,18 +37,43 @@
         "title": "문단 한단계 높이기"
       },
       {
-        "command": "namucode.linkify",
-        "title": "문자 링크화하기"
-      },
-      {
         "command": "namucode.paragraphSort",
         "title": "문단 자동 정렬"
+      },
+      {
+        "command": "namucode.linkify",
+        "title": "텍스트 링크"
+      },
+      {
+        "command": "namucode.textBold",
+        "title": "텍스트 굵게"
+      },
+      {
+        "command": "namucode.textItalic",
+        "title": "텍스트 기울임"
+      },
+      {
+        "command": "namucode.textUnderline",
+        "title": "텍스트 밑줄"
+      },
+      {
+        "command": "namucode.textStrike",
+        "title": "텍스트 취소선"
+      },
+      {
+        "command": "namucode.textSuperscript",
+        "title": "텍스트 위첨자"
+      },
+      {
+        "command": "namucode.textSubscript",
+        "title": "텍스트 아래첨자"
       }
     ],
     "languages": [
       {
         "id": "namu",
         "aliases": [
+          "나무마크",
           "Namuwiki Code"
         ],
         "extensions": [
@@ -101,13 +104,70 @@
         "command": "namucode.paragraphLevelDown",
         "key": "ctrl+down",
         "mac": "cmd+down",
-        "when": "editorTextFocus"
+        "when": "editorTextFocus && editorLangId == 'namu'"
       },
       {
         "command": "namucode.paragraphLevelUp",
         "key": "ctrl+up",
         "mac": "cmd+up",
-        "when": "editorTextFocus"
+        "when": "editorTextFocus && editorLangId == 'namu'"
+      },
+      {
+        "command": "namucode.linkify",
+        "key": "ctrl+shift+K",
+        "mac": "cmd+shift+K",
+        "when": "editorHasSelection && editorLangId == 'namu'"
+      },
+      {
+        "command": "namucode.textBold",
+        "key": "ctrl+B",
+        "mac": "cmd+B",
+        "when": "editorHasSelection && editorLangId == 'namu'"
+      },
+      {
+        "command": "namucode.textItalic",
+        "key": "ctrl+I",
+        "mac": "cmd+I",
+        "when": "editorHasSelection && editorLangId == 'namu'"
+      },
+      {
+        "command": "namucode.textUnderline",
+        "key": "ctrl+U",
+        "mac": "cmd+U",
+        "when": "editorHasSelection && editorLangId == 'namu'"
+      },
+      {
+        "command": "namucode.textStrike",
+        "key": "ctrl+D",
+        "mac": "cmd+D",
+        "when": "editorHasSelection && editorLangId == 'namu'"
+      },
+      {
+        "command": "namucode.textSuperscript",
+        "key": "ctrl+shift+U",
+        "mac": "cmd+shift+U",
+        "when": "editorHasSelection && editorLangId == 'namu'"
+      },
+      {
+        "command": "namucode.textSubscript",
+        "key": "ctrl+shift+Y",
+        "mac": "cmd+shift+Y",
+        "when": "editorHasSelection && editorLangId == 'namu'"
+      },
+      {
+        "command": "namucode.newParagraph",
+        "key": "ctrl+=",
+        "mac": "cmd+=",
+        "when": "editorHasSelection && editorLangId == 'namu'"
+      },
+      {
+        "command": "editor.action.insertSnippet",
+        "key": "ctrl+alt+I",
+        "mac": "cmd+shift+I",
+        "args": {
+          "langId": "namu",
+          "name": "파일 삽입"
+        }
       }
     ],
     "configurationDefaults": {
@@ -132,6 +192,13 @@
               "settings": {
                 "foreground": "#D4D4D4",
                 "fontStyle": "italic"
+              }
+            },
+            {
+              "scope": "markup.underline.namu",
+              "settings": {
+                "foreground": "#D4D4D4",
+                "fontStyle": "underline"
               }
             },
             {
@@ -177,6 +244,29 @@
           ]
         }
       }
+    },
+    "configuration": {
+      "type": "object",
+      "title": "Example configuration",
+      "properties": {
+        "languageServerExample.maxNumberOfProblems": {
+          "scope": "resource",
+          "type": "number",
+          "default": 100,
+          "description": "Controls the maximum number of problems produced by the server."
+        },
+        "languageServerExample.trace.server": {
+          "scope": "window",
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Traces the communication between VS Code and the language server."
+        }
+      }
     }
   },
   "scripts": {
@@ -189,16 +279,16 @@
   },
   "devDependencies": {
     "@types/glob": "^7.2.0",
-    "@types/mocha": "^9.1.1",
-    "@types/node": "16.x",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^18.14.6",
     "@types/vscode": "^1.68.0",
-    "@typescript-eslint/eslint-plugin": "^5.27.0",
-    "@typescript-eslint/parser": "^5.27.0",
+    "@typescript-eslint/eslint-plugin": "^7.1.0",
+    "@typescript-eslint/parser": "^7.1.0",
     "@vscode/test-electron": "^2.1.3",
-    "eslint": "^8.16.0",
+    "eslint": "^8.57.0",
     "glob": "^8.0.3",
-    "mocha": "^10.0.0",
-    "typescript": "^4.7.2"
+    "mocha": "^10.3.0",
+    "typescript": "^5.3.3"
   },
   "dependencies": {}
 }

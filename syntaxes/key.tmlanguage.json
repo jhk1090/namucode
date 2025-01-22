@@ -19,6 +19,9 @@
       "include": "#anchors"
     },
     {
+      "include": "#math"
+    },
+    {
       "include": "#macros"
     },
     {
@@ -50,7 +53,7 @@
     },
     "titles": {
       "name": "keyword.control.namu",
-      "match": "(^== .* ==$|^=== .* ===$|^==== .* ====$|^===== .* =====$|^====== .* ======$|^==# .* #==$|^===# .* #===$|^====# .* #====$|^=====# .* #=====$|^======# .* #======$)"
+      "match": "^(={1,6})(#?) (.*) (\\2)(\\1)$"
     },
     "links": {
       "match": "\\[{2}([^|\\]\\[]*)((\\|)([^|\\]\\[]*))?\\]{2}",
@@ -108,7 +111,7 @@
       ]
     },
     "anchors": {
-      "match": "\\[((anchor|age|dday|math|youtube|kakaotv|niconicovideo|vimeo|navertv)\\(([^\\)]*(\\){1,})?)\\)|(pagecount)(\\(([^\\)]*(\\){1,})?)\\))?)\\]",
+      "match": "\\[((anchor|age|dday|youtube|kakaotv|niconicovideo|vimeo|navertv)\\(([^\\)]*(\\){1,})?)\\)|(pagecount)(\\(([^\\)]*(\\){1,})?)\\))?)\\]",
       "captures": {
         "2": {
           "name": "keyword.control.namu"
@@ -123,6 +126,17 @@
           "name": "variable.parameter.namu"
         }
       }
+    },
+    "math": {
+      "begin": "\\[((?=math))",
+      "end": "\\]",
+      "patterns": [
+        {
+          "name": "keyword.control.namu",
+          "match": "math(?=\\()"
+        },
+        { "include": "text.katex" }
+      ]
     },
     "macros": {
       "begin": "\\[(?=clearfix|date|datetime|목차|tableofcontents|각주|footnote|br)",
@@ -146,7 +160,7 @@
         },
         {
           "name": "markup.deleted.namu",
-          "match": "~~[^~]*~~"
+          "match": "(~~[^~]*~~|--[^-]+--)"
         },
         {
           "name": "keyword.control.namu",
@@ -154,7 +168,7 @@
         },
         {
           "name": "keyword.operator.namu",
-          "match": "^>"
+          "match": "^(> ?){1,8}"
         },
         {
           "name": "keyword.control.namu",
@@ -174,12 +188,12 @@
       "patterns": [
         {
           "name": "keyword.operator.namu",
-          "match": "(?<=^ ( )*)(\\*|1\\.|a\\.|A\\.|i\\.|I\\.(\\#[0-9][0-9]?)?)"
+          "match": "(?<=^(> ?){0,8} ( )*)(\\*|1\\.|a\\.|A\\.|i\\.|I\\.(\\#[0-9][0-9]?)?)"
         }
       ]
     },
     "brackets": {
-      "match": "((?<=\\{{3}))((\\+[0-9]|#[A-Fa-f0-9]{3,6}(\\,#[A-Fa-f0-9]{3,6})?)( )|((#!folding )(.*)|(#!wiki) (style)=(\"[^\"]*\")|(#!html) )|(#!syntax) (basic|cpp|csharp|css|erlang|go|java|javascript|json|kotlin|lisp|lua|markdown|objectivec|perl|php|powershell|python|ruby|rust|sh|sql|swift|typescript|xml))",
+      "match": "((?<=\\{{3}))((\\+[0-9]|#[A-Fa-f0-9]{3,6}(\\,#[A-Fa-f0-9]{3,6})?)( )|((#!folding )(.*)|(#!wiki)(?: (?:(?:(style)=(\"[^\"]*\")(?: (dark-style)=(\"[^\"]*\"))?)|(?:(dark-style)=(\"[^\"]*\")(?: (style)=(\"[^\"]*\"))?)))?|(#!html))|(#!syntax) (basic|cpp|csharp|css|erlang|go|java(script)?|json|kotlin|lisp|lua|markdown|objectivec|perl|php|powershell|python|ruby|rust|sh|sql|swift|typescript|xml))",
       "captures": {
         "1": {
           "name": "keyword.control.namu"
@@ -206,12 +220,30 @@
           "name": "string.quoted.double.namu"
         },
         "12": {
-          "name": "support.constant.namu"
+          "name": "variable.parameter.namu"
         },
         "13": {
-          "name": "support.constant.namu"
+          "name": "string.quoted.double.namu"
         },
         "14": {
+          "name": "variable.parameter.namu"
+        },
+        "15": {
+          "name": "string.quoted.double.namu"
+        },
+        "16": {
+          "name": "variable.parameter.namu"
+        },
+        "17": {
+          "name": "string.quoted.double.namu"
+        },
+        "18": {
+          "name": "support.constant.namu"
+        },
+        "19": {
+          "name": "support.constant.namu"
+        },
+        "20": {
           "name": "string.quoted.double.namu"
         }
       }
