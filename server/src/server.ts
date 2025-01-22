@@ -194,21 +194,21 @@ async function validateTextDocument(
     /(^= [^=]* =$|^=# [^=]* #=$)/gm,
     DiagnosticSeverity.Warning,
     () =>
-      `1단계 문단은 비권장 문법입니다.\n2단계 문단 이상으로 변경할 것을 권장합니다.`
+      `1단계 문단은 비권장 문법입니다. 2단계 문단 이상으로 변경할 것을 권장합니다.`
   );
-  createDiagnostics(/^##@(.*)/gm, DiagnosticSeverity.Information, (m) =>
-    m[0].substring(3)
-  );
+  // createDiagnostics(/^##@(.*)/gm, DiagnosticSeverity.Information, (m) =>
+  //   m[0].substring(3)
+  // );
   createDiagnostics(
     /^-{4,9}[^-\r\n]+$|^[^-\r\n]+-{4,9}$/gm,
     DiagnosticSeverity.Error,
-    () => `수평줄 문법 옆에 문자가 존재합니다. \n문법을 삭제하거나 개행하세요.`
+    () => `수평줄 문법 옆에 문자가 존재합니다. 문법을 삭제하거나 개행하세요.`
   );
   createDiagnostics(
     /^(> ?){9,}/gm,
     DiagnosticSeverity.Error,
     () =>
-      `인용문은 8단계 이상 중첩할 수 없습니다.\n중첩 수를 줄이거나, 적절한 위치에 백슬래시(\\)를 삽입하세요.`
+      `인용문은 8단계 이상 중첩할 수 없습니다. 중첩 수를 줄이거나, 적절한 위치에 백슬래시(\\)를 삽입하세요.`
   );
 
   return diagnostics;

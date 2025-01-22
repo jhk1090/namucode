@@ -11,6 +11,7 @@
     - [자동완성 기능 (Snippet)](#자동완성-기능-snippet)
     - [커맨드 기능 (Command Palette)](#커맨드-기능-command-palette)
     - [목차 표시 기능 (Table of Contents)](#목차-표시-기능-table-of-contents)
+  - [기여](#기여)
   - [업데이트 로그](#업데이트-로그)
   - [참고](#참고)
 
@@ -108,6 +109,9 @@ _▲ 선택란_
 
 ![namucode_tableofcontent](https://user-images.githubusercontent.com/72603240/178151612-0395c438-57f3-4789-a497-b4cd6331bc91.png)
 _▲ 나무위키:문법 도움말_
+
+## 기여
+프로젝트 발전에 기여하시는 분들을 전부 환영합니다! [Pull Requests](https://github.com/jhk1090/namucode/pulls)를 통해 기여해주실 수 있습니다.
 
 ## 업데이트 로그
 

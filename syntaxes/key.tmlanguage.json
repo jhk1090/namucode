@@ -193,7 +193,7 @@
       ]
     },
     "brackets": {
-      "match": "((?<=\\{{3}))((\\+[0-9]|#[A-Fa-f0-9]{3,6}(\\,#[A-Fa-f0-9]{3,6})?)( )|((#!folding )(.*)|(#!wiki) (style)=(\"[^\"]*\")|(#!html) )|(#!syntax) (basic|cpp|csharp|css|erlang|go|java(script)?|json|kotlin|lisp|lua|markdown|objectivec|perl|php|powershell|python|ruby|rust|sh|sql|swift|typescript|xml))",
+      "match": "((?<=\\{{3}))((\\+[0-9]|#[A-Fa-f0-9]{3,6}(\\,#[A-Fa-f0-9]{3,6})?)( )|((#!folding )(.*)|(#!wiki)(?: (?:(?:(style)=(\"[^\"]*\")(?: (dark-style)=(\"[^\"]*\"))?)|(?:(dark-style)=(\"[^\"]*\")(?: (style)=(\"[^\"]*\"))?)))?|(#!html))|(#!syntax) (basic|cpp|csharp|css|erlang|go|java(script)?|json|kotlin|lisp|lua|markdown|objectivec|perl|php|powershell|python|ruby|rust|sh|sql|swift|typescript|xml))",
       "captures": {
         "1": {
           "name": "keyword.control.namu"
@@ -220,12 +220,30 @@
           "name": "string.quoted.double.namu"
         },
         "12": {
-          "name": "support.constant.namu"
+          "name": "variable.parameter.namu"
         },
         "13": {
-          "name": "support.constant.namu"
+          "name": "string.quoted.double.namu"
         },
         "14": {
+          "name": "variable.parameter.namu"
+        },
+        "15": {
+          "name": "string.quoted.double.namu"
+        },
+        "16": {
+          "name": "variable.parameter.namu"
+        },
+        "17": {
+          "name": "string.quoted.double.namu"
+        },
+        "18": {
+          "name": "support.constant.namu"
+        },
+        "19": {
+          "name": "support.constant.namu"
+        },
+        "20": {
           "name": "string.quoted.double.namu"
         }
       }
