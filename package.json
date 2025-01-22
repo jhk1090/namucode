@@ -270,8 +270,10 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "yarn run compile",
-    "compile": "tsc -p ./",
+    "vscode:prepublish": "yarn run build",
+    "build": "yarn run build:client && yarn run build:server",
+    "build:client": "cd client && yarn install && yarn run build",
+    "build:server": "cd server && yarn install && yarn run build",
     "watch": "tsc -watch -p ./",
     "pretest": "yarn run compile && yarn run lint",
     "lint": "eslint src --ext ts",
