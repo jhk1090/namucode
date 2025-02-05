@@ -14,6 +14,8 @@ import {
 } from "vscode-languageclient/node";
 import { EXTENSION_NAME, getConfig } from "./config";
 import { LinkDefinitionProvider } from "./linkdef";
+import { NamuMark } from 'namumark-clone-core';
+import * as cheerio from "cheerio";
 
 var isDocumentPerfect = true;
 let client: LanguageClient;
@@ -76,6 +78,22 @@ export function activate(context: ExtensionContext) {
       at: "top",
     });
   });
+
+  vscode.commands.registerCommand("namucode.preview", () => {
+    MarkPreview.createOrShow(context, context.extensionUri);
+  });
+
+  if (vscode.window.registerWebviewPanelSerializer) {
+		// Make sure we register a serializer in activation event
+		vscode.window.registerWebviewPanelSerializer(MarkPreview.viewType, {
+			async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
+				console.log(`Got state: ${state}`);
+				// Reset the webview options so we use latest uri for `localResourceRoots`.
+				webviewPanel.webview.options = getWebviewOptions(context.extensionUri);
+				MarkPreview.revive(webviewPanel, context, context.extensionUri);
+			}
+		});
+	}
 
   const symbolProvider = new DocumentSymbolProvider();
   vscode.languages.registerDocumentSymbolProvider("namu", symbolProvider);
@@ -148,8 +166,17 @@ class DocumentSymbolProvider implements vscode.DocumentSymbolProvider {
 
         if (match) {
           const depth = match[1].length;
+          let name!: string;
+          try {
+            const result = new NamuMark(match[3], { docName: "" }, { data: [] }).parse()[0]
+            const $ = cheerio.load(`<main>${result}</main>`)
+            name = $.text()
+          } catch (err) {
+            console.error(err);
+            name = match[3]
+          }
           const symbol = new TreeSymbol(
-            match[3],
+            name,
             "",
             vscode.SymbolKind.TypeParameter,
             line.range,
@@ -808,3 +835,198 @@ const getSelectedLineRange = (): vscode.Range | null => {
 
   return new vscode.Range(start, end);
 };
+
+function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptions {
+	return {
+		// Enable javascript in the webview
+		enableScripts: true,
+
+		// And restrict the webview to only loading content from our extension's `media` directory.
+		localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'client/media')]
+	};
+}
+
+class MarkPreview {
+	/**
+	 * Track the currently panel. Only allow a single panel to exist at a time.
+	 */
+	public static currentPanel: MarkPreview | undefined;
+
+	public static readonly viewType = 'markPreview';
+
+	private readonly _panel: vscode.WebviewPanel;
+  private readonly _context: ExtensionContext;
+	private readonly _extensionUri: vscode.Uri;
+	private _disposables: vscode.Disposable[] = [];
+
+	public static createOrShow(context: ExtensionContext, extensionUri: vscode.Uri) {
+		const column = vscode.window.activeTextEditor
+			? vscode.window.activeTextEditor.viewColumn
+			: undefined;
+
+		// If we already have a panel, show it.
+		if (MarkPreview.currentPanel) {
+			MarkPreview.currentPanel._panel.reveal(column);
+			return;
+		}
+
+		// Otherwise, create a new panel.
+		const panel = vscode.window.createWebviewPanel(
+			MarkPreview.viewType,
+			`미리보기 ${path.basename(vscode.window.activeTextEditor.document.fileName)}`,
+			vscode.ViewColumn.Beside,
+			getWebviewOptions(extensionUri),
+		);
+
+		MarkPreview.currentPanel = new MarkPreview(panel, context, extensionUri);
+	}
+
+	public static revive(panel: vscode.WebviewPanel, context: ExtensionContext, extensionUri: vscode.Uri) {
+		MarkPreview.currentPanel = new MarkPreview(panel, context, extensionUri);
+	}
+
+	private constructor(panel: vscode.WebviewPanel, context: ExtensionContext, extensionUri: vscode.Uri) {
+		this._panel = panel;
+		this._context = context;
+		this._extensionUri = extensionUri;
+
+		// Set the webview's initial html content
+		this._update();
+
+		// Listen for when the panel is disposed
+		// This happens when the user closes the panel or when the panel is closed programmatically
+		this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
+
+		// Update the content based on view changes
+		this._panel.onDidChangeViewState(
+			e => {
+				if (this._panel.visible) {
+					this._update();
+				}
+			},
+			null,
+			this._disposables
+		);
+
+		// Handle messages from the webview
+		this._panel.webview.onDidReceiveMessage(
+			message => {
+				switch (message.command) {
+					case 'alert':
+						vscode.window.showErrorMessage(message.text);
+						return;
+				}
+			},
+			null,
+			this._disposables
+		);
+
+    const themeDisposable = vscode.workspace.onDidChangeConfiguration(event => {
+      if (event.affectsConfiguration('workbench.colorTheme')) {
+        this._update();
+      }
+    },
+    null,
+    this._disposables)
+
+    const saveDisposable = vscode.workspace.onDidSaveTextDocument(document => {
+      this._update();
+    }, null, this._disposables)
+
+    context.subscriptions.push(themeDisposable, saveDisposable)
+	}
+
+	public doRefactor() {
+		// Send a message to the webview webview.
+		// You can send any JSON serializable data.
+		this._panel.webview.postMessage({ command: 'refactor' });
+	}
+
+	public dispose() {
+		MarkPreview.currentPanel = undefined;
+
+		// Clean up our resources
+		this._panel.dispose();
+
+		while (this._disposables.length) {
+			const x = this._disposables.pop();
+			if (x) {
+				x.dispose();
+			}
+		}
+	}
+
+	private _update() {
+		const webview = this._panel.webview;
+    this._panel.iconPath = (vscode.Uri.joinPath(this._extensionUri, "images/Logo.svg"));
+    this._panel.title = `미리보기 ${path.basename(vscode.window.activeTextEditor.document.fileName)}`;
+		this._panel.webview.html = this._getHtmlForWebview(webview);
+	}
+
+	private _getHtmlForWebview(webview: vscode.Webview) {
+		// Local path to main script run in the webview
+		const scriptFuncPath = vscode.Uri.joinPath(this._extensionUri, 'client/media/func.js');
+		const scriptRenderPath = vscode.Uri.joinPath(this._extensionUri, 'client/media/render.js');
+		const scriptFuncUri = webview.asWebviewUri(scriptFuncPath);
+		const scriptRenderUri = webview.asWebviewUri(scriptRenderPath);
+
+		// Local path to css styles
+		const stylePath = vscode.Uri.joinPath(this._extensionUri, 'client/media/style.css');
+    const styleUri = webview.asWebviewUri(stylePath);
+    console.log(scriptFuncUri,scriptFuncUri,styleUri)
+		// Use a nonce to only allow specific scripts to be run
+		const nonce = getNonce();
+
+    if (!vscode.window.activeTextEditor) {
+      return ""
+    }
+
+    const text = vscode.window.activeTextEditor.document.getText().replaceAll("\r", "");
+    const result = new NamuMark(text, { docName: path.basename(vscode.window.activeTextEditor.document.fileName).split(".")[0], useDarkmode: vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark || vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.HighContrast ? "on" : "off" }, { data: [] }).parse()
+
+    return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Document</title>
+
+      <script defer id="katex" src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js" integrity="sha512-LQNxIMR5rXv7o+b1l8+N1EZMfhG7iFZ9HhnbJkTp4zjNr5Wvst75AqUeFDxeRUa7l5vEDyUiAip//r+EFLLCyA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+      <script defer id="hljs" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js" integrity="sha512-rdhY3cbXURo13l/WU9VlaRyaIYeJ/KBakckXIvJNAQde8DgpOmE+eZf7ha4vdqVjTtwQt69bD2wH2LXob/LB7Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+      <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/x86asm.min.js" integrity="sha512-HeAchnWb+wLjUb2njWKqEXNTDlcd1QcyOVxb+Mc9X0bWY0U5yNHiY5hTRUt/0twG8NEZn60P3jttqBvla/i2gA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+      <script defer src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.48.0/min/vs/loader.min.js" integrity="sha512-ZG31AN9z/CQD1YDDAK4RUAvogwbJHv6bHrumrnMLzdCrVu4HeAqrUX7Jsal/cbUwXGfaMUNmQU04tQ8XXl5Znw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+      <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlightjs-line-numbers.js/2.8.0/highlightjs-line-numbers.min.js"></script>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" integrity="sha512-fHwaWebuwA7NSF5Qg/af4UeDx9XqUpYpOGgubo3yWu+b2IQR4UeQwbb42Ti7gVAjNtVoI/I9TEoYeu9omwcC6g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/default.min.css" integrity="sha512-hasIneQUHlh06VNBe7f6ZcHmeRTLIaQWFd43YriJ0UND19bvYRauxthDg8E4eVNPm9bRUhr5JGeqH7FRFXQu5g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.41.0/min/vs/editor/editor.main.min.css" integrity="sha512-MFDhxgOYIqLdcYTXw7en/n5BshKoduTitYmX8TkQ+iJOGjrWusRi8+KmfZOrgaDrCjZSotH2d1U1e/Z1KT6nWw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+      <link rel="stylesheet" href="${styleUri}">
+      <script defer nonce="${nonce}" src="${scriptFuncUri}"></script>
+      <script defer nonce="${nonce}" src="${scriptRenderUri}"></script>
+    </head>
+    <body>
+      <section>
+        <article class="main" id="main_data">
+          <div class="opennamu_render_complete">
+            ${result[0] /* html 코드 */}
+          </div>
+        </article>
+      </section>
+      <script>
+        ${result[1] /* js 코드 */}
+      </script> 
+    </body>
+    </html>
+    `
+  }
+}
+
+function getNonce() {
+	let text = '';
+	const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+	for (let i = 0; i < 32; i++) {
+		text += possible.charAt(Math.floor(Math.random() * possible.length));
+	}
+	return text;
+}

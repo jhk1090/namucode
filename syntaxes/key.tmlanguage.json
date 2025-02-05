@@ -159,10 +159,6 @@
           "match": "(''[^']*''|__[^_]*__)"
         },
         {
-          "name": "markup.deleted.namu",
-          "match": "(~~[^~]*~~|--[^-]+--)"
-        },
-        {
           "name": "keyword.control.namu",
           "match": "-{4,9}"
         },

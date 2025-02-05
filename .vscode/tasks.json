@@ -31,7 +31,7 @@
     {
       "label": "customTasks",
       "type": "shell",
-      "command": "cd client && tsc -p ./ && cd ../server && tsc -p ./", // 원하는 터미널 명령어를 입력해야 해
+      "command": "yarn run build", // 원하는 터미널 명령어를 입력해야 해
       "group": {
         "kind": "build",
         "isDefault": true

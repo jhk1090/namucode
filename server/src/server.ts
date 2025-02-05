@@ -199,11 +199,11 @@ async function validateTextDocument(
   // createDiagnostics(/^##@(.*)/gm, DiagnosticSeverity.Information, (m) =>
   //   m[0].substring(3)
   // );
-  createDiagnostics(
-    /^-{4,9}[^-\r\n]+$|^[^-\r\n]+-{4,9}$/gm,
-    DiagnosticSeverity.Error,
-    () => `수평줄 문법 옆에 문자가 존재합니다. 문법을 삭제하거나 개행하세요.`
-  );
+  // createDiagnostics(
+  //   /^-{4,9}[^-\r\n]+$|^[^-\r\n]+-{4,9}$/gm,
+  //   DiagnosticSeverity.Error,
+  //   () => `수평줄 문법 옆에 문자가 존재합니다. 문법을 삭제하거나 개행하세요.`
+  // );
   createDiagnostics(
     /^(> ?){9,}/gm,
     DiagnosticSeverity.Error,

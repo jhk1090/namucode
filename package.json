@@ -30,45 +30,71 @@
     "commands": [
       {
         "command": "namucode.paragraphLevelDown",
-        "title": "문단 한단계 낮추기"
+        "title": "문단 한단계 낮추기",
+        "category": "나무코드"
       },
       {
         "command": "namucode.paragraphLevelUp",
-        "title": "문단 한단계 높이기"
+        "title": "문단 한단계 높이기",
+        "category": "나무코드"
       },
       {
         "command": "namucode.paragraphSort",
-        "title": "문단 자동 정렬"
+        "title": "문단 자동 정렬",
+        "category": "나무코드"
       },
       {
         "command": "namucode.linkify",
-        "title": "텍스트 링크"
+        "title": "텍스트 링크",
+        "category": "나무코드"
       },
       {
         "command": "namucode.textBold",
-        "title": "텍스트 굵게"
+        "title": "텍스트 굵게",
+        "category": "나무코드"
       },
       {
         "command": "namucode.textItalic",
-        "title": "텍스트 기울임"
+        "title": "텍스트 기울임",
+        "category": "나무코드"
       },
       {
         "command": "namucode.textUnderline",
-        "title": "텍스트 밑줄"
+        "title": "텍스트 밑줄",
+        "category": "나무코드"
       },
       {
         "command": "namucode.textStrike",
-        "title": "텍스트 취소선"
+        "title": "텍스트 취소선",
+        "category": "나무코드"
       },
       {
         "command": "namucode.textSuperscript",
-        "title": "텍스트 위첨자"
+        "title": "텍스트 위첨자",
+        "category": "나무코드"
       },
       {
         "command": "namucode.textSubscript",
-        "title": "텍스트 아래첨자"
+        "title": "텍스트 아래첨자",
+        "category": "나무코드"
+      },
+      {
+        "command": "namucode.preview",
+        "title": "미리보기",
+        "category": "나무코드",
+        "icon": "$(open-preview)",
+        "when": "editorLangId == 'namu'"
       }
     ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "namucode.preview",
+          "group": "navigation",
+          "when": "editorLangId == 'namu'"
+        }
+      ]
+    },
     "languages": [
       {
         "id": "namu",
@@ -274,6 +300,7 @@
     "build": "yarn run build:client && yarn run build:server",
     "build:client": "cd client && yarn install && yarn run build",
     "build:server": "cd server && yarn install && yarn run build",
+    "build:mark": "cd client/src/mark && npm install && tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "yarn run compile && yarn run lint",
     "lint": "eslint src --ext ts",
