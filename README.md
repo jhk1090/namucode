@@ -8,6 +8,8 @@
   - [기능](#기능)
     - [텍스트 강조 기능 (Syntax Highlighting)](#텍스트-강조-기능-syntax-highlighting)
     - [코드 분석 기능 (Linting)](#코드-분석-기능-linting)
+    - [미리보기 (Preview)](#미리보기-preview)
+    - [문단 자동 정렬 기능 (Auto-Sorting Paragraph)]()
     - [자동완성 기능 (Snippet)](#자동완성-기능-snippet)
     - [커맨드 기능 (Command Palette)](#커맨드-기능-command-palette)
     - [목차 표시 기능 (Table of Contents)](#목차-표시-기능-table-of-contents)
@@ -15,7 +17,7 @@
   - [업데이트 로그](#업데이트-로그)
   - [참고](#참고)
 
-![namucode_oneditor](https://user-images.githubusercontent.com/72603240/177030474-b7355ad7-83a2-4c6c-a39c-54ed28ead3f2.jpg)
+![namucode_oneditor](./images/namucode_oneditor.png)
 
 ## 설치
 
@@ -25,12 +27,11 @@
 
 1. 나무코드를 설치합니다. (상단 설치 링크)
 1. 설치 후 언어칸에서 '나무마크'를 선택하거나 파일 확장자를 `.namu`로 바꿔줍니다.
-1. 설정이 끝났으며 나무마크 문법을 사용해보세요!\
-   \
-   예시: [나무위키(namuwiki.namu) 문서](https://github.com/jhk1090/namucode/blob/main/src/namuwiki.namu)
+1. 설정이 끝났으며 나무마크 문법을 사용해보세요!
 
-![namucode_onlanguageselect](https://user-images.githubusercontent.com/72603240/177031047-5ac630d1-f218-4a92-88bb-68a8453d8a35.png)
-_▲ 선택란_
+| ![namucode_onlanguageselect](./images/namucode_onlanguageselect.png) |
+| :----: |
+| 선택란 |
 
 ## 기능
 
@@ -39,23 +40,37 @@ _▲ 선택란_
 나무코드는 텍스트 강조를 지원합니다.\
 기존 에디터보다 더 세세한 강조가 지원됩니다.
 
----
-
-나무위키의 '나무위키' 문서 비교샷
-
-- 나무위키 내부 편집기
-  ![namucode_origin](https://user-images.githubusercontent.com/72603240/177030481-020df8da-1b36-4b11-b1c2-f3ecf6e7c32a.jpg)
-- 나무코드
-  ![namucode_vscode](https://user-images.githubusercontent.com/72603240/177030487-f90f862d-e264-49d6-b935-137fb6154905.png)
+| ![namucode_origin](./images/namucode_origin.jpg) | ![namucode_vscode](./images/namucode_vscode.png) |
+| :----: | :----: |
+| 나무위키 편집기 | **나무코드 편집기** |
+  
 
 ### 코드 분석 기능 (Linting)
 
 간단한 분석을 통해 교정할 수 있는 문법 등을 강조 표시합니다.
 현재 코드 분석을 통해 강조를 지원하는 구문은 다음과 같습니다.
 
-- **고정 주석 강조** - `##@`를 사용한 고정 주석을 강조합니다.
-- **비권장 문법 경고 표시** - 나무위키에서 권장하지 않는 문법을 사용한 경우 경고 표시합니다.
+<!-- - **고정 주석 강조** - `##@`를 사용한 고정 주석을 강조합니다. -->
+- **비권장 문법 경고 표시** - 나무위키에서 권장하지 않는 문법을 사용한 경우 경고를 표시합니다.
   - 1단계 문단 경고
+- **인용문 오류 표시** - 인용문은 8단계 이상 중첩할 수 없습니다. 만약 사용한 경우 오류를 표시합니다.
+
+### 미리보기 (Preview)
+#### 개발 중인 기능입니다. 일부 문법이 꺠지거나 불안정 할 수 있습니다.
+나무코드는 미리보기를 지원합니다.\
+`F1`을 눌러 **나무코드: 미리보기** 옵션을 누르거나 `*.namu` 파일의 오른쪽 상단에 위치한 미리보기 아이콘을 눌러 미리보기를 조회할 수 있습니다.
+
+| ![Image](./images/namucode_preview_icon.png) | ![Image](./images/namucode_preview_example.png) |
+| :----: | :----: |
+| 미리보기 아이콘 | 미리보기 예시 |
+
+### 문단 자동 정렬 기능 (Auto-Sorting Paragraph)
+나무코드는 문단 자동 정렬 기능을 지원합니다.\
+`F1`을 눌러 **나무코드: 문단 자동 정렬** 옵션을 누르거나 `*.namu` 파일의 오른쪽 상단에 위치한 문단 자동 정렬 아이콘을 눌러 미리보기를 조회할 수 있습니다.
+
+| ![Image](./images/namucode_sort_icon.png) |
+| :----: |
+| 문단 자동 정렬 아이콘
 
 ### 자동완성 기능 (Snippet)
 
@@ -98,16 +113,18 @@ _▲ 선택란_
 - **텍스트 굵게** `ctrl`(`cmd`)+`B` - 선택한 문자를 굵게 만든다.
 - **텍스트 기울임** `ctrl`(`cmd`)+`I` - 선택한 문자를 기울임꼴로 만든다.
 - **텍스트 밑줄** `ctrl`(`cmd`)+`U` - 선택한 문자를 밑줄로 만든다.
-- **텍스트 취소선** `ctrl`(`cmd`)+`D` - 선택한 문자를 취소선으로 만든다.
+- **텍스트 취소선** `ctrl`(`cmd`)+`shift`+`D` - 선택한 문자를 취소선으로 만든다.
 - **텍스트 위첨자** `ctrl`(`cmd`)+`shift`+`U` - 선택한 문자를 위첨자로 만든다.
 - **텍스트 아래첨자** `ctrl`(`cmd`)+`shift`+`Y` - 선택한 문자를 아래첨자로 만든다.
+- **문단 자동 정렬 기능** `ctrl`(`cmd`)+`k` `ctrl`(`cmd`)+`s` - [문단 자동 정렬 기능](#문단-자동-정렬-기능-auto-sorting-paragraph)을 제공한다.
+- **미리보기** `ctrl`(`cmd`)+`k` `ctrl`(`cmd`)+`p` - [미리보기](#미리보기-preview) 기능을 제공한다.
 
 ### 목차 표시 기능 (Table of Contents)
 
-편집기 왼쪽 탐색기 탭에서 확인할 수 있으며, 문단 제목의 내용을 그대로 가져와 '개요' 란에 표시합니다.\
+편집기 왼쪽 탐색기 탭에서 확인할 수 있으며, 문단 제목의 내용을 그대로 가져와 '개요'(outline) 란에 표시합니다.\
 목차 클릭시 클릭한 목차로 이동됩니다.
 
-![namucode_tableofcontent](https://user-images.githubusercontent.com/72603240/178151612-0395c438-57f3-4789-a497-b4cd6331bc91.png)
+![namucode_tableofcontent](./images/namucode_toc.png)
 _▲ 나무위키:문법 도움말_
 
 ## 기여

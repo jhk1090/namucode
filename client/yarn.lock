@@ -190,7 +190,7 @@ https-proxy-agent@^5.0.0:
     agent-base "6"
     debug "4"
 
-iconv-lite@0.6.3, iconv-lite@^0.6.3:
+iconv-lite@^0.6.3, iconv-lite@0.6.3:
   version "0.6.3"
   resolved "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.6.3.tgz"
   integrity sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw==
@@ -243,7 +243,7 @@ ms@2.1.2:
 
 namumark-clone-core@^0.0.4:
   version "0.0.4"
-  resolved "https://registry.yarnpkg.com/namumark-clone-core/-/namumark-clone-core-0.0.4.tgz#43fbd121f0e5673073c63322c60c4aa5fc20515b"
+  resolved "https://registry.npmjs.org/namumark-clone-core/-/namumark-clone-core-0.0.4.tgz"
   integrity sha512-JzWirnm0pMjTHCHD9+s8oG0nWRcjU32tNGI4gf1nJFypPYf+Q+QCgvVVmIehWeTJ3Qw9iYRLN8q16qo92VBgRA==
   dependencies:
     crypto "^1.0.1"

@@ -6,18 +6,12 @@
 import * as path from "path";
 import { workspace, ExtensionContext } from "vscode";
 import * as vscode from "vscode";
-import {
-  LanguageClient,
-  LanguageClientOptions,
-  ServerOptions,
-  TransportKind,
-} from "vscode-languageclient/node";
+import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from "vscode-languageclient/node";
 import { EXTENSION_NAME, getConfig } from "./config";
 import { LinkDefinitionProvider } from "./linkdef";
-import { NamuMark } from 'namumark-clone-core';
+import { NamuMark } from "namumark-clone-core";
 import * as cheerio from "cheerio";
 
-var isDocumentPerfect = true;
 let client: LanguageClient;
 let activeRules: vscode.Disposable[] = [];
 enum Level {
@@ -26,74 +20,159 @@ enum Level {
 }
 
 export function activate(context: ExtensionContext) {
-  modifyParagraph(context);
   provideLink(context);
 
   vscode.commands.registerCommand("namucode.linkify", () => {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || editor.document.languageId !== 'namu') {
+      vscode.window.showWarningMessage('이 명령어는 나무마크 파일(*.namu)에서만 사용할 수 있습니다.');
+      return;
+    }
+
     if (tryUnwrapChar("[[", "]]")) return;
     wrapByChar("[[", "]]");
   });
 
   vscode.commands.registerCommand("namucode.textBold", () => {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || editor.document.languageId !== 'namu') {
+      vscode.window.showWarningMessage('이 명령어는 나무마크 파일(*.namu)에서만 사용할 수 있습니다.');
+      return;
+    }
+
     if (tryUnwrapChar("'''", "'''")) return;
     wrapByChar("'''", "'''");
   });
 
   vscode.commands.registerCommand("namucode.textItalic", () => {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || editor.document.languageId !== 'namu') {
+      vscode.window.showWarningMessage('이 명령어는 나무마크 파일(*.namu)에서만 사용할 수 있습니다.');
+      return;
+    }
     if (tryUnwrapChar("''", "''")) return;
     wrapByChar("''", "''");
   });
 
   vscode.commands.registerCommand("namucode.textUnderline", () => {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || editor.document.languageId !== 'namu') {
+      vscode.window.showWarningMessage('이 명령어는 나무마크 파일(*.namu)에서만 사용할 수 있습니다.');
+      return;
+    }
+
     if (tryUnwrapChar("__", "__")) return;
     wrapByChar("__", "__");
   });
 
   vscode.commands.registerCommand("namucode.textSuperscript", () => {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || editor.document.languageId !== 'namu') {
+      vscode.window.showWarningMessage('이 명령어는 나무마크 파일(*.namu)에서만 사용할 수 있습니다.');
+      return;
+    }
+
     if (tryUnwrapChar("^^", "^^")) return;
     tryUnwrapChar(",,", ",,");
     wrapByChar("^^", "^^");
   });
 
   vscode.commands.registerCommand("namucode.textSubscript", () => {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || editor.document.languageId !== 'namu') {
+      vscode.window.showWarningMessage('이 명령어는 나무마크 파일(*.namu)에서만 사용할 수 있습니다.');
+      return;
+    }
+
     if (tryUnwrapChar(",,", ",,")) return;
     tryUnwrapChar("^^", "^^");
     wrapByChar(",,", ",,");
   });
 
   vscode.commands.registerCommand("namucode.textStrike", () => {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || editor.document.languageId !== 'namu') {
+      vscode.window.showWarningMessage('이 명령어는 나무마크 파일(*.namu)에서만 사용할 수 있습니다.');
+      return;
+    }
+
     if (tryUnwrapChar("~~", "~~")) return;
     if (tryUnwrapChar("--", "--")) return;
     wrapByChar("~~", "~~");
   });
 
   vscode.commands.registerCommand("namucode.newParagraph", () => {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || editor.document.languageId !== 'namu') {
+      vscode.window.showWarningMessage('이 명령어는 나무마크 파일(*.namu)에서만 사용할 수 있습니다.');
+      return;
+    }
+
     if (tryUnwrapChar("== ", " ==")) return;
     wrapByChar("== ", " ==");
   });
 
   vscode.commands.registerCommand("namucode.gotoLine", (line: number) => {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || editor.document.languageId !== 'namu') {
+      vscode.window.showWarningMessage('이 명령어는 나무마크 파일(*.namu)에서만 사용할 수 있습니다.');
+      return;
+    }
+
     vscode.commands.executeCommand("revealLine", {
       lineNumber: line,
       at: "top",
     });
   });
 
-  vscode.commands.registerCommand("namucode.preview", () => {
-    MarkPreview.createOrShow(context, context.extensionUri);
+  vscode.commands.registerCommand("namucode.paragraphLevelDown", () => {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || editor.document.languageId !== 'namu') {
+      vscode.window.showWarningMessage('이 명령어는 나무마크 파일(*.namu)에서만 사용할 수 있습니다.');
+      return;
+    }
+
+    paragraphLeveling(Level.DOWN);
+  });
+
+  vscode.commands.registerCommand("namucode.paragraphLevelUp", () => {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || editor.document.languageId !== 'namu') {
+      vscode.window.showWarningMessage('이 명령어는 나무마크 파일(*.namu)에서만 사용할 수 있습니다.');
+      return;
+    }
+
+    paragraphLeveling(Level.UP);
+  });
+
+  const preview = vscode.commands.registerCommand("namucode.preview", () => {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || editor.document.languageId !== 'namu') {
+      vscode.window.showWarningMessage('이 명령어는 나무마크 파일(*.namu)에서만 사용할 수 있습니다.');
+      return;
+    }
+
+    const filePath = editor.document.uri.fsPath;
+    MarkPreview.createOrShow(context, context.extensionUri, filePath);
   });
 
   if (vscode.window.registerWebviewPanelSerializer) {
-		// Make sure we register a serializer in activation event
-		vscode.window.registerWebviewPanelSerializer(MarkPreview.viewType, {
-			async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
-				console.log(`Got state: ${state}`);
-				// Reset the webview options so we use latest uri for `localResourceRoots`.
-				webviewPanel.webview.options = getWebviewOptions(context.extensionUri);
-				MarkPreview.revive(webviewPanel, context, context.extensionUri);
-			}
-		});
-	}
+    // Make sure we register a serializer in activation event
+    for (const filePath of Object.keys(MarkPreview.currentPanels || {})) {
+      vscode.window.registerWebviewPanelSerializer(filePath, {
+        async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
+          console.log(`Got state: ${state}`);
+          // Reset the webview options so we use latest uri for `localResourceRoots`.
+          webviewPanel.webview.options = getWebviewOptions(context.extensionUri);
+          MarkPreview.revive(webviewPanel, context, context.extensionUri, filePath);
+        },
+      });
+    }
+  }
+
+  const sort = vscode.commands.registerCommand("namucode.paragraphSort", sortParagraph);
+
+  context.subscriptions.push(preview, sort);
 
   const symbolProvider = new DocumentSymbolProvider();
   vscode.languages.registerDocumentSymbolProvider("namu", symbolProvider);
@@ -104,9 +183,7 @@ export function activate(context: ExtensionContext) {
   // );
 
   // Code to connect to sever
-  const serverModule = context.asAbsolutePath(
-    path.join("server", "out", "server.js")
-  );
+  const serverModule = context.asAbsolutePath(path.join("server", "out", "server.js"));
 
   const serverOptions: ServerOptions = {
     run: { module: serverModule, transport: TransportKind.ipc },
@@ -139,25 +216,28 @@ export function deactivate(): Thenable<void> | undefined {
 // Code to provide tableofcontents(outline)
 class TreeSymbol extends vscode.DocumentSymbol {
   depth: number;
+  children: TreeSymbol[];
 
-  constructor(
-    name: string,
-    detail: string,
-    kind: vscode.SymbolKind,
-    range: vscode.Range,
-    selectionRange: vscode.Range,
-    depth: number
-  ) {
+  constructor(name: string, detail: string, kind: vscode.SymbolKind, range: vscode.Range, selectionRange: vscode.Range, depth: number) {
     super(name, detail, kind, range, selectionRange);
     this.depth = depth;
   }
 }
+
+class ParagraphTreeSymbol extends TreeSymbol {
+  contentRange: vscode.Range;
+  children: ParagraphTreeSymbol[];
+
+  constructor(symbol: TreeSymbol, contentRange: vscode.Range) {
+    super(symbol.name, symbol.detail, symbol.kind, symbol.range, symbol.selectionRange, symbol.depth);
+    this.contentRange = contentRange;
+  }
+}
+
 class DocumentSymbolProvider implements vscode.DocumentSymbolProvider {
-  public provideDocumentSymbols(
-    document: vscode.TextDocument
-  ): Thenable<vscode.DocumentSymbol[]> {
+  public provideDocumentSymbols(document: vscode.TextDocument): Thenable<TreeSymbol[]> {
     return new Promise((resolve, reject) => {
-      let symbols: vscode.DocumentSymbol[] = [];
+      let symbols: TreeSymbol[] = [];
       let parents: TreeSymbol[] = [];
 
       for (let i = 0; i < document.lineCount; i++) {
@@ -168,29 +248,19 @@ class DocumentSymbolProvider implements vscode.DocumentSymbolProvider {
           const depth = match[1].length;
           let name!: string;
           try {
-            const result = new NamuMark(match[3], { docName: "" }, { data: [] }).parse()[0]
-            const $ = cheerio.load(`<main>${result}</main>`)
-            name = $.text()
+            const result = new NamuMark(match[3], { docName: "" }, { data: [] }).parse()[0];
+            const $ = cheerio.load(`<main>${result}</main>`);
+            name = $.text();
           } catch (err) {
             console.error(err);
-            name = match[3]
+            name = match[3];
           }
-          const symbol = new TreeSymbol(
-            name,
-            "",
-            vscode.SymbolKind.TypeParameter,
-            line.range,
-            line.range,
-            depth
-          );
+          const symbol = new TreeSymbol(name, "", vscode.SymbolKind.TypeParameter, line.range, line.range, depth);
           if (depth === 1) {
             symbols.push(symbol);
             parents = [symbol];
           } else {
-            while (
-              parents.length > 0 &&
-              parents[parents.length - 1].depth >= depth
-            ) {
+            while (parents.length > 0 && parents[parents.length - 1].depth >= depth) {
               parents.pop();
             }
             if (parents.length > 0) {
@@ -241,463 +311,123 @@ class FoldingRangeProvider implements vscode.FoldingRangeProvider {
 }
 */
 // FIXME: Code to sort paragraph
-const modifyParagraph = (context: vscode.ExtensionContext) => {
-  interface typeTreeStruct {
-    title: string;
-    range: number[];
-    children: typeTreeStruct[];
+const sortParagraph = async () => {
+  const editor = vscode.window.activeTextEditor;
+  const symbolProvider = new DocumentSymbolProvider();
+  const symbolsProvided = await symbolProvider.provideDocumentSymbols(vscode.window.activeTextEditor.document);
+  let symbols!: ParagraphTreeSymbol[];
+  let isDocumentPerfect = true;
+  let imperfectReason = "";
+
+  if (!editor || editor.document.languageId !== 'namu') {
+    vscode.window.showWarningMessage('이 명령어는 나무마크 파일(*.namu)에서만 사용할 수 있습니다.');
+    return;
   }
 
-  var paragraph: typeTreeStruct[] = [];
+  const modifySymbolTree = (tree: TreeSymbol[], lastLine: vscode.TextLine) => {
+    const symbols: ParagraphTreeSymbol[] = [];
 
-  const treeStruct = (
-    name: string,
-    range1: string,
-    range2: string,
-    children?: []
-  ) => {
-    const length = Number(range2) - Number(range1);
-    let child: typeTreeStruct[] = [];
-    if (children != undefined) child = children;
-    return {
-      title: name,
-      range: [...Array(length).keys()].map((e) => e + Number(range1)),
-      children: child,
-    };
-  };
+    for (let i = 0; i < tree.length; i++) {
+      const current = tree[i];
+      const next = tree?.[i + 1];
 
-  const analyzeThree = (content: string) => {
-    const titleRegexThree = /^#(.*)#=== (.*) ===$|^#(.*)#===# (.*) #===$/gm;
-    let queue: { [k: string]: RegExpMatchArray[] } = {};
-    const analysisThree = [...content.matchAll(titleRegexThree)];
-
-    if (analysisThree.length == 0) return;
-
-    analysisThree.forEach((element) => {
-      let pindex = 0;
-      for (const [k, v] of paragraph.entries()) {
-        if (v.range.includes(Number(element[1]))) {
-          pindex = k;
-          break;
-        }
-      }
-      if (queue[String(pindex)] == undefined) {
-        queue[String(pindex)] = [];
+      let symbolToPush!: ParagraphTreeSymbol;
+      if (next) {
+        symbolToPush = new ParagraphTreeSymbol(
+          current,
+          new vscode.Range(current.range.start, editor.document.lineAt(next.range.start.line - 1).range.end)
+        );
+        symbolToPush.children = modifySymbolTree(current.children, editor.document.lineAt(next.range.start.line - 1));
+      } else {
+        symbolToPush = new ParagraphTreeSymbol(current, new vscode.Range(current.range.start, lastLine.range.end));
+        symbolToPush.children = modifySymbolTree(current.children, lastLine);
       }
 
-      queue[String(pindex)].push(element);
-    });
-    for (const [key, value] of Object.entries(queue)) {
-      value.forEach((e, i) => {
-        // 뒤에 3단계 문장 있음
-        if (i < value.length - 1)
-          paragraph[Number(key)].children.push(
-            treeStruct(e[2], e[1], value[i + 1][1])
-          );
-        else if (Number(key) < paragraph.length - 1)
-          // 뒤에 3단계 문장 없음 = 다음 2단계 문장의 첫 index 기준 && 뒤에 2단계 문장 있음
-          paragraph[Number(key)].children.push(
-            treeStruct(e[2], e[1], String(paragraph[Number(key) + 1].range[0]))
-          );
-        // 뒤에 2, 3단계 문장 없음 = 현재 2단계 문장의 끝 index 기준
-        else
-          paragraph[Number(key)].children.push(
-            treeStruct(
-              e[2],
-              e[1],
-              String(Number(paragraph[Number(key)].range.at(-1)) + 1)
-            )
-          );
-      });
+      symbols.push(symbolToPush);
     }
 
-    queue = {};
-    analyzeFour(content);
+    if (imperfectReason === "") {
+      const symbolsLevel = symbols.map(v => v.depth)
+      const top: number = symbolsLevel[0];
+      let prev = top;
+      for (let index = 0; index < symbolsLevel.length; index++) {
+        const level = symbolsLevel[index];
+        if (prev > level) {
+          if (level !== top) {
+            const disqualified = symbols[index - 1]
+            const compared = symbols[index]
+
+            imperfectReason = `${disqualified.depth}단계 문단 "${disqualified.name}"은 ${compared.depth}단계 문단 "${compared.name}"보다 선행될 수 없습니다.`
+            isDocumentPerfect = false;
+            break;
+          }
+        }
+  
+        prev = level;
+      }
+    }
+
+    return symbols;
+  };
+
+  symbols = modifySymbolTree(symbolsProvided, editor.document.lineAt(editor.document.lineCount - 1));
+  console.log(symbols);
+  console.log(isDocumentPerfect);
+
+  if (!isDocumentPerfect) {
+    vscode.window.showErrorMessage(`문단 구성이 완벽하지 않습니다. ${imperfectReason}`);
     return;
-  };
+  }
 
-  const analyzeFour = (content: string) => {
-    const titleRegexFour = /^#(.*)#==== (.*) ====$|^#(.*)#====# (.*) #====$/gm;
-    let queue: { [k: string]: { [k: string]: RegExpMatchArray[] } } = {};
-    const analysisFour = [...content.matchAll(titleRegexFour)];
+  let indexed!: string[];
+  const indexTree = (tree: ParagraphTreeSymbol[]) => {
+    let indexed: string[] = [];
 
-    if (analysisFour.length == 0) return;
-
-    analysisFour.forEach((element) => {
-      let twoIndex = 0;
-      let threeIndex = 0;
-      for (const [k, v] of paragraph.entries()) {
-        if (v.range.includes(Number(element[1]))) {
-          twoIndex = k;
-          for (const [kThree, vThree] of v.children.entries()) {
-            if (vThree.range.includes(Number(element[1]))) {
-              threeIndex = kThree;
-              break;
-            }
-          }
-          break;
-        }
-      }
-      if (queue[String(twoIndex)] == undefined) queue[String(twoIndex)] = {};
-      if (queue[String(twoIndex)][String(threeIndex)] == undefined)
-        queue[String(twoIndex)][String(threeIndex)] = [];
-
-      queue[String(twoIndex)][String(threeIndex)].push(element);
-    });
-    for (const [keyTwo, valueTwo] of Object.entries(queue)) {
-      for (const [keyThree, valueThree] of Object.entries(valueTwo)) {
-        const k2 = Number(keyTwo);
-        const k3 = Number(keyThree);
-        let target = paragraph[k2].children[k3].children;
-        valueThree.forEach((e, i) => {
-          // 뒤에 4단계 문장 있음
-          if (i < valueThree.length - 1) {
-            target.push(treeStruct(e[2], e[1], valueThree[i + 1][1]));
-            return;
-          } else if (k3 < paragraph[k2].children.length - 1) {
-            // 뒤에 4단계 문장 없음 = 다음 3단계 문장의 첫 index 기준 && 뒤에 3단계 문장 있음
-            target.push(
-              treeStruct(
-                e[2],
-                e[1],
-                String(paragraph[k2].children[k3 + 1].range[0])
-              )
-            );
-            return;
-          } else if (k2 < paragraph.length - 1) {
-            // 뒤에 3, 4단계 문장 없음 = 다음 2단계 문장의 첫 index 기준 && 뒤에 2단계 문장 있음
-            target.push(
-              treeStruct(e[2], e[1], String(Number(paragraph[k2 + 1].range[0])))
-            );
-            return;
-          } else {
-            // 뒤에 2, 3, 4단계 문장 없음 = 다음 2단계 문장의 끝 index 기준
-            target.push(
-              treeStruct(
-                e[2],
-                e[1],
-                String(Number(paragraph[k2].range.at(-1)) + 1)
-              )
-            );
-            return;
-          }
-        });
+    const indexMapList = tree
+      .map((v, i) => {
+        return [v.name, i];
+      })
+      .sort((first, second) => {
+        if (first[0] < second[0]) return -1;
+        if (first[0] > second[0]) return 1;
+        return 0;
+      }) as [string, number][];
+    for (const indexMap of indexMapList) {
+      const value = tree[indexMap[1]];
+      if (value.children.length !== 0) {
+        const childrenIndexed = indexTree(value.children);
+        const childrenRangeStart = value.children[0].contentRange.start;
+        const noChildrenContentRange = new vscode.Range(value.contentRange.start, editor.document.lineAt(childrenRangeStart.line - 1).range.end);
+        console.log([editor.document.getText(noChildrenContentRange)]);
+        indexed.push(...[editor.document.getText(noChildrenContentRange).replaceAll("\r", ""), ...childrenIndexed]);
+      } else {
+        indexed.push(editor.document.getText(value.contentRange).replaceAll("\r", ""));
       }
     }
 
-    queue = {};
-    analyzeFive(content);
-    return;
+    return indexed;
   };
 
-  const analyzeFive = (content: string) => {
-    const titleRegexFive =
-      /^#(.*)#===== (.*) =====$|^#(.*)#=====# (.*) #=====$/gm;
-    let queue: {
-      [k: string]: { [k: string]: { [k: string]: RegExpMatchArray[] } };
-    } = {};
-    const analysisFive = [...content.matchAll(titleRegexFive)];
+  indexed = indexTree(symbols);
+  const nonBodyRangeEnd = symbols[0].range.start.line - 1
+  if (nonBodyRangeEnd > -1) {
+    indexed = [
+      editor.document.getText(new vscode.Range(editor.document.positionAt(0), editor.document.lineAt(nonBodyRangeEnd).range.end)),
+      ...indexed,
+    ];
+  }
 
-    if (analysisFive.length == 0) return;
-
-    analysisFive.forEach((element) => {
-      let twoIndex = 0;
-      let threeIndex = 0;
-      let fourIndex = 0;
-      for (const [k, v] of paragraph.entries()) {
-        if (v.range.includes(Number(element[1]))) {
-          twoIndex = k;
-          for (const [kThree, vThree] of v.children.entries()) {
-            if (vThree.range.includes(Number(element[1]))) {
-              threeIndex = kThree;
-              for (const [kFour, vFour] of vThree.children.entries()) {
-                if (vFour.range.includes(Number(element[1]))) {
-                  fourIndex = kFour;
-                  break;
-                }
-              }
-              break;
-            }
-          }
-          break;
-        }
-      }
-      if (queue[String(twoIndex)] == undefined) queue[String(twoIndex)] = {};
-      if (queue[String(twoIndex)][String(threeIndex)] == undefined)
-        queue[String(twoIndex)][String(threeIndex)] = {};
-      if (
-        queue[String(twoIndex)][String(threeIndex)][String(fourIndex)] ==
-        undefined
-      )
-        queue[String(twoIndex)][String(threeIndex)][String(fourIndex)] = [];
-
-      queue[String(twoIndex)][String(threeIndex)][String(fourIndex)].push(
-        element
-      );
-    });
-    for (const [keyTwo, valueTwo] of Object.entries(queue)) {
-      for (const [keyThree, valueThree] of Object.entries(valueTwo)) {
-        for (const [keyFour, valueFour] of Object.entries(valueThree)) {
-          const k2 = Number(keyTwo);
-          const k3 = Number(keyThree);
-          const k4 = Number(keyFour);
-          let target = paragraph[k2].children[k3].children[k4].children;
-          valueFour.forEach((e, i) => {
-            // 뒤에 5단계 문장 있음
-            if (i < valueFour.length - 1) {
-              target.push(treeStruct(e[2], e[1], valueFour[i + 1][1]));
-              return;
-            }
-            // 뒤에 5단계 문장 없음 = 다음 4단계 문장의 첫 index 기준 && 뒤에 4단계 문장 있음
-            else if (k4 < paragraph[k2].children[k3].children.length - 1) {
-              target.push(
-                treeStruct(
-                  e[2],
-                  e[1],
-                  String(paragraph[k2].children[k3].children[k4 + 1].range[0])
-                )
-              );
-              return;
-            } else if (k3 < paragraph[k2].children.length - 1) {
-              // 뒤에 4, 5단계 문장 없음 = 다음 3단계 문장의 첫 index 기준 && 뒤에 3단계 문장 있음
-              target.push(
-                treeStruct(
-                  e[2],
-                  e[1],
-                  String(paragraph[k2].children[k3 + 1].range[0])
-                )
-              );
-              return;
-            } else if (k2 < paragraph.length - 1) {
-              // 뒤에 3, 4, 5단계 문장 없음 = 다음 2단계 문장의 첫 index 기준 && 뒤에 2단계 문장 있음
-              target.push(
-                treeStruct(
-                  e[2],
-                  e[1],
-                  String(Number(paragraph[k2 + 1].range[0]))
-                )
-              );
-              return;
-            } else {
-              // 뒤에 2, 3, 4, 5단계 문장 없음 = 다음 2단계 문장의 끝 index 기준
-              target.push(
-                treeStruct(
-                  e[2],
-                  e[1],
-                  String(Number(paragraph[k2].range.at(-1)) + 1)
-                )
-              );
-              return;
-            }
-          });
-        }
-      }
-    }
-
-    queue = {};
-    analyzeSix(content);
-    return;
-  };
-
-  const analyzeSix = (content: string) => {
-    const titleRegexSix =
-      /^#(.*)#====== (.*) ======$|^#(.*)#======# (.*) #======$/gm;
-    let queue: {
-      [k: string]: {
-        [k: string]: { [k: string]: { [k: string]: RegExpMatchArray[] } };
-      };
-    } = {};
-    const analysisSix = [...content.matchAll(titleRegexSix)];
-
-    if (analysisSix.length == 0) return;
-
-    analysisSix.forEach((element) => {
-      let twoIndex = 0;
-      let threeIndex = 0;
-      let fourIndex = 0;
-      let fiveIndex = 0;
-      for (const [k, v] of paragraph.entries()) {
-        if (v.range.includes(Number(element[1]))) {
-          twoIndex = k;
-          for (const [kThree, vThree] of v.children.entries()) {
-            if (vThree.range.includes(Number(element[1]))) {
-              threeIndex = kThree;
-              for (const [kFour, vFour] of vThree.children.entries()) {
-                if (vFour.range.includes(Number(element[1]))) {
-                  fourIndex = kFour;
-                  for (const [kFive, vFive] of vFour.children.entries()) {
-                    if (vFive.range.includes(Number(element[1]))) {
-                      fiveIndex = kFive;
-                      break;
-                    }
-                  }
-                  break;
-                }
-              }
-              break;
-            }
-          }
-          break;
-        }
-      }
-      if (queue[String(twoIndex)] == undefined) queue[String(twoIndex)] = {};
-      if (queue[String(twoIndex)][String(threeIndex)] == undefined)
-        queue[String(twoIndex)][String(threeIndex)] = {};
-      if (
-        queue[String(twoIndex)][String(threeIndex)][String(fourIndex)] ==
-        undefined
-      )
-        queue[String(twoIndex)][String(threeIndex)][String(fourIndex)] = {};
-      if (
-        queue[String(twoIndex)][String(threeIndex)][String(fourIndex)][
-          String(fiveIndex)
-        ] == undefined
-      )
-        queue[String(twoIndex)][String(threeIndex)][String(fourIndex)][
-          String(fiveIndex)
-        ] = [];
-
-      queue[String(twoIndex)][String(threeIndex)][String(fourIndex)][
-        String(fiveIndex)
-      ].push(element);
-    });
-    for (const [keyTwo, valueTwo] of Object.entries(queue)) {
-      for (const [keyThree, valueThree] of Object.entries(valueTwo)) {
-        for (const [keyFour, valueFour] of Object.entries(valueThree)) {
-          for (const [keyFive, valueFive] of Object.entries(valueFour)) {
-            const k2 = Number(keyTwo);
-            const k3 = Number(keyThree);
-            const k4 = Number(keyFour);
-            const k5 = Number(keyFive);
-            let target =
-              paragraph[k2].children[k3].children[k4].children[k5].children;
-            valueFive.forEach((e, i) => {
-              if (i < valueFive.length - 1) {
-                // 뒤에 6단계 문장 있음
-                target.push(treeStruct(e[2], e[1], valueFive[i + 1][1]));
-                return;
-              } else if (
-                k5 <
-                paragraph[k2].children[k3].children[k4].children.length - 1
-              ) {
-                // 뒤에 6단계 문장 없음 = 다음 5단계 문장의 첫 index 기준 && 뒤에 5단계 문장 있음
-                target.push(
-                  treeStruct(
-                    e[2],
-                    e[1],
-                    String(
-                      paragraph[k2].children[k3].children[k4].children[k5 + 1]
-                        .range[0]
-                    )
-                  )
-                );
-                return;
-              } else if (k4 < paragraph[k2].children[k3].children.length - 1) {
-                // 뒤에 5, 6단계 문장 없음 = 다음 4단계 문장의 첫 index 기준 && 뒤에 4단계 문장 있음
-                target.push(
-                  treeStruct(
-                    e[2],
-                    e[1],
-                    String(paragraph[k2].children[k3].children[k4 + 1].range[0])
-                  )
-                );
-                return;
-              } else if (k3 < paragraph[k2].children.length - 1) {
-                // 뒤에 4, 5, 6단계 문장 없음 = 다음 3단계 문장의 첫 index 기준 && 뒤에 3단계 문장 있음
-                target.push(
-                  treeStruct(
-                    e[2],
-                    e[1],
-                    String(paragraph[k2].children[k3 + 1].range[0])
-                  )
-                );
-                return;
-              } else if (k2 < paragraph.length - 1) {
-                // 뒤에 3, 4, 5, 6단계 문장 없음 = 다음 2단계 문장의 첫 index 기준 && 뒤에 2단계 문장 있음
-                target.push(
-                  treeStruct(
-                    e[2],
-                    e[1],
-                    String(Number(paragraph[k2 + 1].range[0]))
-                  )
-                );
-                return;
-              } else {
-                // 뒤에 2, 3, 4, 5, 6단계 문장 없음 = 다음 2단계 문장의 끝 index 기준
-                target.push(
-                  treeStruct(
-                    e[2],
-                    e[1],
-                    String(Number(paragraph[k2].range.at(-1)) + 1)
-                  )
-                );
-                return;
-              }
-            });
-          }
-        }
-      }
-    }
-    queue = {};
-    return;
-  };
-
-  const paragraphSort = () => {
-    const editor = vscode.window.activeTextEditor;
-
-    if (!isDocumentPerfect) {
-      vscode.window.showErrorMessage(
-        "문단 구성이 잘못되어 정렬할 수 없습니다. 구성이 올바른지 확인하세요."
-      );
-      return;
-    }
-
-    if (editor) {
-      const document = editor.document;
-      const titleRegexTwo = /^#(.*)#== (.*) ==$|^#(.*)#==# (.*) #==$/gm;
-
-      let content: string = "";
-      const splitter = document
-        .getText()
-        .split("\n")
-        .map((elem, idx) => `#${String(idx).padStart(7, "0")}#` + elem);
-      splitter.forEach((elem) => (content += elem + "\n"));
-      const analysisTwo = [...content.matchAll(titleRegexTwo)];
-      analysisTwo.forEach((element, idx) => {
-        // 뒤에 2단계 문단이 존재
-        if (idx < analysisTwo.length - 1) {
-          paragraph.push(
-            treeStruct(element[2], element[1], analysisTwo[idx + 1][1])
-          );
-        } // 뒤에 2단계 문단 없음 = 끝 문장의 index 기준
-        else {
-          paragraph.push(
-            treeStruct(element[2], element[1], String(splitter.length))
-          );
-        }
-      });
-
-      analyzeThree(content);
-
-      console.log(paragraph);
-      vscode.window.showInformationMessage("성공적으로 정렬되었습니다!");
-      paragraph = [];
-    }
-  };
-
-  vscode.commands.registerCommand("namucode.paragraphLevelDown", () => {
-    paragraphLeveling(Level.DOWN);
-  });
-
-  vscode.commands.registerCommand("namucode.paragraphLevelUp", () => {
-    paragraphLeveling(Level.UP);
-  });
-  const sort = vscode.commands.registerCommand(
-    "namucode.paragraphSort",
-    paragraphSort
+  // 문서의 전체 범위를 가져옵니다.
+  const entireRange = new vscode.Range(
+    editor.document.positionAt(0), // 문서 시작
+    editor.document.positionAt(editor.document.getText().length) // 문서 끝
   );
 
-  context.subscriptions.push(sort);
+  editor.edit((editBuilder) => {
+    editBuilder.replace(entireRange, indexed.join("\n"));
+  });
+
+  vscode.window.showInformationMessage("성공적으로 정렬되었습니다!");
 };
 
 // Code to provide shortcuts
@@ -711,30 +441,30 @@ const paragraphLeveling = (type: Level) => {
 
     let lines = document.getText(lineRange).split("\n");
     if (type == Level.UP) {
-      const paragraphRegex = /(^(={1,5})(#?) (.*) (\2)(\1)(?<returnChar>\r)?$)/
+      const paragraphRegex = /(^(={1,5})(#?) (.*) (\2)(\1)(?<returnChar>\r)?$)/;
       for (let i = 0; i < lines.length; i++) {
         const execResult = paragraphRegex.exec(lines[i]);
-        console.log(execResult)
+        console.log(execResult);
         if (execResult !== null) {
           if (execResult.groups?.returnChar === "\r") {
-            lines[i] = lines[i].replace("\r", "")
-            lines[i] = `=${lines[i]}=\r`
+            lines[i] = lines[i].replace("\r", "");
+            lines[i] = `=${lines[i]}=\r`;
           } else {
-            lines[i] = `=${lines[i]}=`
+            lines[i] = `=${lines[i]}=`;
           }
         }
         paragraphRegex.lastIndex = 0;
       }
     } else if (type == Level.DOWN) {
-      const paragraphRegex = /(^(={2,6})(#?) (.*) (\2)(\1)(?<returnChar>\r)?$)/
+      const paragraphRegex = /(^(={2,6})(#?) (.*) (\2)(\1)(?<returnChar>\r)?$)/;
       for (let i = 0; i < lines.length; i++) {
         const execResult = paragraphRegex.exec(lines[i]);
         if (execResult !== null) {
           if (execResult.groups?.returnChar === "\r") {
-            lines[i] = lines[i].replace("\r", "")
-            lines[i] = `${lines[i].slice(1, -1)}\r`
+            lines[i] = lines[i].replace("\r", "");
+            lines[i] = `${lines[i].slice(1, -1)}\r`;
           } else {
-            lines[i] = lines[i].slice(1, -1)
+            lines[i] = lines[i].slice(1, -1);
           }
         }
         paragraphRegex.lastIndex = 0;
@@ -756,10 +486,8 @@ const wrapByChar = (prefix, postfix) => {
   const word = document.getText(selection);
 
   // 굵게, 기울임 구분용 공백 삽입
-  if (word.match(/^'/) && (prefix == "''" || prefix == "'''"))
-    prefix = `${prefix} `;
-  if (word.match(/'$/) && (postfix == "''" || postfix == "'''"))
-    postfix = ` ${postfix}`;
+  if (word.match(/^'/) && (prefix == "''" || prefix == "'''")) prefix = `${prefix} `;
+  if (word.match(/'$/) && (postfix == "''" || postfix == "'''")) postfix = ` ${postfix}`;
 
   editor.edit((editBuilder) => {
     editBuilder.replace(selection, `${prefix}${word}${postfix}`);
@@ -773,9 +501,7 @@ const tryUnwrapChar = (prefix, postfix) => {
   const document = editor.document;
   const selection = editor.selection;
   const word = document.getText(selection);
-  const re = new RegExp(
-    `^ *${escapeRegex(prefix)}([^'].*?[^'])${escapeRegex(postfix)} *$`
-  );
+  const re = new RegExp(`^ *${escapeRegex(prefix)}([^'].*?[^'])${escapeRegex(postfix)} *$`);
   const matched = word.match(re);
 
   if (matched) {
@@ -798,11 +524,7 @@ const provideLink = (context: vscode.ExtensionContext): void => {
   activeRules = config.rules.map((rule) => {
     return vscode.languages.registerDocumentLinkProvider(
       rule.languages.map((language) => ({ language })),
-      new LinkDefinitionProvider(
-        rule.linkPattern,
-        rule.linkPatternFlags,
-        rule.linkTarget
-      )
+      new LinkDefinitionProvider(rule.linkPattern, rule.linkPatternFlags, rule.linkTarget)
     );
   });
 
@@ -813,8 +535,7 @@ const provideLink = (context: vscode.ExtensionContext): void => {
 
 // Code of module function
 
-const escapeRegex = (string) =>
-  string.replace(/[/\-\\^$*+?.()|[\]{}]/g, "\\$&");
+const escapeRegex = (string) => string.replace(/[/\-\\^$*+?.()|[\]{}]/g, "\\$&");
 
 const getSelectedLineRange = (): vscode.Range | null => {
   const editor = vscode.window.activeTextEditor;
@@ -828,161 +549,141 @@ const getSelectedLineRange = (): vscode.Range | null => {
   const endLine = selection.end.line;
 
   const start = new vscode.Position(startLine, 0);
-  const end = new vscode.Position(
-    endLine,
-    editor.document.lineAt(endLine).text.length
-  );
+  const end = new vscode.Position(endLine, editor.document.lineAt(endLine).text.length);
 
   return new vscode.Range(start, end);
 };
 
 function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptions {
-	return {
-		// Enable javascript in the webview
-		enableScripts: true,
+  return {
+    // Enable javascript in the webview
+    enableScripts: true,
 
-		// And restrict the webview to only loading content from our extension's `media` directory.
-		localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'client/media')]
-	};
+    // And restrict the webview to only loading content from our extension's `media` directory.
+    localResourceRoots: [vscode.Uri.joinPath(extensionUri, "client/media")],
+  };
 }
 
 class MarkPreview {
-	/**
-	 * Track the currently panel. Only allow a single panel to exist at a time.
-	 */
-	public static currentPanel: MarkPreview | undefined;
+  public static currentPanels: { [key: string]: MarkPreview | undefined } = {};
 
-	public static readonly viewType = 'markPreview';
-
-	private readonly _panel: vscode.WebviewPanel;
+  private readonly _panel: vscode.WebviewPanel;
   private readonly _context: ExtensionContext;
-	private readonly _extensionUri: vscode.Uri;
-	private _disposables: vscode.Disposable[] = [];
+  private readonly _extensionUri: vscode.Uri;
+  private _disposables: vscode.Disposable[] = [];
 
-	public static createOrShow(context: ExtensionContext, extensionUri: vscode.Uri) {
-		const column = vscode.window.activeTextEditor
-			? vscode.window.activeTextEditor.viewColumn
-			: undefined;
+  public static createOrShow(context: ExtensionContext, extensionUri: vscode.Uri, panelId: string) {
+    const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
 
-		// If we already have a panel, show it.
-		if (MarkPreview.currentPanel) {
-			MarkPreview.currentPanel._panel.reveal(column);
-			return;
-		}
+    // If we already have a panel, show it.
+    if (MarkPreview.currentPanels[panelId]) {
+      MarkPreview.currentPanels[panelId]._panel.reveal();
+      return;
+    }
 
-		// Otherwise, create a new panel.
-		const panel = vscode.window.createWebviewPanel(
-			MarkPreview.viewType,
-			`미리보기 ${path.basename(vscode.window.activeTextEditor.document.fileName)}`,
-			vscode.ViewColumn.Beside,
-			getWebviewOptions(extensionUri),
-		);
+    // Otherwise, create a new panel.
+    const panel = vscode.window.createWebviewPanel(
+      panelId,
+      `${path.basename(vscode.window.activeTextEditor.document.fileName)} (미리보기)`,
+      vscode.ViewColumn.Beside,
+      getWebviewOptions(extensionUri)
+    );
 
-		MarkPreview.currentPanel = new MarkPreview(panel, context, extensionUri);
-	}
+    MarkPreview.currentPanels[panelId] = new MarkPreview(panel, context, extensionUri, panelId);
+  }
 
-	public static revive(panel: vscode.WebviewPanel, context: ExtensionContext, extensionUri: vscode.Uri) {
-		MarkPreview.currentPanel = new MarkPreview(panel, context, extensionUri);
-	}
+  public static revive(panel: vscode.WebviewPanel, context: ExtensionContext, extensionUri: vscode.Uri, panelId: string) {
+    MarkPreview.currentPanels[panelId] = new MarkPreview(panel, context, extensionUri, panelId);
+  }
 
-	private constructor(panel: vscode.WebviewPanel, context: ExtensionContext, extensionUri: vscode.Uri) {
-		this._panel = panel;
-		this._context = context;
-		this._extensionUri = extensionUri;
+  private constructor(panel: vscode.WebviewPanel, context: ExtensionContext, extensionUri: vscode.Uri, panelId: string) {
+    this._panel = panel;
+    this._context = context;
+    this._extensionUri = extensionUri;
+    console.log(path.basename(panelId), "just updated!");
+    // Set the webview's initial html content
+    this._update();
 
-		// Set the webview's initial html content
-		this._update();
+    // Listen for when the panel is disposed
+    // This happens when the user closes the panel or when the panel is closed programmatically
+    this._panel.onDidDispose(() => this.dispose(panelId), null, this._disposables);
 
-		// Listen for when the panel is disposed
-		// This happens when the user closes the panel or when the panel is closed programmatically
-		this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
+    const themeDisposable = vscode.workspace.onDidChangeConfiguration(
+      (event) => {
+        if (event.affectsConfiguration("workbench.colorTheme")) {
+          console.log(path.basename(panelId), "just updated!", "in theme state");
+          this._update();
+        }
+      },
+      null,
+      this._disposables
+    );
 
-		// Update the content based on view changes
-		this._panel.onDidChangeViewState(
-			e => {
-				if (this._panel.visible) {
-					this._update();
-				}
-			},
-			null,
-			this._disposables
-		);
+    const saveDisposable = vscode.workspace.onDidSaveTextDocument(
+      (document) => {
+        if (panelId === document.fileName) {
+          console.log(path.basename(panelId), "just updated!", "in save state");
+          this._update();
+        }
+      },
+      null,
+      this._disposables
+    );
 
-		// Handle messages from the webview
-		this._panel.webview.onDidReceiveMessage(
-			message => {
-				switch (message.command) {
-					case 'alert':
-						vscode.window.showErrorMessage(message.text);
-						return;
-				}
-			},
-			null,
-			this._disposables
-		);
+    context.subscriptions.push(themeDisposable, saveDisposable);
+  }
 
-    const themeDisposable = vscode.workspace.onDidChangeConfiguration(event => {
-      if (event.affectsConfiguration('workbench.colorTheme')) {
-        this._update();
+  public dispose(panelId: string) {
+    MarkPreview.currentPanels[panelId] = undefined;
+
+    // Clean up our resources
+    this._panel.dispose();
+
+    while (this._disposables.length) {
+      const x = this._disposables.pop();
+      if (x) {
+        x.dispose();
       }
-    },
-    null,
-    this._disposables)
+    }
+  }
 
-    const saveDisposable = vscode.workspace.onDidSaveTextDocument(document => {
-      this._update();
-    }, null, this._disposables)
+  private _update() {
+    const webview = this._panel.webview;
+    this._panel.iconPath = vscode.Uri.joinPath(this._extensionUri, "images/Logo.svg");
+    this._panel.title = `${path.basename(vscode.window.activeTextEditor.document.fileName)} (미리보기)`;
+    this._panel.webview.html = this._getHtmlForWebview(webview);
+  }
 
-    context.subscriptions.push(themeDisposable, saveDisposable)
-	}
+  private _getHtmlForWebview(webview: vscode.Webview) {
+    // Local path to main script run in the webview
+    const scriptFuncPath = vscode.Uri.joinPath(this._extensionUri, "client/media/func.js");
+    const scriptRenderPath = vscode.Uri.joinPath(this._extensionUri, "client/media/render.js");
+    const scriptFuncUri = webview.asWebviewUri(scriptFuncPath);
+    const scriptRenderUri = webview.asWebviewUri(scriptRenderPath);
 
-	public doRefactor() {
-		// Send a message to the webview webview.
-		// You can send any JSON serializable data.
-		this._panel.webview.postMessage({ command: 'refactor' });
-	}
-
-	public dispose() {
-		MarkPreview.currentPanel = undefined;
-
-		// Clean up our resources
-		this._panel.dispose();
-
-		while (this._disposables.length) {
-			const x = this._disposables.pop();
-			if (x) {
-				x.dispose();
-			}
-		}
-	}
-
-	private _update() {
-		const webview = this._panel.webview;
-    this._panel.iconPath = (vscode.Uri.joinPath(this._extensionUri, "images/Logo.svg"));
-    this._panel.title = `미리보기 ${path.basename(vscode.window.activeTextEditor.document.fileName)}`;
-		this._panel.webview.html = this._getHtmlForWebview(webview);
-	}
-
-	private _getHtmlForWebview(webview: vscode.Webview) {
-		// Local path to main script run in the webview
-		const scriptFuncPath = vscode.Uri.joinPath(this._extensionUri, 'client/media/func.js');
-		const scriptRenderPath = vscode.Uri.joinPath(this._extensionUri, 'client/media/render.js');
-		const scriptFuncUri = webview.asWebviewUri(scriptFuncPath);
-		const scriptRenderUri = webview.asWebviewUri(scriptRenderPath);
-
-		// Local path to css styles
-		const stylePath = vscode.Uri.joinPath(this._extensionUri, 'client/media/style.css');
+    // Local path to css styles
+    const stylePath = vscode.Uri.joinPath(this._extensionUri, "client/media/style.css");
     const styleUri = webview.asWebviewUri(stylePath);
-    console.log(scriptFuncUri,scriptFuncUri,styleUri)
-		// Use a nonce to only allow specific scripts to be run
-		const nonce = getNonce();
+    // Use a nonce to only allow specific scripts to be run
+    const nonce = getNonce();
 
     if (!vscode.window.activeTextEditor) {
-      return ""
+      return "";
     }
 
     const text = vscode.window.activeTextEditor.document.getText().replaceAll("\r", "");
-    const result = new NamuMark(text, { docName: path.basename(vscode.window.activeTextEditor.document.fileName).split(".")[0], useDarkmode: vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark || vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.HighContrast ? "on" : "off" }, { data: [] }).parse()
+    const result = new NamuMark(
+      text,
+      {
+        docName: path.basename(vscode.window.activeTextEditor.document.fileName).split(".")[0],
+        useDarkmode:
+          vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark ||
+          vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.HighContrast
+            ? "on"
+            : "off",
+      },
+      { data: [] }
+    ).parse();
 
     return `
     <!DOCTYPE html>
@@ -1018,15 +719,15 @@ class MarkPreview {
       </script> 
     </body>
     </html>
-    `
+    `;
   }
 }
 
 function getNonce() {
-	let text = '';
-	const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-	for (let i = 0; i < 32; i++) {
-		text += possible.charAt(Math.floor(Math.random() * possible.length));
-	}
-	return text;
+  let text = "";
+  const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  for (let i = 0; i < 32; i++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
 }

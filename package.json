@@ -3,7 +3,7 @@
   "displayName": "Namucode",
   "description": "나무위키 VSCode 확장 프로그램",
   "publisher": "jhk1090",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "engines": {
     "vscode": "^1.75.0"
   },
@@ -31,59 +31,70 @@
       {
         "command": "namucode.paragraphLevelDown",
         "title": "문단 한단계 낮추기",
-        "category": "나무코드"
+        "category": "나무코드",
+        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
       },
       {
         "command": "namucode.paragraphLevelUp",
         "title": "문단 한단계 높이기",
-        "category": "나무코드"
+        "category": "나무코드",
+        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
       },
       {
         "command": "namucode.paragraphSort",
         "title": "문단 자동 정렬",
-        "category": "나무코드"
+        "category": "나무코드",
+        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'",
+        "icon": "$(sort-precedence)"
       },
       {
         "command": "namucode.linkify",
         "title": "텍스트 링크",
-        "category": "나무코드"
+        "category": "나무코드",
+        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
       },
       {
         "command": "namucode.textBold",
         "title": "텍스트 굵게",
-        "category": "나무코드"
+        "category": "나무코드",
+        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
       },
       {
         "command": "namucode.textItalic",
         "title": "텍스트 기울임",
-        "category": "나무코드"
+        "category": "나무코드",
+        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
       },
       {
         "command": "namucode.textUnderline",
         "title": "텍스트 밑줄",
-        "category": "나무코드"
+        "category": "나무코드",
+        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
       },
       {
         "command": "namucode.textStrike",
         "title": "텍스트 취소선",
-        "category": "나무코드"
+        "category": "나무코드",
+        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
       },
       {
         "command": "namucode.textSuperscript",
         "title": "텍스트 위첨자",
-        "category": "나무코드"
+        "category": "나무코드",
+        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
       },
       {
         "command": "namucode.textSubscript",
         "title": "텍스트 아래첨자",
-        "category": "나무코드"
+        "category": "나무코드",
+        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
       },
       {
         "command": "namucode.preview",
         "title": "미리보기",
         "category": "나무코드",
-        "icon": "$(open-preview)",
-        "when": "editorLangId == 'namu'"
+        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'",
+        "icon": "$(open-preview)"
       }
     ],
     "menus": {
@@ -91,7 +102,12 @@
         {
           "command": "namucode.preview",
           "group": "navigation",
-          "when": "editorLangId == 'namu'"
+          "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
+        },
+        {
+          "command": "namucode.paragraphSort",
+          "group": "navigation",
+          "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
         }
       ]
     },
@@ -164,8 +180,8 @@
       },
       {
         "command": "namucode.textStrike",
-        "key": "ctrl+D",
-        "mac": "cmd+D",
+        "key": "ctrl+shift+D",
+        "mac": "cmd+shift+D",
         "when": "editorHasSelection && editorLangId == 'namu'"
       },
       {
@@ -194,6 +210,18 @@
           "langId": "namu",
           "name": "파일 삽입"
         }
+      },
+      {
+        "command": "namucode.paragraphSort",
+        "key": "ctrl+k ctrl+s",
+        "mac": "cmd+k cmd+s",
+        "when": "editorTextFocus && editorLangId == 'namu'"
+      },
+      {
+        "command": "namucode.preview",
+        "key": "ctrl+k ctrl+p",
+        "mac": "cmd+k cmd+p",
+        "when": "editorTextFocus && editorLangId == 'namu'"
       }
     ],
     "configurationDefaults": {
@@ -301,7 +329,7 @@
     "build:client": "cd client && yarn install && yarn run build",
     "build:server": "cd server && yarn install && yarn run build",
     "build:mark": "cd client/src/mark && npm install && tsc -p ./",
-    "watch": "tsc -watch -p ./",
+    "watch": "tsc -p -w",
     "pretest": "yarn run compile && yarn run lint",
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js"
