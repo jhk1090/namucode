@@ -673,7 +673,7 @@ class MarkPreview {
 
     const document = vscode.window.activeTextEditor.document
 
-    const text = document.getText(new vscode.Range(document.positionAt(0), document.lineAt(999).range.end)).replaceAll("\r", "");
+    const text = document.getText(new vscode.Range(document.positionAt(0), document.lineAt(document.lineCount - 1 >= 999 ? 999 : document.lineCount - 1).range.end)).replaceAll("\r", "");
     const result = new NamuMark(
       text,
       {
