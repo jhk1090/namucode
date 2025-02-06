@@ -9,7 +9,7 @@
     - [텍스트 강조 기능 (Syntax Highlighting)](#텍스트-강조-기능-syntax-highlighting)
     - [코드 분석 기능 (Linting)](#코드-분석-기능-linting)
     - [미리보기 (Preview)](#미리보기-preview)
-    - [문단 자동 정렬 기능 (Auto-Sorting Paragraph)]()
+    - [문단 자동 정렬 기능 (Auto-Sorting Paragraph)](#문단-자동-정렬-기능-auto-sorting-paragraph)
     - [자동완성 기능 (Snippet)](#자동완성-기능-snippet)
     - [커맨드 기능 (Command Palette)](#커맨드-기능-command-palette)
     - [목차 표시 기능 (Table of Contents)](#목차-표시-기능-table-of-contents)
