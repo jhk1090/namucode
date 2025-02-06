@@ -671,7 +671,9 @@ class MarkPreview {
       return "";
     }
 
-    const text = vscode.window.activeTextEditor.document.getText().replaceAll("\r", "");
+    const document = vscode.window.activeTextEditor.document
+
+    const text = document.getText(new vscode.Range(document.positionAt(0), document.lineAt(999).range.end)).replaceAll("\r", "");
     const result = new NamuMark(
       text,
       {
@@ -709,6 +711,7 @@ class MarkPreview {
     <body>
       <section>
         <article class="main" id="main_data">
+          <div style="background-color: darkred; color: white; font-size: 15px; position: fixed; bottom: 0; width: 100%; text-align: center;">실험적 기능. 1000줄까지만 지원합니다.</div>
           <div class="opennamu_render_complete">
             ${result[0] /* html 코드 */}
           </div>

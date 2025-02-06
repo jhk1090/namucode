@@ -3,7 +3,7 @@
   "displayName": "Namucode",
   "description": "나무위키 VSCode 확장 프로그램",
   "publisher": "jhk1090",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "engines": {
     "vscode": "^1.75.0"
   },
@@ -91,7 +91,7 @@
       },
       {
         "command": "namucode.preview",
-        "title": "미리보기",
+        "title": "미리보기 (베타)",
         "category": "나무코드",
         "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'",
         "icon": "$(open-preview)"
