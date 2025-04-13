@@ -189,7 +189,7 @@
       ]
     },
     "brackets": {
-      "match": "((?<=\\{{3}))((\\+[0-9]|#[A-Fa-f0-9]{3,6}(\\,#[A-Fa-f0-9]{3,6})?)( )|((#!folding )(.*)|(#!wiki)(?: (?:(?:(style)=(\"[^\"]*\")(?: (dark-style)=(\"[^\"]*\"))?)|(?:(dark-style)=(\"[^\"]*\")(?: (style)=(\"[^\"]*\"))?)))?|(#!html))|(#!syntax) (basic|cpp|csharp|css|erlang|go|java(script)?|json|kotlin|lisp|lua|markdown|objectivec|perl|php|powershell|python|ruby|rust|sh|sql|swift|typescript|xml))",
+      "match": "((?<=\\{{3}))((\\+[0-9]|#[A-Fa-f0-9]{3,6}(\\,#[A-Fa-f0-9]{3,6})?)( )|((#!folding )(.*)|(#!wiki)(?: (?:(?:(style)=(\"[^\"]*\")(?: (dark-style)=(\"[^\"]*\"))?)|(?:(dark-style)=(\"[^\"]*\")(?: (style)=(\"[^\"]*\"))?)))?|(#!html))|(#!syntax) (basic|cpp|csharp|css|erlang|go|java(script)?|json|kotlin|lisp|lua|markdown|objectivec|perl|php|powershell|python|ruby|rust|sh|sql|swift|typescript|xml)|(#!if)(?: (.*)))",
       "captures": {
         "1": {
           "name": "keyword.control.namu"
@@ -240,6 +240,12 @@
           "name": "support.constant.namu"
         },
         "20": {
+          "name": "string.quoted.double.namu"
+        },
+        "22": {
+          "name": "support.constant.namu"
+        },
+        "23": {
           "name": "string.quoted.double.namu"
         }
       }

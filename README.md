@@ -92,6 +92,7 @@
 - **parent** - 상위 문서 틀을 삽입합니다.
 - **relate** - 관련 문서 틀을 삽입합니다.
 - **youtube**, **yt** - 유튜브 영상을 삽입합니다.
+- **if** - if 문법을 삽입합니다.
 - **wikistyle**, **ws** - wiki style 문법을 삽입합니다.
 - **wikistyledark**, **wsd** - wiki style 문법을 삽입합니다. (dark-style 포함)
 - **syntax** - 문법 강조 구문을 삽입합니다.
