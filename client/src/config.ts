@@ -23,8 +23,16 @@ export function getConfig(): Config {
         linkTarget: "https://namu.wiki/w/$1",
       },
       {
+        linkPattern: "\\[include\\(([^,\\)\\]]*)(?:,[^\\)]*)?\\)\\]", // [include(이름)]
+        linkTarget: "https://namu.wiki/w/$1",
+      },
+      {
         linkPattern: "\\[\\[:(.*?)(\\|.*?\\]\\]|\\]\\])", // [[:링크]] 및 [[:링크|내용]]
         linkTarget: "https://namu.wiki/w/$1",
+      },
+      {
+        linkPattern: "\\[(?:youtube|kakaotv|nicovideo|vimeo|navertv)\\((.[^\\)\\]]*)\\)\\]", // [youtube(링크)]
+        linkTarget: "https://youtube.com/watch?v=$1",
       },
     ],
   };

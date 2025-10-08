@@ -3,7 +3,7 @@
   "displayName": "Namucode",
   "description": "나무위키 VSCode 확장 프로그램",
   "publisher": "jhk1090",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "engines": {
     "vscode": "^1.75.0"
   },
@@ -132,7 +132,13 @@
       {
         "language": "namu",
         "scopeName": "source.namu",
-        "path": "./syntaxes/key.tmLanguage.json"
+        "path": "./syntaxes/key.tmLanguage.json",
+        "injectTo": ["source.namu"],
+        "embeddedLanguages": {
+          "meta.embedded.block.javascript": "javascript",
+          "meta.embedded.line.css": "css",
+          "meta.embedded.block.html": "html"
+        }
       }
     ],
     "snippets": [
@@ -293,6 +299,90 @@
               "settings": {
                 "foreground": "#6d6d6d",
                 "fontStyle": "italic"
+              }
+            },
+            {
+              "scope": "support.constant.color.namu",
+              "settings": {
+                "foreground": "#fa7f5a",
+                "fontStyle": ""
+              }
+            },
+            {
+              "scope": "keyword.control.bracket.namu",
+              "settings": {
+                "foreground": "#fa7f5a",
+                "fontStyle": ""
+              }
+            },
+            {
+              "scope": "variable.parameter.bracket.namu",
+              "settings": {
+                "foreground": "#89DDFF",
+                "fontStyle": ""
+              }
+            },
+            {
+              "scope": "meta.block",
+              "settings": {
+                "foreground": "#EEFFFF",
+                "fontStyle": ""
+              }
+            },
+            {
+              "scope": "punctuation.definition.table.namu",
+              "settings": {
+                "foreground": "#569CD6",
+                "fontStyle": ""
+              }
+            },
+            {
+              "scope": "punctuation.definition.tag.begin.namu",
+              "settings": {
+                "foreground": "#569CD6",
+                "fontStyle": ""
+              }
+            },
+            {
+              "scope": "punctuation.definition.tag.end.namu",
+              "settings": {
+                "foreground": "#569CD6",
+                "fontStyle": ""
+              }
+            },
+            {
+              "scope": "entity.other.attribute-name.table.namu",
+              "settings": {
+                "foreground": "#89DDFF",
+                "fontStyle": ""
+              }
+            },
+            {
+              "scope": "string.unquoted.attribute-value.table.namu",
+              "settings": {
+                "foreground": "#CE9178",
+                "fontStyle": ""
+              }
+            },
+            {
+              "scope": "keyword.control.include.namu",
+              "settings": {
+                "foreground": "#569CD6",
+                "fontStyle": ""
+              }
+            },
+            {
+              "scope": "variable.parameter.key.namu",
+              "settings": {
+                "foreground": "#89DDFF",
+                "fontStyle": ""
+              }
+            },
+            {
+              "scope": "string.unquoted.argument.namu",
+              "settings": {
+                "foreground": "#CE9178",
+                "fontStyle": ""
               }
             }
           ]
