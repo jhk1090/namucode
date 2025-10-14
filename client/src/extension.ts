@@ -371,6 +371,11 @@ const sortParagraph = async () => {
   };
 
   symbols = modifySymbolTree(symbolsProvided, editor.document.lineAt(editor.document.lineCount - 1));
+  if (symbols.length == 0) {
+    vscode.window.showErrorMessage(`문서 내에 문단이 없습니다.`);
+    return;
+  }
+
   console.log(symbols);
   console.log(isDocumentPerfect);
 
@@ -409,6 +414,7 @@ const sortParagraph = async () => {
   };
 
   indexed = indexTree(symbols);
+
   const nonBodyRangeEnd = symbols[0].range.start.line - 1
   if (nonBodyRangeEnd > -1) {
     indexed = [
