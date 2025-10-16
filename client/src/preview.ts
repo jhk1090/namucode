@@ -1,6 +1,7 @@
 import * as path from "path";
 import * as vscode from "vscode"
 import { ExtensionContext } from "vscode";
+import fs from "fs";
 
 export function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptions {
   return {
@@ -8,7 +9,7 @@ export function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptio
     enableScripts: true,
 
     // And restrict the webview to only loading content from our extension's `media` directory.
-    localResourceRoots: [vscode.Uri.joinPath(extensionUri, "client/out")],
+    localResourceRoots: [vscode.Uri.joinPath(extensionUri, "client/out"), vscode.Uri.joinPath(extensionUri, "client/out/assets"),  vscode.Uri.joinPath(extensionUri, "client/out/assets/fonts"),  vscode.Uri.joinPath(extensionUri, "client/out/assets/fonts/katex")],
   };
 }
 
@@ -103,18 +104,22 @@ export class MarkPreview {
   }
 
   private _getHtmlForWebview(webview: vscode.Webview) {
-    // Local path to main script run in the webview
-		const styleUri = webview.asWebviewUri(
-			vscode.Uri.joinPath(
-				this._extensionUri, "client/out/client/vite-project.css"
-			)
-		)
-
 		const vueAppUri = webview.asWebviewUri(
 			vscode.Uri.joinPath(
 				this._extensionUri, "client/out/client/vite-project.mjs"
 			)
 		)
+
+    const styleUriList = []
+    for (const css of ["default.css", "github-dark-dimmed.min.css", "github.min.css", "ionicons.min.css", "katex.min.css", "wiki.css"]) {
+      styleUriList.push(webview.asWebviewUri(
+			vscode.Uri.joinPath(
+				this._extensionUri, "client/out/client/assets/css/" + css
+			)
+		))
+    }
+
+    const stylesheetFlatten = styleUriList.map(v => `<link href="${v}" rel="stylesheet" />`).map(v => v.toString()).join("\n")
 
     // Use a nonce to only allow specific scripts to be run
     const nonce = getNonce();
@@ -139,11 +144,12 @@ export class MarkPreview {
 				<meta http-equiv="Content-Security-Policy" content="default-src 'none';
 						style-src ${webview.cspSource};
 						img-src ${webview.cspSource};
+            font-src ${webview.cspSource};
 						script-src 'nonce-${nonce}';">
 
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-				<link href="${styleUri}" rel="stylesheet" />
+        ${stylesheetFlatten}
 
 				<title>Json Editor</title>
 		</head>

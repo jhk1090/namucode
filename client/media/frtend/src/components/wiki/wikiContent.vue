@@ -17,7 +17,7 @@ export default {
       type: Boolean,
       default: false
     },
-    content: {
+    value: {
       type: String,
       default: ''
     },
@@ -41,7 +41,8 @@ export default {
       modal: {
         show: false,
         content: ''
-      }
+      },
+      content: this.value
     }
   },
   mounted() {
@@ -298,6 +299,9 @@ export default {
         const input = newEl.querySelector(`[type=radio][name="${key}"][value="${value}"]`)
         input.checked = true
       }
+    },
+    updateContent(value) {
+      this.content = value
     }
   }
 }

@@ -1,5 +1,5 @@
 <template>
-  <WikiContent :content="content" :categories="categories" />
+  <WikiContent ref="wikiContent" :value="content" :categories="categories" />
 </template>
 <script>
 import Common from '@/mixins/common'
@@ -19,10 +19,16 @@ export default {
     }
   },
   mounted() {
-    window.addEventListener("message", e => {
+    window.addEventListener("message", this.handleMessage)
+  },
+  unmounted() {
+    window.removeEventListener("message", this.handleMessage)
+  },
+  methods: {
+    handleMessage(e) {
       if (e.data.type === 'updateContent')
-        this.content = e.data.newContent
-    })
+        this.$refs.wikiContent.updateContent(e.data.newContent)
+    }
   }
 }
 </script>
