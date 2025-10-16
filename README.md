@@ -13,6 +13,7 @@
     - [자동완성 기능 (Snippet)](#자동완성-기능-snippet)
     - [커맨드 기능 (Command Palette)](#커맨드-기능-command-palette)
     - [목차 표시 기능 (Table of Contents)](#목차-표시-기능-table-of-contents)
+  - [저작권 고지](#저작권-고지)
   - [기여](#기여)
   - [업데이트 로그](#업데이트-로그)
   - [참고](#참고)
@@ -128,6 +129,11 @@
 
 ![namucode_tableofcontent](./images/namucode_toc.png)
 _▲ 나무위키:문법 도움말_
+
+## 저작권 고지
+이 프로젝트에 사용된 나무위키 아이콘 저작자는 kein, 저작권은 umanle S.R.L.가 소유하고 있으며, CC BY-NC-SA 2.0 KR 하에 배포됩니다. [(참고)](https://namu.wiki/w/%ED%8C%8C%EC%9D%BC:%EB%82%98%EB%AC%B4%EC%9C%84%ED%82%A4%20%EC%95%84%EC%9D%B4%EC%BD%98.svg)
+
+이 프로젝트의 미리보기 기능의 구현을 위해 정현수님의 the tree 프로젝트의 코드를 사용했습니다.
 
 ## 기여
 프로젝트 발전에 기여하시는 분들을 전부 환영합니다! [Pull Requests](https://github.com/jhk1090/namucode/pulls)를 통해 기여해주실 수 있습니다.

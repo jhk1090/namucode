@@ -1,0 +1,20 @@
+{
+    "name": "vite-project",
+    "version": "0.0.0",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview"
+    },
+    "dependencies": {
+        "vue": "^3.5.17",
+        "@floating-ui/vue": "^1.1.6",
+        "@msgpack/msgpack": "^3.1.1",
+        "floating-vue": "^5.2.2",
+        "vue-final-modal": "^3.4.11"
+    },
+    "devDependencies": {
+        "@vitejs/plugin-vue": "^5.2.3",
+        "vite": "^6.2.4"
+    }
+}

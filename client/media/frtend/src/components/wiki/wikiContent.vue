@@ -1,40 +1,17 @@
 <template>
-  <WikiCategory v-if="categories.length" :categories="categories"/>
-
-  <div ref="div" v-html="content" class="wiki-content" @click="onDynamicContentClick" @submit.prevent="formSubmit" :class="{ 'wiki-thread-content': discuss }"></div>
-
+  <div ref="div" v-html="content" class="wiki-content" @submit.prevent="formSubmit" :class="{ 'wiki-thread-content': discuss }"></div>
   <div ref="popover" v-show="popover.show" id="tooltip" class="popper">
     <div ref="popoverArrow" id="tooltip-arrow" class="popper__arrow"></div>
-    <div id="tooltip-content" class="wiki-content" v-html="popover.content" @click="onDynamicContentClick"></div>
+    <div id="tooltip-content" class="wiki-content" v-html="popover.content"></div>
   </div>
-  <Modal v-model="modal.show" v-slot="props">
-    <div class="wiki-content" v-html="modal.content" @click="onDynamicContentClick"></div>
-    <button @click="props.close">닫기</button>
-  </Modal>
 </template>
 <script>
 import { computePosition, offset, flip, shift, autoUpdate } from '@floating-ui/vue'
 
-import NuxtLink from '@/components/global/nuxtLink'
-import Alert from '@/components/alert'
-import WikiCategory from '@/components/wiki/wikiCategory'
-import WikiCategoryDocs from '@/components/wiki/wikiCategoryDocs'
-import LocalDate from '@/components/localDate'
-
 import Common from '@/mixins/common'
-import { isMobile } from '@/utils'
-import Modal from '@/components/modal'
 
 export default {
   mixins: [Common],
-  components: {
-    Modal,
-    NuxtLink,
-    Alert,
-    WikiCategory,
-    WikiCategoryDocs,
-    LocalDate
-  },
   props: {
     discuss: {
       type: Boolean,
@@ -69,7 +46,6 @@ export default {
   },
   mounted() {
     this.setupWikiContent()
-    if(!import.meta.env.SSR) import('@justinribeiro/lite-youtube')
   },
   watch: {
     async content() {
@@ -106,10 +82,10 @@ export default {
           }
         });
 
-        if(this.$store.state.localConfig['wiki.hide_heading_content']) {
-          heading.classList.add('wiki-heading-folded');
-          heading.nextElementSibling.classList.add('wiki-heading-content-folded');
-        }
+        // if(this.$store.state.localConfig['wiki.hide_heading_content']) {
+        //   heading.classList.add('wiki-heading-folded');
+        //   heading.nextElementSibling.classList.add('wiki-heading-content-folded');
+        // }
       }
 
       const foldings = div.getElementsByClassName('wiki-folding');
@@ -157,8 +133,8 @@ export default {
           foldingContent.removeEventListener('transitionend', finishOpen);
         }
 
-        if(this.$store.state.localConfig['wiki.show_folding'])
-          foldingContent.classList.add('wiki-folding-open-anim', 'wiki-folding-opened');
+        // if(this.$store.state.localConfig['wiki.show_folding'])
+        //   foldingContent.classList.add('wiki-folding-open-anim', 'wiki-folding-opened');
 
         foldingText.addEventListener('click', e => {
           const foldingText = e.currentTarget;
@@ -185,11 +161,10 @@ export default {
         });
       }
 
-      let footnoteType = this.$store.state.localConfig['wiki.footnote_type'];
-      footnoteType ??= isMobile ? 'popup' : 'popover';
+      // let footnoteType = this.$store.state.localConfig['wiki.footnote_type'];
+      let footnoteType = "popover"
 
       if(footnoteType === 'popover') this.setupFootnoteTooltip();
-      else if(footnoteType === 'popup') this.setupFootnoteModal();
 
       const oldDarkStyle = document.getElementById('darkStyle');
       if(oldDarkStyle) oldDarkStyle.remove();
@@ -303,21 +278,6 @@ export default {
         });
 
         footnote.addEventListener('mouseleave', mouseLeaveHandler);
-      }
-    },
-    setupFootnoteModal() {
-      for(let footnote of this.footnotes) {
-        const targetId = footnote.getAttribute('href').slice(1);
-        const contentElement = document.getElementById(targetId).parentElement;
-
-        footnote.title = '';
-
-        footnote.addEventListener('click', e => {
-          e.preventDefault();
-
-          this.modal.content = contentElement.innerHTML;
-          this.modal.show = true;
-        });
       }
     },
     async formSubmit(e) {

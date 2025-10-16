@@ -10,6 +10,12 @@
   - 문단/리스트 상하 관계가 이상한 경우 경고
 - 단축키 폭넓게 추가
 
+- 미리보기
+  - vscode-vue 간 통신 추가
+  - this.$store 모의 구현 (pinia 모듈) (the tree의 main.js)
+  - 파일 경로로 이미지 추가
+  - 파일 경로로 include 구현
+
 ## Soon
 
 - TODO: 접기 구현
