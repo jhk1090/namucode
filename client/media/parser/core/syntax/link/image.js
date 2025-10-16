@@ -1,8 +1,7 @@
 const querystring = require('querystring');
 
 const utils = require('../../utils');
-const mainUtils = require('../../..');
-const globalUtils = require('../../..'); // global
+const mainUtils = require('../../mainUtil');
 
 module.exports = async (obj, link, { Store, thread, document: docDocument, dbDocument: docDbDocument, rev: docRev, includeData, disableImageLinkButton }) => {
     const document = mainUtils.parseDocumentName(obj.link);
@@ -130,7 +129,7 @@ module.exports = async (obj, link, { Store, thread, document: docDocument, dbDoc
 
     if(options.theme) imgSpanClassList.push(`wiki-theme-${options.theme}`);
 
-    const fullTitle = utils.escapeHtml(globalUtils.doc_fulltitle(document));
+    const fullTitle = utils.escapeHtml(mainUtils.doc_fulltitle(document));
 
     // TODO: over 1MB remove option, loading lazy config
     return `
@@ -140,7 +139,7 @@ module.exports = async (obj, link, { Store, thread, document: docDocument, dbDoc
 <img class="wiki-image"${imgAttrib} style="${imgStyle}" src="${imgUrl}" alt="${fullTitle}" data-filesize="${rev.fileSize}" data-src="${imgUrl}" data-doc="${fullTitle}" loading="lazy">
 ${disableImageLinkButton || (docDocument.namespace === namespace && docDocument.title === title) 
     ? '' 
-    : `<a class="wiki-image-info" href="${utils.escapeHtml(globalUtils.doc_action_link(document, 'w'))}" rel="nofollow noopener"></a>`
+    : `<a class="wiki-image-info" href="${utils.escapeHtml(mainUtils.doc_action_link(document, 'w'))}" rel="nofollow noopener"></a>`
 }
 </span>
 </span>`.replaceAll('\n', '');

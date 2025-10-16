@@ -1,9 +1,10 @@
 const { highlight } = require('highlight.js');
 const ivm = require('isolated-vm');
 const fs = require('fs');
+const path = require('path');
 
 const utils = require('./utils');
-const globalUtils = require('../'); // ../global 이였으나, ../로 통합
+const mainUtils = require('./mainUtil'); // ../global 이였으나, ../로 통합
 
 const link = require('./syntax/link');
 const macro = require('./syntax/macro');
@@ -13,7 +14,7 @@ const table = require('./syntax/table');
 const MAXIMUM_LENGTH = 1000000;
 const MAXIMUM_LENGTH_HTML = '문서 길이가 너무 깁니다.';
 
-const jsGlobalRemover = fs.readFileSync('./utils/newNamumark/utils/jsGlobalRemover.js', 'utf8');
+const jsGlobalRemover = fs.readFileSync(path.join(__dirname, "utils/jsGlobalRemover.js"), 'utf8');
 
 const topToHtml = module.exports = async parameter => {
   // if(parameter[0]?.batch) return await Promise.all(parameter[0].batch.map(a => topToHtml(a)));
@@ -132,7 +133,7 @@ const topToHtml = module.exports = async parameter => {
 
         result += `<h${obj.level} class="wiki-heading${obj.closed ? " wiki-heading-folded" : ""}">`;
         result += `<a id="s-${obj.numText}" href="#toc">${obj.numText}.</a>`;
-        result += ` <span id="${globalUtils.removeHtmlTags(text)}">${text}`;
+        result += ` <span id="${mainUtils.removeHtmlTags(text)}">${text}`;
         result += `</span></h${obj.level}>`;
         result += `<div class="wiki-heading-content${obj.closed ? " wiki-heading-content-folded" : ""}">`;
         result += await toHtml(obj.content);
@@ -279,7 +280,7 @@ const topToHtml = module.exports = async parameter => {
       case "footnote": {
         const name = obj.name;
         const value = await toHtml(obj.value);
-        result += `<a class="wiki-fn-content" title="${globalUtils.removeHtmlTags(value)}" href="#fn-${name}"><span id="rfn-${
+        result += `<a class="wiki-fn-content" title="${mainUtils.removeHtmlTags(value)}" href="#fn-${name}"><span id="rfn-${
           obj.index
         }"></span>[${name}]</a>`;
         break;

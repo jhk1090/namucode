@@ -1,13 +1,12 @@
 const processImage = require('./image');
 
 const utils = require('../../utils');
-const mainUtils = require('../../../../utils');
-const globalUtils = require('../../../../utils');  // global
+const mainUtils = require('../../mainUtil');
 
 module.exports = async (obj, options = {}) => {
     const { document, Store, toHtml } = options;
 
-    const docTitle = globalUtils.doc_fulltitle(document);
+    const docTitle = mainUtils.doc_fulltitle(document);
 
     let link = obj.link;
     let text = obj.text = await utils.parseIncludeParams(obj.text, options.Store.isolateContext);
@@ -131,7 +130,7 @@ module.exports = async (obj, options = {}) => {
 
             if(link.startsWith('문서:')) link = link.slice(3);
             if(link.includes('../')) link = `/w?doc=${encodeURIComponent(link)}${hash ? `#${hash}` : ''}`;
-            else link = `/w/${globalUtils.encodeSpecialChars(link)}${hash ? `#${hash}` : ''}`;
+            else link = `/w/${mainUtils.encodeSpecialChars(link)}${hash ? `#${hash}` : ''}`;
 
             const document = mainUtils.parseDocumentName(title);
             titleDocument = document;
@@ -167,10 +166,10 @@ module.exports = async (obj, options = {}) => {
     //     text = text.slice(0, aPos) + text.slice(aClosePosEnd);
     // }
 
-    const safeLink = utils.escapeHtml(globalUtils.removeHtmlTags(link));
+    const safeLink = utils.escapeHtml(mainUtils.removeHtmlTags(link));
     const parsedTitle = obj.textExists ? await toHtml(obj.parsedText, { disableImageLinkButton: true }) : utils.escapeHtml(text);
 
-    const titleDocName = titleDocument ? globalUtils.doc_fulltitle(titleDocument) : null;
+    const titleDocName = titleDocument ? mainUtils.doc_fulltitle(titleDocument) : null;
     const html = `<a href="${safeLink}" title="${link.startsWith('#') ? '' : utils.escapeHtml(titleDocName ?? link)}" class="${classList.join(' ')}" rel="${rel.join(' ')}"${parsedLink ? 'target="_blank"' : ''}>${parsedTitle}</a>`;
 
     if(titleDocName

@@ -1,5 +1,5 @@
-const parser = require("./utils/newNamumark/parser")
-const toHtml = require("./utils/newNamumark/toHtml")
+const { parser } = require(".")
+const { toHtml }= require(".")
 const fs = require("fs");
 
 const parsed = parser(`

@@ -1,6 +1,7 @@
 import * as path from "path";
 import * as vscode from "vscode"
 import { ExtensionContext } from "vscode";
+import { toHtml, parser } from "../media/parser"
 import fs from "fs";
 
 export function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptions {
@@ -131,9 +132,11 @@ export class MarkPreview {
     const document = vscode.window.activeTextEditor.document
 
     const text = document.getText();
-    const result = `<div class="wiki-paragraph"></div><div class="wiki-paragraph"></div><div class="wiki-paragraph"></div><div class="wiki-paragraph"><br><div class="wiki-macro-toc"><div class="toc-indent"><span class="toc-item"><a href="#s-1">1</a>. 개요</span></div></div></div><h2 class="wiki-heading"><a id="s-1" href="#toc">1.</a> <span id="개요">개요</span></h2><div class="wiki-heading-content"><div class="wiki-paragraph"><a href="/w/나무위키" title="나무위키" class="not-exist wiki-link-internal" rel="nofollow">나무위키</a>의 문법 도움말입니다. <a href="/w/the seed" title="the seed" class="not-exist wiki-link-internal" rel="nofollow">나무위키가 사용하는 위키 엔진</a>이 제공하는 문법이라 하여 &#039;나무마크&#039;라고도 합니다.<br><br>이 문서에서는 기본적인 수준의 위키 <a href="/w/문법" title="문법" class="not-exist wiki-link-internal" rel="nofollow">문법</a>들을 정리했으며, <a href="/w/나무위키:문법 도움말/심화" title="나무위키:문법 도움말/심화" class="not-exist wiki-link-internal" rel="nofollow">나무위키:문법 도움말/심화</a> 문서에서 고급 문법을 확인하실 수 있습니다. <a href="/w/나무위키:문법 도움말/개발" title="나무위키:문법 도움말/개발" class="not-exist wiki-link-internal" rel="nofollow">나무위키:문법 도움말/개발</a> 문서에서는 위키 문법을 처리하는 원리 등을 설명합니다.</div></div>`
-
-		webview.postMessage({ type: "updateContent", newContent: result })
+    const parsed = parser(text)
+    toHtml(parsed, { namespace: '문서', title: 'Document' }).then(result => {
+      console.log(result)
+      webview.postMessage({ type: "updateContent", newContent: result.html  })
+    })
 
     return `
     <!DOCTYPE html>

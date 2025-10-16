@@ -32,7 +32,8 @@
     "@types/node": "^22.10.8",
     "@types/uuid": "^10.0.0",
     "@types/vscode": "^1.75.1",
-    "@vscode/test-electron": "^2.3.9"
+    "@vscode/test-electron": "^2.3.9",
+    "electron-rebuild": "^3.2.9"
   },
   "scripts": {
     "build": "tsc -p ./"

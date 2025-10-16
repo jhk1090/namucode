@@ -1,4 +1,4 @@
-const mainUtils = require('../../../');
+const mainUtils = require('../../mainUtil');
 const parser = require('../../parser');
 const ivm = require('isolated-vm');
 
