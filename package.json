@@ -437,5 +437,15 @@
     "mocha": "^10.3.0",
     "typescript": "^5.3.3"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "configuration": {
+    "title": "Find Node.js executable",
+      "properties": {
+          "myExtension.nodePath": {
+              "type": "string",
+              "default": "node",
+              "description": "The path to the local Node.js executable for the worker process."
+          }
+      }
+  }
 }

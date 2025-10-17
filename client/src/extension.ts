@@ -11,7 +11,7 @@ import { EXTENSION_NAME, getConfig } from "./config";
 import { LinkDefinitionProvider } from "./linkdef";
 import { NamuMark } from "namumark-clone-core";
 import * as cheerio from "cheerio";
-import { MarkPreview, getWebviewOptions } from './preview';
+import { MarkPreview, ToHtmlWorkerManager, getWebviewOptions } from './preview';
 
 let client: LanguageClient;
 let activeRules: vscode.Disposable[] = [];
@@ -20,9 +20,14 @@ enum Level {
   DOWN,
 }
 
+let workerManager: ToHtmlWorkerManager
+
 export function activate(context: ExtensionContext) {
   provideLink(context);
+  workerManager = new ToHtmlWorkerManager(context);
 
+  context.subscriptions.push(workerManager)
+  
   vscode.commands.registerCommand("namucode.linkify", () => {
     const editor = vscode.window.activeTextEditor;
     if (!editor || editor.document.languageId !== 'namu') {
@@ -154,7 +159,7 @@ export function activate(context: ExtensionContext) {
     }
 
     const filePath = editor.document.uri.fsPath;
-    MarkPreview.createOrShow(context, context.extensionUri, filePath);
+    MarkPreview.createOrShow(context, context.extensionUri, filePath, workerManager);
   });
 
   if (vscode.window.registerWebviewPanelSerializer) {
@@ -165,7 +170,7 @@ export function activate(context: ExtensionContext) {
           console.log(`Got state: ${state}`);
           // Reset the webview options so we use latest uri for `localResourceRoots`.
           webviewPanel.webview.options = getWebviewOptions(context.extensionUri);
-          MarkPreview.revive(webviewPanel, context, context.extensionUri, filePath);
+          MarkPreview.revive(webviewPanel, context, context.extensionUri, filePath, workerManager);
         },
       });
     }
@@ -208,6 +213,7 @@ export function activate(context: ExtensionContext) {
 }
 
 export function deactivate(): Thenable<void> | undefined {
+  workerManager.dispose();
   if (!client) {
     return undefined;
   }
