@@ -28,8 +28,8 @@ export class LinkDefinitionProvider implements vscode.DocumentLinkProvider {
     const text = document.getText();
     const links: vscode.DecorationOptions[] = [];
 
-    let match: RegExpExecArray | null;
-    while ((match = regEx.exec(text))) {
+    let match: (RegExpExecArray & { indices: number[][] }) | null;
+    while ((match = regEx.exec(text) as any)) {
       const startPos = document.positionAt(match.indices[1][0]);
       const endPos = document.positionAt(match.indices[1][1]);
       const range = new vscode.Range(startPos, endPos);

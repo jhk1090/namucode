@@ -1,19 +1,17 @@
-import * as vscode from "vscode";
-import type { PartialDeep } from "type-fest";
-
-interface Config {
-  rules: {
+interface ConfigRule {
     linkPattern: string;
     linkPatternFlags: string;
     linkTarget: string;
     languages: string[];
-  }[];
+}
+interface Config {
+  rules: Partial<ConfigRule>[];
 }
 
 export const EXTENSION_NAME = "namulink";
 
 export function getConfig(): Config {
-  const config: PartialDeep<Config> = {
+  const config: Config = {
     rules: [
       // FIXME: def all link patterns
       // FIXME: 겹친 링크도 정상적으로 연결되도록 regex 다듬기

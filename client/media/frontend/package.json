@@ -12,7 +12,8 @@
         "floating-vue": "^5.2.2",
         "vite-plugin-static-copy": "^3.1.4",
         "vue": "^3.5.17",
-        "vue-final-modal": "^3.4.11"
+        "vue-final-modal": "^3.4.11",
+        "@justinribeiro/lite-youtube": "^1.8.2"
     },
     "devDependencies": {
         "@vitejs/plugin-vue": "^5.2.3",

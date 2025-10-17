@@ -11,7 +11,7 @@ const macro = require('./syntax/macro');
 const table = require('./syntax/table');
 
 
-const MAXIMUM_LENGTH = 1000000;
+const MAXIMUM_LENGTH = 10000000;
 const MAXIMUM_LENGTH_HTML = '문서 길이가 너무 깁니다.';
 
 const jsGlobalRemover = fs.readFileSync(path.join(__dirname, "utils/jsGlobalRemover.js"), 'utf8');
@@ -291,7 +291,7 @@ const topToHtml = module.exports = async parameter => {
         console.error("missing implementation:", obj.type);
     }
 
-    if (result.length > /* config.document_maximum_length */ 1000000 ?? MAXIMUM_LENGTH) {
+    if (result.length > MAXIMUM_LENGTH) {
       Store.error = MAXIMUM_LENGTH_HTML;
       Store.errorCode = "too_large_document";
       break;

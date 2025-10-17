@@ -47,6 +47,7 @@ export default {
   },
   mounted() {
     this.setupWikiContent()
+    import('@justinribeiro/lite-youtube')
   },
   watch: {
     async content() {

@@ -30,5 +30,5 @@ module.exports = params => {
     width = utils.escapeHtml(width);
     height = utils.escapeHtml(height);
 
-    return `<iframe class="wiki-media" allowfullscreen${width ? ` width="${width}"` : ''}${height ? ` height="${height}"` : ''} frameborder="0" src="//embed.nicovideo.jp/watch/${videoId}" loading="lazy"></iframe>`;
+    return `<iframe class="wiki-media" allowfullscreen${width ? ` width="${width}"` : ''}${height ? ` height="${height}"` : ''} frameborder="0" src="https://embed.nicovideo.jp/watch/${videoId}" loading="lazy"></iframe>`;
 }

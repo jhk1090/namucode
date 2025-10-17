@@ -47,5 +47,5 @@ module.exports = (params, { Store }) => {
 
     return Store.macro.counts.youtube >= 3
         ? `<div class="wiki-media-wrapper"><lite-youtube class="wiki-media" videoid="${videoId}"${start ? ` videostartat=${start}` : ''}${end ? ` params="end=${end}"` : ''} style="width:${width}px;height:${height}px"></lite-youtube></div>`
-        : `<iframe class="wiki-media" allowfullscreen${width ? ` width="${width}"` : ''}${height ? ` height="${height}"` : ''} frameborder="0" src="//www.youtube.com/embed/${videoId}${queryStr ?? ''}" loading="lazy"></iframe>`;
+        : `<iframe class="wiki-media" allowfullscreen${width ? ` width="${width}"` : ''}${height ? ` height="${height}"` : ''} frameborder="0" src="https://www.youtube.com/embed/${videoId}${queryStr ?? ''}" loading="lazy"></iframe>`;
 }

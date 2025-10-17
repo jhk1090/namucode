@@ -11,8 +11,7 @@
 - 단축키 폭넓게 추가
 
 - 미리보기
-  - vscode-vue 간 통신 추가
-  - this.$store 모의 구현 (pinia 모듈) (the tree의 main.js)
+  - footnote popover 위치 이상한거 수정
   - 파일 경로로 이미지 추가
   - 파일 경로로 include 구현
 
