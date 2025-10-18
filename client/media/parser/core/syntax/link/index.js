@@ -134,8 +134,8 @@ module.exports = async (obj, options = {}) => {
 
             const document = mainUtils.parseDocumentName(title);
             titleDocument = document;
-            const cache = Store.dbDocuments.find(cache => cache.namespace === document.namespace && cache.title === document.title);
-            if(cache) notExist = !cache.contentExists;
+            const cache = Store.workspaceDocuments.find(cache => cache.namespace === document.namespace && cache.title === document.title);
+            if(cache) notExist = cache === undefined;
             else notExist = true;
         }
     }

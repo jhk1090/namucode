@@ -1,23 +1,37 @@
 export type ParsedData = any;
 export interface ToHtmlOptions {
-    namespace: string;
-    title: string;
+    document: {
+        namespace: string;
+        title: string;
+    }
     [key: string]: any;
 }
 
 // 부모 -> 자식 메시지
-export interface IWorkerMessage {
+export interface IWorkerToHtmlMessage {
     id: string;
     command: 'toHtml';
     parsed: ParsedData;
     options: ToHtmlOptions;
 }
 
+export interface IWorkerParserMessage {
+    id: string;
+    command: 'parser';
+    text: string;
+}
+
 // 자식 -> 부모 응답 (성공)
-export interface IWorkerResponseSuccess {
+export interface IWorkerToHtmlResponseSuccess {
     id: string;
     status: 'success';
     html: string;
+}
+
+export interface IWorkerParserResponseSuccess {
+    id: string;
+    status: 'success';
+    parsed: any;
 }
 
 // 자식 -> 부모 응답 (오류)
@@ -28,4 +42,4 @@ export interface IWorkerResponseError {
 }
 
 // 자식 -> 부모 응답 전체
-export type IWorkerResponse = IWorkerResponseSuccess | IWorkerResponseError;
+export type IWorkerResponse = IWorkerToHtmlResponseSuccess | IWorkerParserResponseSuccess | IWorkerResponseError;

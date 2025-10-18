@@ -221,6 +221,7 @@ module.exports = {
         'typescript',
         'xml'
     ].sort((a, b) => b.length - a.length),
+    AllowedNamespace: [ '문서', '틀', '분류', '파일', '사용자', '삭제된사용자' ],
     baseSanitizeHtml: text => sanitizeHtml(text, baseSanitizeHtmlOptions),
     sanitizeHtml: text => sanitizeHtml(text, sanitizeHtmlOptions),
     loadMacros() {

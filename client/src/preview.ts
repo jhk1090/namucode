@@ -1,10 +1,8 @@
 import * as path from "path";
 import * as vscode from "vscode";
 import { ExtensionContext } from "vscode";
-import { parser } from "../media/parser";
-import { spawn, ChildProcess } from "child_process";
-import * as crypto from "crypto";
-import { ParsedData, ToHtmlOptions, IWorkerMessage, IWorkerResponse, IWorkerResponseSuccess } from "./types";
+import { ParserWorkerManager, ToHtmlWorkerManager } from './previewWorker';
+import { parser } from "../media/parser/index.js"
 
 export function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptions {
     return {
@@ -32,10 +30,11 @@ export class MarkPreview {
 
     private readonly _context: ExtensionContext;
     private readonly _extensionUri: vscode.Uri;
-    private readonly _workerManager: ToHtmlWorkerManager;
+    private _toHtmlWorkerManager: ToHtmlWorkerManager;
+    private _parserWorkerManager: ParserWorkerManager;
     private _disposables: vscode.Disposable[] = [];
 
-    public static createOrShow(context: ExtensionContext, extensionUri: vscode.Uri, panelId: string, workerManager: ToHtmlWorkerManager) {
+    public static createOrShow(context: ExtensionContext, extensionUri: vscode.Uri, panelId: string, toHtmlWorkerManager: ToHtmlWorkerManager, parserWorkerManager: ParserWorkerManager) {
         const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
 
         // If we already have a panel, show it.
@@ -52,31 +51,30 @@ export class MarkPreview {
             getWebviewOptions(extensionUri)
         );
 
-        MarkPreview.currentPanels[panelId] = new MarkPreview(panel, context, extensionUri, panelId, workerManager);
+        MarkPreview.currentPanels[panelId] = new MarkPreview(panel, context, extensionUri, panelId, toHtmlWorkerManager, parserWorkerManager);
     }
 
     public static revive(
         panel: vscode.WebviewPanel,
         context: ExtensionContext,
         extensionUri: vscode.Uri,
-        panelId: string,
-        workerManager: ToHtmlWorkerManager
+        panelId: string, toHtmlWorkerManager: ToHtmlWorkerManager, parserWorkerManager: ParserWorkerManager
     ) {
         console.log(path.basename(panelId), "reviving..");
-        MarkPreview.currentPanels[panelId] = new MarkPreview(panel, context, extensionUri, panelId, workerManager);
+        MarkPreview.currentPanels[panelId] = new MarkPreview(panel, context, extensionUri, panelId, toHtmlWorkerManager, parserWorkerManager);
     }
 
     private constructor(
         panel: vscode.WebviewPanel,
         context: ExtensionContext,
         extensionUri: vscode.Uri,
-        panelId: string,
-        workerManager: ToHtmlWorkerManager
+        panelId: string, toHtmlWorkerManager: ToHtmlWorkerManager, parserWorkerManager: ParserWorkerManager
     ) {
         this._panel = panel;
         this._context = context;
         this._extensionUri = extensionUri;
-        this._workerManager = workerManager;
+        this._toHtmlWorkerManager = toHtmlWorkerManager;
+        this._parserWorkerManager = parserWorkerManager;
 
         this._panelLastViewState = {
             visible: panel.visible,
@@ -149,7 +147,6 @@ export class MarkPreview {
     public dispose(panelId: string) {
         MarkPreview.currentPanels[panelId] = undefined;
         console.log(path.basename(panelId), "just disposed!");
-        console.log(this._disposables);
         // Clean up our resources
         this._panel.dispose();
 
@@ -322,15 +319,38 @@ export class MarkPreview {
                 break;
         }
         webview.postMessage({ type: "updateContent", newContent: `<div style="width: 100%; text-align: center; word-break: keep-all;"><h2>렌더링이 진행중입니다! 잠시만 기다려주세요..</h2></div>` });
-        const parsed = parser(text);
-        this._workerManager
-            .toHtmlRemote(parsed, { namespace: "문서", title: "Document" })
-            .then((value) => {
-                webview.postMessage({ type: "updateContent", newContent: value.html });
-                this._panelLastContent = text
-                this._panelLastToHtmlResult = value.html
-            })
-            .catch((error) => vscode.window.showErrorMessage(`HTML 렌더링 중 오류 발생: ${error instanceof Error ? error.message : String(error)}`));
+
+        (async () => {
+            try {
+                const { parsed } = await this._parserWorkerManager.remote(text)
+                
+                const files = await vscode.workspace.findFiles("**/*.namu")  
+                const workspaceDocuments = await Promise.all(
+                    files.map(async (file) => {
+                        const document = await vscode.workspace.openTextDocument(file);
+                        const namespace = "문서";
+                        const title = path.basename(document.fileName, ".namu");
+    
+                        const content = document.getText();
+    
+                        return {
+                            namespace,
+                            title,
+                            content,
+                        };
+                    })
+                );
+                const namespace = "문서";
+                const title = path.basename(document.fileName, ".namu");
+                const { html } = await this._toHtmlWorkerManager.remote(parsed, { document: { namespace, title }, workspaceDocuments })
+    
+                webview.postMessage({ type: "updateContent", newContent: html });
+                this._panelLastContent = text;
+                this._panelLastToHtmlResult = html;
+            } catch (error) {
+                vscode.window.showErrorMessage(`렌더링 중 오류 발생: ${error instanceof Error ? error.message : String(error)}`);
+            }
+        })()
     }
 }
 
@@ -341,104 +361,4 @@ function getNonce() {
         text += possible.charAt(Math.floor(Math.random() * possible.length));
     }
     return text;
-}
-
-interface PendingRequest {
-    resolve: (value: IWorkerResponseSuccess) => void;
-    reject: (reason?: any) => void;
-}
-
-export class ToHtmlWorkerManager {
-    private worker: ChildProcess | null = null;
-    private pendingRequests = new Map<string, PendingRequest>();
-    private readonly workerPath: string;
-
-    constructor(context: ExtensionContext) {
-        // ⚠️ TypeScript를 사용해도 Node.js 런타임에서 실행될 때는
-        // 컴파일된 JavaScript 파일을 지정해야 합니다.
-        // 예를 들어, toHtmlWorker.ts가 toHtmlWorker.js로 컴파일된다고 가정합니다.
-        this.workerPath = path.join(context.extensionPath, "client/media/parser", "index.js");
-        this.initializeWorker(context);
-    }
-
-    private initializeWorker(context: ExtensionContext): void {
-        const config = vscode.workspace.getConfiguration("namucode");
-        const nodePath = config.get<string>("nodePath", "node");
-
-        this.worker = spawn(nodePath, [this.workerPath], {
-    // 💥 표준 Node.js 경로를 사용합니다.
-            stdio: ['ipc', 'pipe', 'pipe'], // IPC와 pipe를 모두 사용
-            env: {
-                ...process.env,
-                ELECTRON_RUN_AS_NODE: undefined,
-                ATOM_SHELL_INTERNAL_RUN_AS_NODE: undefined
-            },
-            windowsHide: true
-        });
-
-        // Worker에서 메시지 수신 핸들러 설정
-        this.worker.on("message", (response: IWorkerResponse) => {
-            const request = this.pendingRequests.get(response.id);
-            if (!request) return;
-
-            if (response.status === "success") {
-                request.resolve(response);
-            } else {
-                request.reject(new Error(response.message));
-            }
-            this.pendingRequests.delete(response.id);
-        });
-
-        // Worker 종료 이벤트 처리
-        this.worker.on("exit", (code, signal) => {
-            vscode.window.showWarningMessage(`ToHtml Worker process terminated. Code: ${code}, Signal: ${signal}`);
-            this.worker = null;
-            // 종료된 Worker로 인해 대기 중인 모든 프로미스를 거부
-            this.pendingRequests.forEach((req) => req.reject(new Error("ToHtml worker process unexpectedly terminated.")));
-            this.pendingRequests.clear();
-        });
-
-        this.worker.on("error", (err) => {
-            vscode.window.showErrorMessage(`ToHtml Worker experienced an error: ${err.message}`);
-            this.worker = null;
-        });
-    }
-
-    /**
-     * toHtml 함수를 Child Process에서 실행하고 Promise로 결과를 반환합니다.
-     */
-    public toHtmlRemote(parsed: ParsedData, options: ToHtmlOptions): Promise<IWorkerResponseSuccess> {
-        if (!this.worker) {
-            return Promise.reject(new Error("ToHtml Worker not active. Please reload the window."));
-        }
-
-        return new Promise((resolve, reject) => {
-            const id = crypto.randomBytes(16).toString("hex");
-
-            this.pendingRequests.set(id, { resolve, reject });
-
-            const message: IWorkerMessage = {
-                id: id,
-                command: "toHtml",
-                parsed: parsed,
-                options: options,
-            };
-
-            // Worker Process로 메시지 전송
-            this.worker!.send(message);
-
-            // ⚠️ 여기서 타입 단언 `worker!.send`를 사용하거나,
-            // `if (this.worker)` 체크 후 `this.worker.send(message)`를 호출해야 합니다.
-        });
-    }
-
-    /**
-     * 확장 프로그램이 비활성화될 때 워커를 종료합니다.
-     */
-    public dispose(): void {
-        if (this.worker) {
-            this.worker.kill("SIGTERM"); // 우아하게 종료 시도
-            this.worker = null;
-        }
-    }
 }

@@ -5,13 +5,14 @@ const path = require('path');
 
 const utils = require('./utils');
 const mainUtils = require('./mainUtil'); // ../global 이였으나, ../로 통합
+const parser = require("./parser")
 
 const link = require('./syntax/link');
 const macro = require('./syntax/macro');
 const table = require('./syntax/table');
 
 
-const MAXIMUM_LENGTH = 10000000;
+const MAXIMUM_LENGTH = 5000000;
 const MAXIMUM_LENGTH_HTML = '문서 길이가 너무 깁니다.';
 
 const jsGlobalRemover = fs.readFileSync(path.join(__dirname, "utils/jsGlobalRemover.js"), 'utf8');
@@ -20,8 +21,7 @@ const topToHtml = module.exports = async parameter => {
   // if(parameter[0]?.batch) return await Promise.all(parameter[0].batch.map(a => topToHtml(a)));
 
   const [parsed, options = {}] = parameter;
-
-  const { document } = options;
+  const { includeData = null, document, workspaceDocuments } = options;
 
   let isolate;
   let isolateContext;
@@ -30,8 +30,7 @@ const topToHtml = module.exports = async parameter => {
     isolateContext = await isolate.createContext();
   }
   const Store = (options.Store ??= {
-    dbDocuments: [],
-    revDocCache: [],
+    workspaceDocuments,
     parsedIncludes: [],
     links: [],
     files: [],
@@ -71,16 +70,96 @@ const topToHtml = module.exports = async parameter => {
 
   if (!isTop && !parsed) return "";
 
-  if (Array.isArray(doc[0])) {
-    const lines = [];
-    for (let line of doc) {
-      lines.push(await toHtml(line));
-    }
-    return lines.join("<br>");
-  }
+  // if (Array.isArray(doc[0])) {
+  //   const lines = [];
+  //   for (let line of doc) {
+  //     lines.push(await toHtml(line));
+  //   }
+  //   return lines.join("<br>");
+  // }
 
   if (isTop) {
     await Store.isolateContext.eval(jsGlobalRemover);
+    if(includeData)
+      await Promise.all(Object.entries(includeData).map(([key, value]) => Store.isolateContext.global.set(key, value)));
+  }
+
+  if(parsed.data && !options.skipInit) {
+      const includeParams = [];
+      for (let [docName, params] of Object.entries(parsed.data.includeParams)) {
+          const parsedName = mainUtils.parseDocumentName(docName);
+          let doc = includeParams.find((a) => a.namespace === parsedName.namespace && a.title === parsedName.title);
+          if (!doc) {
+              doc = {
+                  ...parsedName,
+                  params: [],
+              };
+              includeParams.push(doc);
+          }
+          doc.params.push(...params);
+      }
+
+      const parsedDocAdder = async (result, parsedDocs = [], includeParams = []) => {
+          const links = [...new Set([...result.data.links, ...result.data.categories.map((a) => "분류:" + a.document), ...result.data.includes])];
+
+          const paramLinks = links.filter((a) => a.includes("@"));
+          if (includeParams.length) {
+              for (let link of paramLinks) {
+                  for (let params of includeParams) {
+                      const newLink = await utils.parseIncludeParams(link, null, params);
+                      if (!links.includes(newLink)) links.push(newLink);
+                  }
+              }
+          } else {
+              for (let link of paramLinks) {
+                  const newLink = await utils.parseIncludeParams(link);
+                  if (!links.includes(newLink)) links.push(newLink);
+              }
+          }
+
+          for (let link of links) {
+              if (link.startsWith(":")) {
+                  const slicedLink = link.slice(1);
+                  if (utils.AllowedNamespace.some((a) => slicedLink.startsWith(a + ":"))) link = slicedLink;
+              }
+              if (document) {
+                  const docTitle = mainUtils.doc_fulltitle(document);
+                  if (link.startsWith("../")) {
+                      link = link.slice(3);
+
+                      const splittedDocument = docTitle.split("/");
+                      splittedDocument.pop();
+                      const document = splittedDocument.join("/");
+                      link = `${document}${document && link ? "/" : ""}${link}`;
+
+                      link ||= docTitle;
+                  } else if (link.startsWith("/")) link = docTitle + link;
+              }
+
+              const item = mainUtils.parseDocumentName(link);
+              if (!parsedDocs.some((a) => a.namespace === item.namespace && a.title === item.title)) parsedDocs.push(item);
+
+              if (result.data.includes.includes(link)) item.isInclude = true;
+          }
+          return parsedDocs;
+      };
+
+      const topDocs = await parsedDocAdder(parsed);
+      const includeDocs = [];
+      for (let docName of topDocs.filter((a) => a.isInclude)) {
+          const doc = Store.workspaceDocuments.find((a) => a.namespace === docName.namespace && a.title === docName.title);
+          if (!doc) continue;
+
+          const params = includeParams.find((a) => a.namespace === docName.namespace && a.title === docName.title)?.params ?? [];
+          doc.parseResult = await parser(doc.content);
+          await parsedDocAdder(doc.parseResult, includeDocs, params);
+      }
+
+      Store.categories = parsed.data.categories;
+      for (let obj of Store.categories) {
+          const cache = Store.workspaceDocuments.find((cache) => cache.namespace === "분류" && cache.title === obj.document);
+          obj.notExist = cache === undefined;
+      }
   }
 
   if (isTop) {
@@ -267,6 +346,8 @@ const topToHtml = module.exports = async parameter => {
           document,
           toHtml,
           Store,
+          includeData,
+          workspaceDocuments: Store.workspaceDocuments
         });
         break;
       case "macro":
@@ -275,6 +356,8 @@ const topToHtml = module.exports = async parameter => {
           toHtml,
           Store,
           heading: Store.heading,
+          includeData,
+          workspaceDocuments: Store.workspaceDocuments
         });
         break;
       case "footnote": {
@@ -301,19 +384,21 @@ const topToHtml = module.exports = async parameter => {
   if (Store.error) result = Store.error;
 
   if (isTop) {
-    const hasHeading = parsed.result.some((a) => a.type === "heading");
-    const target = hasHeading
-      ? parsed.result
-          .filter((a) => a.type === "heading")
-          .map((a, i) => {
-            const result = [];
-            if (i) result.push(a.text);
-            result.push(a.content);
-            return result;
-          })
-      : parsed.result;
-    const embedText = utils.parsedToText(target, true);
-    Store.embed.text = embedText.replaceAll("\n", " ").replaceAll("  ", " ").trim().slice(0, 200);
+    if(!includeData) {
+        const hasHeading = parsed.result.some((a) => a.type === "heading");
+        const target = hasHeading
+            ? parsed.result
+                  .filter((a) => a.type === "heading")
+                  .map((a, i) => {
+                      const result = [];
+                      if (i) result.push(a.text);
+                      result.push(a.content);
+                      return result;
+                  })
+            : parsed.result;
+        const embedText = utils.parsedToText(target, true);
+        Store.embed.text = embedText.replaceAll("\n", " ").replaceAll("  ", " ").trim().slice(0, 200);
+    }
 
     Store.isolate.dispose();
 

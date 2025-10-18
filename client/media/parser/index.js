@@ -3,26 +3,44 @@ const toHtml = require("./core/toHtml");
 
 process.on("message", async (message) => {
     if (message.command === "toHtml") {
-        const { id, parsed, options } = message; // ID를 사용하여 응답을 특정 요청과 연결
-
+        const { id, parsed, options } = message;
         try {
-            // toHtml 함수 실행
-            const result = await toHtml(parsed, options);
+            const result = await toHtml(parsed, options/* , controller.signal */);
 
-            // 결과를 부모 프로세스에 ID와 함께 전송
             process.send({
                 id: id,
                 status: "success",
                 html: result.html,
             });
         } catch (error) {
-            // 오류 발생 시 오류 메시지 전송
+            console.error(error)
             process.send({
                 id: id,
                 status: "error",
                 message: error.message,
             });
         }
+        return
+    }
+    if (message.command === "parser") {
+        const { id, text } = message;
+        try {
+            const result = parser(text);
+
+            process.send({
+                id: id,
+                status: "success",
+                parsed: result,
+            });
+        } catch (error) {
+            console.error(error)
+            process.send({
+                id: id,
+                status: "error",
+                message: error.message,
+            });
+        }
+        return
     }
 });
 

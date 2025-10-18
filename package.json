@@ -441,7 +441,7 @@
   "configuration": {
     "title": "Find Node.js executable",
       "properties": {
-          "myExtension.nodePath": {
+          "namucode.nodePath": {
               "type": "string",
               "default": "node",
               "description": "The path to the local Node.js executable for the worker process."

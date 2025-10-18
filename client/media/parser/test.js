@@ -8,7 +8,7 @@ const parsed = parser(`
 [youtube(KSJl4A9eUW4)]
 [youtube(nHdEUIPpS2k)]
 `)
-const html = toHtml(parsed, { namespace: '문서', title: 'Document' })
+const html = toHtml(parsed, { document:{ namespace: '문서', title: 'Document' }})
 
 html.then(result => {
 	fs.writeFileSync("output.html", result.html)

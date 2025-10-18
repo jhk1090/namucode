@@ -11,7 +11,8 @@ import { EXTENSION_NAME, getConfig } from "./config";
 import { LinkDefinitionProvider } from "./linkdef";
 import { NamuMark } from "namumark-clone-core";
 import * as cheerio from "cheerio";
-import { MarkPreview, ToHtmlWorkerManager, getWebviewOptions } from './preview';
+import { MarkPreview, getWebviewOptions } from './preview';
+import { ParserWorkerManager, ToHtmlWorkerManager } from './previewWorker';
 
 let client: LanguageClient;
 let activeRules: vscode.Disposable[] = [];
@@ -20,13 +21,15 @@ enum Level {
   DOWN,
 }
 
-let workerManager: ToHtmlWorkerManager
+let toHtmlWorkerManager: ToHtmlWorkerManager
+let parserWorkerManager: ParserWorkerManager
 
 export function activate(context: ExtensionContext) {
   provideLink(context);
-  workerManager = new ToHtmlWorkerManager(context);
+  toHtmlWorkerManager = new ToHtmlWorkerManager(context);
+  parserWorkerManager = new ParserWorkerManager(context);
 
-  context.subscriptions.push(workerManager)
+  context.subscriptions.push(toHtmlWorkerManager, parserWorkerManager)
   
   vscode.commands.registerCommand("namucode.linkify", () => {
     const editor = vscode.window.activeTextEditor;
@@ -159,7 +162,7 @@ export function activate(context: ExtensionContext) {
     }
 
     const filePath = editor.document.uri.fsPath;
-    MarkPreview.createOrShow(context, context.extensionUri, filePath, workerManager);
+    MarkPreview.createOrShow(context, context.extensionUri, filePath, toHtmlWorkerManager, parserWorkerManager);
   });
 
   if (vscode.window.registerWebviewPanelSerializer) {
@@ -170,7 +173,7 @@ export function activate(context: ExtensionContext) {
           console.log(`Got state: ${state}`);
           // Reset the webview options so we use latest uri for `localResourceRoots`.
           webviewPanel.webview.options = getWebviewOptions(context.extensionUri);
-          MarkPreview.revive(webviewPanel, context, context.extensionUri, filePath, workerManager);
+          MarkPreview.revive(webviewPanel, context, context.extensionUri, filePath, toHtmlWorkerManager, parserWorkerManager);
         },
       });
     }
@@ -213,7 +216,8 @@ export function activate(context: ExtensionContext) {
 }
 
 export function deactivate(): Thenable<void> | undefined {
-  workerManager.dispose();
+  toHtmlWorkerManager.dispose();
+  parserWorkerManager.dispose();
   if (!client) {
     return undefined;
   }

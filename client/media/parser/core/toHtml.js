@@ -13,9 +13,6 @@ if(isNaN(maxThreads) || maxThreads < 1) maxThreads = Math.max(4, os.cpus().lengt
 module.exports = async (...params) => {
     const worker = new Piscina({
         filename: require.resolve('./toHtmlWorker'),
-        workerData: {
-            config: { document: { namespace: '문서', title: 'Document' } }
-        },
         minThreads,
         maxThreads
     });
