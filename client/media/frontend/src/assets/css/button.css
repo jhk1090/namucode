@@ -1,0 +1,273 @@
+.base {
+    align-items: center;
+    -moz-column-gap: .4rem;
+    column-gap: .4rem;
+    display: inline-flex;
+    font-size: .9rem;
+    justify-content: center;
+    line-height: 1.5;
+    overflow: hidden;
+    padding: .3rem .75rem;
+    text-decoration: none !important;
+    white-space: nowrap;
+}
+
+.link {
+    cursor: pointer;
+}
+
+.button {
+    --button-color: var(--light-text-color, var(--text-color, #212529));
+    --button-background-color: var(--light-article-background-color, var(--article-background-color, #fff));
+    --button-border: 1px solid;
+    --button-border-color: #dfe1e2;
+    --button-border-radius: 4px;
+    background-color: var(--button-background-color);
+    border: 1px solid;
+    border: var(--button-border);
+    border-color: var(--button-border-color);
+    border-radius: var(--button-border-radius);
+    color: var(--button-color) !important;
+    transition: background-color .1s ease-in,box-shadow .1s linear;
+}
+
+:global(.theseed-dark-mode) .button {
+    --button-color: var(--dark-text-color, var(--text-color, #e0e0e0));
+    --button-background-color: var(--dark-article-background-color, var(--article-background-color, #1c1d1f));
+    --button-border-color: #5c5c5c;
+}
+
+@media screen and (max-width: 727.98px) {
+    .button:not(.button--unresponsive) {
+        padding:.4rem .75rem;
+    }
+}
+
+@media screen and (max-width: 319.98px) {
+    .button:not(.button--unresponsive) {
+        padding:.3rem .75rem;
+    }
+}
+
+.button:not(.button--unreactive) {
+    cursor: pointer;
+}
+
+.button:not(.button--unreactive):not(.button--disabled) {
+    --light-focus-outline-color: var(--brand-bright-color-2, #e3e3e3);
+    --dark-focus-outline-color: #454545;
+    --focus-outline-color: var(--light-focus-outline-color);
+    --focus-box-shadow-style: var(--focus-outline-color) 0 0 0 0.2rem;
+}
+
+.button--hover:not(.button--disabled), .button:not(.button--unreactive):not(.button--disabled):hover {
+    --button-background-color: #f3f3f3;
+    text-decoration: none;
+}
+
+:global(.theseed-dark-mode) .button--hover:not(.button--disabled), :global(.theseed-dark-mode) .button:not(.button--unreactive):not(.button--disabled):hover {
+    --button-background-color: #2d2e2f;
+}
+
+.button--focus:not(.button--unreactive):not(.button--disabled), .button:not(.button--unreactive):not(.button--disabled):focus-visible {
+    box-shadow: var(--focus-box-shadow-style);
+    transition: box-shadow .1s linear;
+}
+
+:global(.theseed-dark-mode) .button--focus:not(.button--unreactive):not(.button--disabled), :global(.theseed-dark-mode) .button:not(.button--unreactive):not(.button--disabled):focus-visible {
+    --focus-outline-color: var(--dark-focus-outline-color);
+}
+
+.button--secondary:not(.button--disabled) {
+    --button-color: #fff;
+    --button-background-color: #757575;
+    --button-border-color: #c9c9c9;
+}
+
+:global(.theseed-dark-mode) .button--secondary:not(.button--disabled) {
+    --button-background-color: #454545;
+    --button-border-color: #1b1b1b;
+}
+
+.button--secondary.button--hover:not(.button--disabled), .button--secondary:not(.button--unreactive):not(.button--disabled):hover {
+    --button-background-color: #454545;
+}
+
+:global(.theseed-dark-mode) .button--secondary.button--hover:not(.button--disabled), :global(.theseed-dark-mode) .button--secondary:not(.button--unreactive):not(.button--disabled):hover {
+    --button-background-color: #2e2e2e;
+}
+
+.button--secondary.button--focus:not(.button--disabled), .button--secondary:not(.button--unreactive):not(.button--disabled):focus-visible {
+    --focus-outline-color: #919191;
+}
+
+:global(.theseed-dark-mode) .button--secondary.button--focus:not(.button--disabled), :global(.theseed-dark-mode) .button--secondary:not(.button--unreactive):not(.button--disabled):focus-visible {
+    --focus-outline-color: #5c5c5c;
+}
+
+.button--primary:not(.button--disabled) {
+    --button-color: #fff;
+    --button-background-color: #0076d6;
+    --button-border-color: #2378c3;
+}
+
+:global(.theseed-dark-mode) .button--primary:not(.button--disabled) {
+    --button-background-color: #0b4778;
+    --button-border-color: #1f303e;
+}
+
+.button--primary.button--hover:not(.button--disabled), .button--primary:not(.button--unreactive):not(.button--disabled):hover {
+    --button-background-color: #005ea2;
+}
+
+:global(.theseed-dark-mode) .button--primary.button--hover:not(.button--disabled), :global(.theseed-dark-mode) .button--primary:not(.button--unreactive):not(.button--disabled):hover {
+    --button-background-color: #112f4e;
+}
+
+.button--primary.button--focus:not(.button--disabled), .button--primary:not(.button--unreactive):not(.button--disabled):focus-visible {
+    --focus-outline-color: #a1d3ff
+}
+
+:global(.theseed-dark-mode) .button--primary.button--focus:not(.button--disabled), :global(.theseed-dark-mode) .button--primary:not(.button--unreactive):not(.button--disabled):focus-visible {
+    --focus-outline-color: #2c608a;
+}
+
+.button--danger:not(.button--disabled) {
+    --button-color: #fff;
+    --button-background-color: #b50909;
+    --button-border-color: #d83933;
+}
+
+:global(.theseed-dark-mode) .button--danger:not(.button--disabled) {
+    --button-background-color: #8b0a03;
+    --button-border-color: #8b0a03;
+}
+
+.button--danger.button--hover:not(.button--disabled), .button--danger:not(.button--unreactive):not(.button--disabled):hover {
+    --button-background-color: #8b0a03;
+}
+
+:global(.theseed-dark-mode) .button--danger.button--hover:not(.button--disabled), :global(.theseed-dark-mode) .button--danger:not(.button--unreactive):not(.button--disabled):hover {
+    --button-background-color: #5c1111;
+}
+
+.button--danger.button--focus:not(.button--disabled), .button--danger:not(.button--unreactive):not(.button--disabled):focus-visible {
+    --focus-outline-color: #fdb8ae;
+}
+
+:global(.theseed-dark-mode) .button--danger.button--focus:not(.button--disabled), :global(.theseed-dark-mode) .button--danger:not(.button--unreactive):not(.button--disabled):focus-visible {
+    --focus-outline-color: #a23737;
+}
+
+.button--super:not(.button--disabled) {
+    --button-color: #fff;
+    --button-background-color: #8168b3;
+    --button-border-color: #9355dc;
+}
+
+:global(.theseed-dark-mode) .button--super:not(.button--disabled) {
+    --button-background-color: #54278f;
+    --button-border-color: #312b3f;
+}
+
+.button--super.button--hover:not(.button--disabled), .button--super:not(.button--unreactive):not(.button--disabled):hover {
+    --button-background-color: #665190;
+}
+
+:global(.theseed-dark-mode) .button--super.button--hover:not(.button--disabled), :global(.theseed-dark-mode) .button--super:not(.button--unreactive):not(.button--disabled):hover {
+    --button-background-color: #39215e;
+}
+
+.button--super.button--focus:not(.button--disabled), .button--super:not(.button--unreactive):not(.button--disabled):focus-visible {
+    --focus-outline-color: #d5bfff;
+}
+
+:global(.theseed-dark-mode) .button--super.button--focus:not(.button--disabled), :global(.theseed-dark-mode) .button--super:not(.button--unreactive):not(.button--disabled):focus-visible {
+    --focus-outline-color: #665190;
+}
+
+.button--brand:not(.button--disabled) {
+    --button-color: #fff;
+    --button-background-color: var(--brand-color-1, #bcbcbc);
+    --button-border-color: var(--brand-color-2, #c7c7c7);
+}
+
+:global(.theseed-dark-mode) .button--brand:not(.button--disabled) {
+    --button-background-color: var(--brand-color-1, #2e3033);
+    --button-border-color: var(--brand-color-2, #2e3033);
+}
+
+.button--brand.button--hover:not(.button--disabled), .button--brand:not(.button--unreactive):not(.button--disabled):hover {
+    --button-background-color: var(--brand-color-2, #c7c7c7);
+}
+
+:global(.theseed-dark-mode) .button--brand.button--hover:not(.button--disabled), :global(.theseed-dark-mode) .button--brand:not(.button--unreactive):not(.button--disabled):hover {
+    --button-background-color: var(--brand-color-2, #2e3033);
+}
+
+.button--brand.button--focus:not(.button--disabled), .button--brand:not(.button--unreactive):not(.button--disabled):focus-visible {
+    --focus-outline-color: var(--brand-bright-color-1, #d5d5d5);
+}
+
+:global(.theseed-dark-mode) .button--brand.button--focus:not(.button--disabled), :global(.theseed-dark-mode) .button--brand:not(.button--unreactive):not(.button--disabled):focus-visible {
+    --focus-outline-color: var(--brand-bright-color-1, #45474b);
+}
+
+.button--disabled {
+    --button-color: #adadad;
+    --button-background-color: #f0f0f0;
+    --button-border-color: #e6e6e6;
+}
+
+:global(.theseed-dark-mode) .button--disabled {
+    --button-color: #5c5c5c;
+    --button-background-color: #2e2e2e;
+    --button-border-color: #454545;
+}
+
+.button--disabled:not(.button--disabled--unreactive):hover {
+    cursor: not-allowed;
+}
+
+.button--small-size {
+    font-size: .8rem;
+    height: 1.6rem;
+    min-width: 2.4rem;
+    padding: .1rem .4rem;
+    --button-border-color: #e6e6e6;
+    --button-border-radius: 3px;
+}
+
+:global(.theseed-dark-mode) .button--small-size {
+    --button-border-color: #454545;
+}
+
+.button--small-size svg {
+    height: .8rem;
+}
+
+.button--no-border {
+    --button-border: none;
+}
+
+@media screen and (max-width: 1023.98px) {
+    .button--small-size:not(.button--unresponsive) {
+        height:1.7rem;
+        min-width: 2.6rem;
+    }
+}
+
+.button--big-size {
+    font-size: 1.05rem;
+    padding: .75rem 1.25rem;
+}
+
+.button--block {
+    display: flex;
+    width: 100%;
+}
+
+.button svg {
+    height: .85rem;
+    fill: currentColor;
+}
