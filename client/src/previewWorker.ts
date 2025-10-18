@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { ExtensionContext } from "vscode";
 import * as path from "path";
 
-import { spawn, ChildProcess } from "child_process";
+import { spawnSync, spawn, ChildProcess } from "child_process";
 import * as crypto from "crypto";
 import {
     ParsedData,
@@ -16,7 +16,7 @@ import {
 } from "./types";
 
 class WorkerManager {
-    worker: ChildProcess | null = null;
+    protected worker: ChildProcess | null = null;
     protected readonly workerPath: string;
 
     constructor(context: ExtensionContext) {
@@ -28,6 +28,10 @@ class WorkerManager {
             this.worker.kill("SIGTERM");
             this.worker = null;
         }
+    }
+
+    public isAlive(): boolean {
+        return this.worker !== null
     }
 }
 
@@ -47,6 +51,36 @@ export class ToHtmlWorkerManager extends WorkerManager {
     private initializeWorker(context: ExtensionContext): void {
         const config = vscode.workspace.getConfiguration("namucode");
         const nodePath = config.get<string>("nodePath", "node");
+        
+        let isError = false
+        try {
+            const result = spawnSync(nodePath, ["--version"], { encoding: "utf8" });
+
+            if (result.error) {
+                if ((result.error as any).code === "ENOENT") {
+                    vscode.window.showErrorMessage(`미리보기 기능을 실행하려면 Node.js 22 이상이 필요합니다. Node.js 실행 파일을 찾을 수 없습니다: ${nodePath}`);
+                    isError = true
+                } else {
+                    vscode.window.showErrorMessage(`Node.js 실행 중 오류가 발생했습니다: ${result.error.message}`);
+                    isError = true
+                }
+            } else {
+                const version = result.stdout.trim()
+                const match = version.match(/^v(\d+)\.(\d+)\.(\d+)/);
+                if (+match[1] < 22) {
+                    vscode.window.showErrorMessage(`미리보기 기능을 실행하려면 Node.js 22 이상이 필요합니다.`);
+                    isError = true
+                }
+            }
+        } catch (err: any) {
+            vscode.window.showErrorMessage(`Node.js 실행에 실패했습니다: ${err.message}`);
+            isError = true
+        }
+
+        if (isError) {
+            this.worker = null;
+            return;
+        }
 
         this.worker = spawn(nodePath, [this.workerPath], {
             // 💥 표준 Node.js 경로를 사용합니다.
@@ -65,7 +99,7 @@ export class ToHtmlWorkerManager extends WorkerManager {
             if (!request) return;
 
             if (response.status === "success") {
-                request.resolve(response as any);
+                request.resolve(response);
             } else {
                 request.reject(new Error(response.message));
             }
@@ -125,6 +159,36 @@ export class ParserWorkerManager extends WorkerManager {
     private initializeWorker(context: ExtensionContext): void {
         const config = vscode.workspace.getConfiguration("namucode");
         const nodePath = config.get<string>("nodePath", "node");
+
+        let isError = false
+        try {
+            const result = spawnSync(nodePath, ["--version"], { encoding: "utf8" });
+
+            if (result.error) {
+                if ((result.error as any).code === "ENOENT") {
+                    vscode.window.showErrorMessage(`미리보기 기능을 실행하려면 Node.js 22 이상이 필요합니다. Node.js 실행 파일을 찾을 수 없습니다: ${nodePath}`);
+                    isError = true
+                } else {
+                    vscode.window.showErrorMessage(`Node.js 실행 중 오류가 발생했습니다: ${result.error.message}`);
+                    isError = true
+                }
+            } else {
+                const version = result.stdout.trim()
+                const match = version.match(/^v(\d+)\.(\d+)\.(\d+)/);
+                if (+match[1] < 22) {
+                    vscode.window.showErrorMessage(`미리보기 기능을 실행하려면 Node.js 22 이상이 필요합니다.`);
+                    isError = true
+                }
+            }
+        } catch (err: any) {
+            vscode.window.showErrorMessage(`Node.js 실행에 실패했습니다: ${err.message}`);
+            isError = true
+        }
+
+        if (isError) {
+            this.worker = null;
+            return;
+        }
 
         this.worker = spawn(nodePath, [this.workerPath], {
             // 💥 표준 Node.js 경로를 사용합니다.

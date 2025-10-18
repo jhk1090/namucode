@@ -1,6 +1,6 @@
 <template>
   <div ref="wikiContentContainer">
-    <WikiContent ref="wikiContent" :value="content" :categories="categories" />
+    <WikiContent ref="wikiContent" />
   </div>
 </template>
 <script>
@@ -12,14 +12,6 @@ export default {
   components: {
     WikiContent
   },
-  computed: {
-    content() {
-      return ""
-    },
-    categories() {
-      return []
-    }
-  },
   mounted() {
     window.addEventListener("message", this.handleMessage)
   },
@@ -28,8 +20,10 @@ export default {
   },
   methods: {
     handleMessage(e) {
-      if (e.data.type === 'updateContent')
+      if (e.data.type === 'updateContent') {
         this.$refs.wikiContent.updateContent(e.data.newContent)
+        this.$refs.wikiContent.updateCategories(e.data.newCategories)
+      }
       if (e.data.type === 'updateTheme') {
         if (e.data.themeKind === "dark") {
           this.$refs.wikiContentContainer.classList.remove("theseed-light-mode")

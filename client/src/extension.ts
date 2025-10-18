@@ -154,10 +154,37 @@ export function activate(context: ExtensionContext) {
     paragraphLeveling(Level.UP);
   });
 
-  const preview = vscode.commands.registerCommand("namucode.preview", () => {
+  vscode.commands.registerCommand("namucode.rebootPreviewWorker", () => {
+    vscode.window.showInformationMessage("Node.js 워커를 재시동하는 중입니다...")
+
+    toHtmlWorkerManager.dispose()
+    parserWorkerManager.dispose()
+
+    toHtmlWorkerManager = new ToHtmlWorkerManager(context);
+    parserWorkerManager = new ParserWorkerManager(context);
+
+    if (toHtmlWorkerManager.isAlive() && parserWorkerManager.isAlive()) {
+      vscode.window.showInformationMessage('Node.js 워커 재시동이 성공적으로 완료되었습니다!');
+      return;
+    }
+  })
+
+  const preview = vscode.commands.registerCommand("namucode.preview", async () => {
     const editor = vscode.window.activeTextEditor;
     if (!editor || editor.document.languageId !== 'namu') {
       vscode.window.showWarningMessage('이 명령어는 나무마크 파일(*.namu)에서만 사용할 수 있습니다.');
+      return;
+    }
+
+    if (!toHtmlWorkerManager.isAlive() || !parserWorkerManager.isAlive()) {
+      const previewWorkerError = await vscode.window.showErrorMessage('미리보기에 요구되는 Node.js 워커가 예기치 않게 종료되었습니다. Node.js를 미설치했거나, Node.js 22 이상이 아닐 수 있습니다.', "Node.js 설치", "Node.js 워커 재시동");
+      if (previewWorkerError === "Node.js 설치") {
+        vscode.env.openExternal(vscode.Uri.parse("https://nodejs.org/"));
+      }
+      if (previewWorkerError === "Node.js 워커 재시동") {
+        vscode.commands.executeCommand("namucode.rebootPreviewWorker")
+      }
+
       return;
     }
 

@@ -30,7 +30,7 @@ const topToHtml = module.exports = async parameter => {
     isolateContext = await isolate.createContext();
   }
   const Store = (options.Store ??= {
-    workspaceDocuments,
+    workspaceDocuments: workspaceDocuments ?? [],
     parsedIncludes: [],
     links: [],
     files: [],

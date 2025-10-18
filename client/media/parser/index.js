@@ -6,11 +6,11 @@ process.on("message", async (message) => {
         const { id, parsed, options } = message;
         try {
             const result = await toHtml(parsed, options/* , controller.signal */);
-
             process.send({
                 id: id,
                 status: "success",
                 html: result.html,
+                categories: result.categories
             });
         } catch (error) {
             console.error(error)

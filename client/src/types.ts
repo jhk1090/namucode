@@ -26,6 +26,7 @@ export interface IWorkerToHtmlResponseSuccess {
     id: string;
     status: 'success';
     html: string;
+    categories: any[];
 }
 
 export interface IWorkerParserResponseSuccess {

@@ -26,7 +26,8 @@ export class MarkPreview {
     private _panelLastViewState: { visible: boolean; active: boolean; viewColumn: vscode.ViewColumn };
     private _panelUri: vscode.Uri;
     private _panelLastContent: string;
-    private _panelLastToHtmlResult: string;
+    private _panelLastHtmlResult: string;
+    private _panelLastCategoriesResult: any[];
 
     private readonly _context: ExtensionContext;
     private readonly _extensionUri: vscode.Uri;
@@ -175,7 +176,7 @@ export class MarkPreview {
         const vueAppUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "client/out/client/vite-project.mjs"));
 
         const styleUriList = [];
-        for (const css of ["default.css", "github-dark-dimmed.min.css", "github.min.css", "ionicons.min.css", "katex.min.css", "wiki.css"]) {
+        for (const css of ["default.css", "github-dark-dimmed.min.css", "github.min.css", "ionicons.min.css", "katex.min.css", "wiki.css", "wikiContent.css", "wikiCategory.css", "button.css"]) {
             styleUriList.push(webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "client/out/client/assets/css/" + css)));
         }
 
@@ -198,7 +199,7 @@ export class MarkPreview {
                     webview.postMessage({ type: "updateTheme", themeKind: "light" })
                     break;
             }
-            webview.postMessage({ type: "updateContent", newContent: this._panelLastToHtmlResult });
+            webview.postMessage({ type: "updateContent", newContent: this._panelLastHtmlResult, newCategories: this._panelLastCategoriesResult });
             return
         }
 
@@ -318,7 +319,7 @@ export class MarkPreview {
                 webview.postMessage({ type: "updateTheme", themeKind: "light" })
                 break;
         }
-        webview.postMessage({ type: "updateContent", newContent: `<div style="width: 100%; text-align: center; word-break: keep-all;"><h2>렌더링이 진행중입니다! 잠시만 기다려주세요..</h2></div>` });
+        webview.postMessage({ type: "updateContent", newContent: `<div style="width: 100%; text-align: center; word-break: keep-all;"><h2>렌더링이 진행중입니다! 잠시만 기다려주세요..</h2></div>`, newCategories: [] });
 
         (async () => {
             try {
@@ -342,11 +343,12 @@ export class MarkPreview {
                 );
                 const namespace = "문서";
                 const title = path.basename(document.fileName, ".namu");
-                const { html } = await this._toHtmlWorkerManager.remote(parsed, { document: { namespace, title }, workspaceDocuments })
+                const { html, categories } = await this._toHtmlWorkerManager.remote(parsed, { document: { namespace, title }, workspaceDocuments })
     
-                webview.postMessage({ type: "updateContent", newContent: html });
+                webview.postMessage({ type: "updateContent", newContent: html, newCategories: categories });
                 this._panelLastContent = text;
-                this._panelLastToHtmlResult = html;
+                this._panelLastHtmlResult = html;
+                this._panelLastCategoriesResult = categories;
             } catch (error) {
                 vscode.window.showErrorMessage(`렌더링 중 오류 발생: ${error instanceof Error ? error.message : String(error)}`);
             }

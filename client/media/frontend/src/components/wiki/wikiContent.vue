@@ -1,5 +1,7 @@
 <template>
-  <div ref="div" v-html="content" class="wiki-content" @submit.prevent="formSubmit" :class="{ 'wiki-thread-content': discuss }"></div>
+  <WikiCategory v-if="categories && categories.length" :categories="categories"/>
+
+  <div ref="div" v-html="content" class="wiki-content" @submit.prevent="formSubmit"></div>
   <div ref="popover" v-show="popover.show" id="tooltip" class="popper">
     <div ref="popoverArrow" id="tooltip-arrow" class="popper__arrow"></div>
     <div id="tooltip-content" class="wiki-content" v-html="popover.content"></div>
@@ -8,23 +10,13 @@
 <script>
 import { computePosition, offset, flip, shift, autoUpdate } from '@floating-ui/vue'
 
+import WikiCategory from "@/components/wiki/wikiCategory"
 import Common from '@/mixins/common'
 
 export default {
   mixins: [Common],
-  props: {
-    discuss: {
-      type: Boolean,
-      default: false
-    },
-    value: {
-      type: String,
-      default: ''
-    },
-    categories: {
-      type: Array,
-      default: () => []
-    }
+  components: {
+    WikiCategory
   },
   computed: {
     footnotes() {
@@ -42,7 +34,8 @@ export default {
         show: false,
         content: ''
       },
-      content: this.value
+      content: "",
+      categories: []
     }
   },
   mounted() {
@@ -267,7 +260,6 @@ export default {
             left: `${x}px`,
             top: `${y}px`,
           });
-
           this.$refs.popoverArrow.style.left = `calc(50% - 10px - ${middlewareData.shift.x}px)`;
         });
 
@@ -303,128 +295,13 @@ export default {
     },
     updateContent(value) {
       this.content = value
+    },
+    updateCategories(value) {
+      this.categories = value
     }
   }
 }
 </script>
 <style scoped>
-.popper {
-  background: #fff;
-  border-radius: 3px;
-  box-shadow: 0 0 2px rgba(0,0,0,.5);
-  max-width: 50%;
-  padding: 15px;
-  position: absolute;
-  word-break: break-all;
-  z-index: 1;
-}
-
-.theseed-dark-mode .popper {
-  background: #383b40;
-  box-shadow: 0 0 2px hsla(0,0%,100%,.5);
-}
-
-.popper .popper__arrow {
-  border-color: #ddd;
-  border-style: solid;
-  height: 0;
-  margin: 5px;
-  position: absolute;
-  width: 0;
-}
-
-.theseed-dark-mode .popper .popper__arrow {
-  border-color: #ccc;
-}
-
-.popper[x-placement^=top] {
-  margin-bottom: 5px;
-}
-
-.popper[x-placement^=top] .popper__arrow {
-  border-bottom-color: transparent;
-  border-left-color: transparent;
-  border-right-color: transparent;
-  border-width: 5px 5px 0;
-  bottom: -5px;
-  left: calc(50% - 10px);
-  margin-bottom: 0;
-  margin-top: 0;
-}
-
-.popper[x-placement^=bottom] {
-  margin-top: 5px
-}
-
-.popper[x-placement^=bottom] .popper__arrow {
-  border-left-color: transparent;
-  border-right-color: transparent;
-  border-top-color: transparent;
-  border-width: 0 5px 5px;
-  left: calc(50% - 10px);
-  margin-bottom: 0;
-  margin-top: 0;
-  top: -5px;
-}
-
-.popper[x-placement^=right] {
-  margin-left: 5px
-}
-
-.popper[x-placement^=right] .popper__arrow {
-  border-bottom-color: transparent;
-  border-left-color: transparent;
-  border-top-color: transparent;
-  border-width: 5px 5px 5px 0;
-  left: -5px;
-  margin-left: 0;
-  margin-right: 0;
-  top: calc(50% - 10px);
-}
-
-.popper[x-placement^=left] {
-  margin-right: 5px;
-}
-
-.popper[x-placement^=left] .popper__arrow {
-  border-bottom-color: transparent;
-  border-right-color: transparent;
-  border-top-color: transparent;
-  border-width: 5px 0 5px 5px;
-  margin-left: 0;
-  margin-right: 0;
-  right: -5px;
-  top: calc(50% - 10px);
-}
-
-:deep(.thetree-modal-container) {
-  padding-top: 10rem;
-}
-
-:deep(.thetree-modal-container):focus {
-  outline: 0 !important;
-}
-
-.thetree-modal-content .wiki-content {
-  padding: 1rem;
-}
-
-.thetree-modal-content button {
-  background-color: #fafafa;
-  border: 0;
-  border-top: 1px solid #eee;
-  color: inherit;
-  cursor: pointer;
-  font-size: 12px !important;
-  font: inherit;
-  margin: 2px 0 0;
-  outline: none;
-  padding: 10px;
-  width: 100%;
-}
-
-.theseed-dark-mode .thetree-modal-content button {
-  background-color: #383b40;
-  border-top: 1px solid #111;
-}
+@import '@/assets/css/wikiContent.css'
 </style>

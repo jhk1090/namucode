@@ -90,6 +90,11 @@
         "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
       },
       {
+        "command": "namucode.rebootPreviewWorker",
+        "title": "미리보기 Node.js 워커 재시동",
+        "category": "나무코드"
+      },
+      {
         "command": "namucode.preview",
         "title": "미리보기 (베타)",
         "category": "나무코드",
@@ -389,29 +394,25 @@
         }
       }
     },
-    "configuration": {
-      "type": "object",
-      "title": "Example configuration",
+    "configuration": [{
+      "id": "namucodeSetting",
+      "title": "Namucode",
+      "order": 1,
       "properties": {
-        "languageServerExample.maxNumberOfProblems": {
-          "scope": "resource",
+        "namucode.preview.parser.maxLength": {
           "type": "number",
-          "default": 100,
-          "description": "Controls the maximum number of problems produced by the server."
+          "default": 5000000,
+          "title": "문서 렌더링 최대 길이",
+          "description": "미리보기 파서에서 문서 길이가 김을 판단하는 글자 수 기준입니다."
         },
-        "languageServerExample.trace.server": {
-          "scope": "window",
-          "type": "string",
-          "enum": [
-            "off",
-            "messages",
-            "verbose"
-          ],
-          "default": "off",
-          "description": "Traces the communication between VS Code and the language server."
+        "namucode.preview.parser.maxTimeout": {
+          "type": "number",
+          "default": 10,
+          "title": "문서 렌더링 최대 대기 시간",
+          "description": "미리보기 파서에서 문서 렌더링을 기다리는 최대 시간(초)입니다."
         }
       }
-    }
+    }]
   },
   "scripts": {
     "vscode:prepublish": "yarn run build",
