@@ -247,12 +247,35 @@ export class MarkPreview {
                 const { parsed } = await parserRemote(this._context, text)
                 
                 const files = await vscode.workspace.findFiles("**/*.namu")  
+                const parentPath = vscode.workspace.getWorkspaceFolder(this._panelUri).uri.fsPath
+
+                const allowedNamespace = ["분류", "틀", "사용자"];
                 const workspaceDocuments = await Promise.all(
                     files.map(async (file) => {
+                        let relativePath = path.relative(parentPath, file.fsPath)
                         const document = await vscode.workspace.openTextDocument(file);
-                        const namespace = "문서";
-                        const title = path.basename(document.fileName, ".namu");
-    
+                        let namespace = "문서";
+
+                        const extension = ".namu"
+                        relativePath = relativePath.replace(/\\/g, "/")
+
+                        let title = relativePath.slice(0, -extension.length)
+                        let namespaceSplitted = title.split(".")
+                        let target = namespaceSplitted.at(-1)
+                        if (allowedNamespace.includes(target)) {
+                            // 분류는 namespace = 분류, title = 문서명
+                            if (target === "분류") {
+                                namespace = namespaceSplitted.at(-1)
+                                namespaceSplitted.splice(-1, 1)
+                                title = namespaceSplitted.join(".")
+                            // 틀은 namespace = 문서, title = 틀
+                            } else {
+                                let namespaceTmp = target
+                                namespaceSplitted.splice(-1, 1)
+                                title = namespaceTmp + ":" + namespaceSplitted.join(".")
+                            }
+                        }
+
                         const content = document.getText();
     
                         return {
@@ -262,6 +285,7 @@ export class MarkPreview {
                         };
                     })
                 );
+                
                 const namespace = "문서";
                 const title = path.basename(document.fileName, ".namu");
                 const { html, categories } = await toHtmlRemote(this._context, parsed, { document: { namespace, title }, workspaceDocuments })
