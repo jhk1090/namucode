@@ -13,7 +13,7 @@ module.exports = async (params, { toHtml, includeData, workspaceDocuments, Store
         noTopParagraph: !obj.topParagraph,
         tokens: doc.parseResult.tokens
     });
-    console.log("parsed result", result.tokens?.length)
+    // console.log("parsed result", result.tokens?.length)
 
     const isolate = new ivm.Isolate({ memoryLimit: 8 });
     const isolateContext = await isolate.createContext();
@@ -30,7 +30,7 @@ module.exports = async (params, { toHtml, includeData, workspaceDocuments, Store
             isolateContext
         }
     });
-    console.log("include result", final.html.length)
+    // console.log("include result", final.html.length)
 
     return final.html;
 }

@@ -23,6 +23,7 @@ export class MarkPreview {
     public static currentPanels: { [key: string]: MarkPreview | undefined } = {};
 
     private readonly _panel: vscode.WebviewPanel;
+    private readonly _panelId: string;
     private _panelLastViewState: { visible: boolean; active: boolean; viewColumn: vscode.ViewColumn };
     private _panelUri: vscode.Uri;
     private _panelLastContent: string;
@@ -72,6 +73,7 @@ export class MarkPreview {
         this._panel = panel;
         this._context = context;
         this._extensionUri = extensionUri;
+        this._panelId = panelId;
 
         this._panelLastViewState = {
             visible: panel.visible,
@@ -246,56 +248,54 @@ export class MarkPreview {
             try {
                 const { parsed } = await parserRemote(this._context, text)
                 
-                const files = await vscode.workspace.findFiles("**/*.namu")  
-                const parentPath = vscode.workspace.getWorkspaceFolder(this._panelUri).uri.fsPath
-
-                const allowedNamespace = ["분류", "틀", "사용자"];
-                const workspaceDocuments = await Promise.all(
-                    files.map(async (file) => {
-                        let relativePath = path.relative(parentPath, file.fsPath)
-                        const document = await vscode.workspace.openTextDocument(file);
-                        let namespace = "문서";
-
-                        const extension = ".namu"
-                        relativePath = relativePath.replace(/\\/g, "/")
-
-                        let title = relativePath.slice(0, -extension.length)
-                        let namespaceSplitted = title.split(".")
-                        let target = namespaceSplitted.at(-1)
-                        if (allowedNamespace.includes(target)) {
-                            // 분류는 namespace = 분류, title = 문서명
-                            if (target === "분류") {
-                                namespace = namespaceSplitted.at(-1)
-                                namespaceSplitted.splice(-1, 1)
-                                title = namespaceSplitted.join(".")
-                            // 틀은 namespace = 문서, title = 틀
-                            } else {
-                                let namespaceTmp = target
-                                namespaceSplitted.splice(-1, 1)
-                                title = namespaceTmp + ":" + namespaceSplitted.join(".")
-                            }
-                        }
-
-                        const content = document.getText();
-    
-                        return {
-                            namespace,
-                            title,
-                            content,
-                        };
-                    })
-                );
+                const workspaceConfig = vscode.workspace.getConfiguration("namucode.preview.parser");
+                const workspaceConfigWorkspaceReference = workspaceConfig.get<boolean>("workspaceReference", true);
                 
-                const namespace = "문서";
-                const title = path.basename(document.fileName, ".namu");
-                const { html, categories } = await toHtmlRemote(this._context, parsed, { document: { namespace, title }, workspaceDocuments })
+                const parentUri = vscode.workspace.getWorkspaceFolder(this._panelUri).uri
+
+                let workspaceDocuments = []
+                if (workspaceConfigWorkspaceReference) {
+                    const files = await vscode.workspace.findFiles("**/*.namu")  
+    
+                    workspaceDocuments = await Promise.all(
+                        files.map(async (file) => {
+                            const document = await vscode.workspace.openTextDocument(file);
+                            const { namespace, title } = await getNamespaceAndTitle(parentUri, file)
+    
+                            const content = document.getText();
+        
+                            return {
+                                namespace,
+                                title,
+                                content,
+                            };
+                        })
+                    );
+                }
+
+                const { namespace, title } = await getNamespaceAndTitle(parentUri, document.uri)
+                const workspaceConfigMaxLength = workspaceConfig.get<number>("maxLength", 5000000);
+                const workspaceConfigMaxTimeout = workspaceConfig.get<number>("maxTimeout", 10);
+                const config = {
+                    maxLength: workspaceConfigMaxLength,
+                    maxTimeout: workspaceConfigMaxTimeout * 1000
+                }
+
+                const { html, categories } = await toHtmlRemote(this._context, parsed, { document: { namespace, title }, workspaceDocuments, config })
     
                 webview.postMessage({ type: "updateContent", newContent: html, newCategories: categories });
                 this._panelLastContent = text;
                 this._panelLastHtmlResult = html;
                 this._panelLastCategoriesResult = categories;
             } catch (error) {
-                vscode.window.showErrorMessage(`렌더링 중 오류 발생: ${error instanceof Error ? error.message : String(error)}`);
+                this.dispose(this._panelId);
+                const errorMessage = await vscode.window.showErrorMessage(`미리보기 렌더링 중 오류 발생: ${error instanceof Error ? error.message : String(error)}`, "제보하기", "재시도");
+                if (errorMessage === "제보하기") {
+                    vscode.env.openExternal(vscode.Uri.parse("https://github.com/jhk1090/namucode/issues"));
+                }
+                if (errorMessage === "재시도") {
+                    vscode.commands.executeCommand("namucode.preview")
+                }
             }
         })()
     }
@@ -308,4 +308,32 @@ function getNonce() {
         text += possible.charAt(Math.floor(Math.random() * possible.length));
     }
     return text;
+}
+
+const allowedNamespace = ["분류", "틀", "사용자"];
+async function getNamespaceAndTitle(parentUri: vscode.Uri, childUri: vscode.Uri) {
+    let relativePath = path.relative(parentUri.fsPath, childUri.fsPath)
+    let namespace = "문서";
+
+    const extension = ".namu"
+    relativePath = relativePath.replace(/\\/g, "/")
+
+    let title = relativePath.slice(0, -extension.length)
+    let namespaceSplitted = title.split(".")
+    let target = namespaceSplitted.at(-1)
+    if (allowedNamespace.includes(target)) {
+        // 분류는 namespace = 분류, title = 문서명
+        if (target === "분류") {
+            namespace = namespaceSplitted.at(-1)
+            namespaceSplitted.splice(-1, 1)
+            title = namespaceSplitted.join(".")
+        // 틀은 namespace = 문서, title = 틀
+        } else {
+            let namespaceTmp = target
+            namespaceSplitted.splice(-1, 1)
+            title = namespaceTmp + ":" + namespaceSplitted.join(".")
+        }
+    }
+
+    return { namespace, title }
 }

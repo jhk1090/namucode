@@ -5,7 +5,7 @@ import * as vscode from "vscode";
 import { IWorkerParserResponseSuccess, IWorkerResponseError, IWorkerToHtmlResponseSuccess, ToHtmlOptions } from "./types";
 
 export function getWorkerConfig(context: vscode.ExtensionContext) {
-    const config = vscode.workspace.getConfiguration("namucode.nodePath");
+    const config = vscode.workspace.getConfiguration("namucode.preview.parser");
     const nodePath = config.get<string>("nodePath", "node");
     const workerScriptPath = path.join(context.extensionPath, "client/media/parser", "index.js");
 
@@ -61,24 +61,24 @@ export function toHtmlRemote(context: vscode.ExtensionContext, parsed: any, opti
             worker.kill();
 
             if (response.id !== id) {
-                return reject(new Error("Worker returned mismatched request ID."));
+                return reject(new Error("워커가 요청한 ID와 다른 ID를 반환했습니다."));
             }
 
             if (response.status === "success") {
                 resolve(response as IWorkerToHtmlResponseSuccess);
             } else {
-                reject(new Error(response.message || "Unknown worker error."));
+                reject(new Error(response.message || "예기치 않은 워커 오류"));
             }
         });
 
         worker.on("error", (err) => {
-            reject(new Error(`Worker failed to start: ${err.message}`));
+            reject(new Error(`워커 실행에 실패했습니다: ${err.message}`));
             worker.kill();
         });
 
         worker.on("close", (code) => {
             if (code !== 0 && code !== null) {
-                reject(new Error(`Worker exited with code ${code}.`));
+                reject(new Error(`워커가 코드 ${code}와 함께 종료되었습니다.`));
             }
         });
 
@@ -111,24 +111,24 @@ export function parserRemote(context: vscode.ExtensionContext, text: string): Pr
             worker.kill();
 
             if (response.id !== id) {
-                return reject(new Error("Worker returned mismatched request ID."));
+                return reject(new Error("워커가 요청한 ID와 다른 ID를 반환했습니다."));
             }
 
             if (response.status === "success") {
                 resolve(response as IWorkerParserResponseSuccess);
             } else {
-                reject(new Error(response.message || "Unknown worker error."));
+                reject(new Error(response.message || "예기치 않은 워커 오류"));
             }
         });
 
         worker.on("error", (err) => {
-            reject(new Error(`Worker failed to start: ${err.message}`));
+            reject(new Error(`워커 실행에 실패했습니다: ${err.message}`));
             worker.kill();
         });
 
         worker.on("close", (code) => {
             if (code !== 0 && code !== null) {
-                reject(new Error(`Worker exited with code ${code}.`));
+                reject(new Error(`워커가 코드 ${code}와 함께 종료되었습니다.`));
             }
         });
 

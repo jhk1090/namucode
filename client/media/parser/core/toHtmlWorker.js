@@ -12,12 +12,15 @@ const macro = require('./syntax/macro');
 const table = require('./syntax/table');
 
 
-const MAXIMUM_LENGTH = 5000000;
+let MAXIMUM_LENGTH = 5000000;
 const MAXIMUM_LENGTH_HTML = '문서 길이가 너무 깁니다.';
 
 const jsGlobalRemover = fs.readFileSync(path.join(__dirname, "utils/jsGlobalRemover.js"), 'utf8');
 
 const topToHtml = module.exports = async parameter => {
+  if (parameter[1]?.config?.maxLength) {
+    MAXIMUM_LENGTH = parameter[1]?.config?.maxLength
+  }
   // if(parameter[0]?.batch) return await Promise.all(parameter[0].batch.map(a => topToHtml(a)));
 
   const [parsed, options = {}] = parameter;

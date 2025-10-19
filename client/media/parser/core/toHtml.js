@@ -1,7 +1,7 @@
 const Piscina = require('piscina');
 const os = require('os');
 
-const MAXIMUM_TIME = 10000;
+let MAXIMUM_TIME = 10000;
 const ERROR_HTML = '문서 렌더링이 실패했습니다.';
 const MAXIMUM_TIME_HTML = '문서 렌더링이 너무 오래 걸립니다.';
 
@@ -11,6 +11,16 @@ let maxThreads = parseInt(process.env.MULTITHREAD_MAX_THREADS);
 if(isNaN(maxThreads) || maxThreads < 1) maxThreads = Math.max(4, os.cpus().length);
 
 module.exports = async (...params) => {
+    if (params[1]?.config?.maxTimeout) {
+        MAXIMUM_TIME = params[1]?.config?.maxTimeout
+    }
+
+    const controller = new AbortController();
+    
+    setTimeout(() => {
+        controller.abort()
+    }, MAXIMUM_TIME)
+
     const worker = new Piscina({
         filename: require.resolve('./toHtmlWorker'),
         minThreads,
@@ -21,7 +31,7 @@ module.exports = async (...params) => {
     console.time('render');
     try {
         return await worker.run(params, {
-            signal: AbortSignal.timeout(MAXIMUM_TIME),
+            signal: controller.signal,
             transferList: [channel.port1]
         });
     } catch (e) {

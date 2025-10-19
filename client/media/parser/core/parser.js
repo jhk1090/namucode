@@ -1492,7 +1492,7 @@ module.exports = (text, { tokens = null, editorComment = false, thread = false, 
     }
 
     if(!tokens && text) {
-        console.time('tokenize');
+        // console.time('tokenize');
         const preLexed = editorComment ? null : inlineLexer.tokenize(text);
         const lines = text.split('\n');
         const newLines = [];
@@ -1519,13 +1519,13 @@ module.exports = (text, { tokens = null, editorComment = false, thread = false, 
         const lexed = lexer.tokenize(text);
         tokens = lexed.tokens;
 
-        console.timeEnd('tokenize');
+        // console.timeEnd('tokenize');
     }
     parser.noTopParagraph = noTopParagraph;
     parser.input = tokens ?? [];
-    console.time('cst');
+    // console.time('cst');
     const result = parser.input.length ? parser.document() : [];
-    console.timeEnd('cst');
+    // console.timeEnd('cst');
 
     const paragraphNum = [...Array(6 + 1 - Store.heading.lowestLevel)].map(_ => 0);
     for(let heading of Store.heading.list) {

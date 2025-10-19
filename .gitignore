@@ -5,3 +5,4 @@ node_modules
 *.vsix
 .DS_Store
 client/media/parser/output.html
+client/media/parser/test.js
