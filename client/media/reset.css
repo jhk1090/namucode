@@ -1,0 +1,75 @@
+html.vscode-dark {
+	background-color: #1c1d1f;
+}
+
+body.vscode-dark {
+	color: #e0e0e0
+}
+
+body.vscode-dark a, body.vscode-dark a code {
+	color: #ec9f19;
+	text-decoration: none;
+}
+
+body.vscode-dark p>a {
+	text-decoration: unset;
+}
+
+body.vscode-dark a:hover {
+	color: #bd7f14;
+	text-decoration: underline;
+}
+
+body.vscode-dark code {
+	color: unset;
+	background-color: unset;
+	padding: unset;
+	border-radius: unset;
+}
+
+body.vscode-dark pre code {
+	padding: unset;
+}
+
+body.vscode-dark blockquote {
+	background: unset;
+	border-color: unset;
+}
+
+html.vscode-light {
+	background-color: #fff;
+}
+
+body.vscode-light {
+	color: #212529
+}
+
+body.vscode-light a, body.vscode-light a code {
+	color: #0275d8;
+	text-decoration: none;
+}
+
+body.vscode-light p>a {
+	text-decoration: unset;
+}
+
+body.vscode-light a:hover {
+	color: #0263b8;
+	text-decoration: underline;
+}
+
+body.vscode-light code {
+	color: unset;
+	background-color: unset;
+	padding: unset;
+	border-radius: unset;
+}
+
+body.vscode-light pre code {
+	padding: unset;
+}
+
+body.vscode-light blockquote {
+	background: unset;
+	border-color: unset;
+}

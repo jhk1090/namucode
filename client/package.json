@@ -36,6 +36,8 @@
     "electron-rebuild": "^3.2.9"
   },
   "scripts": {
-    "build": "tsc -p ./"
+    "build": "yarn run build:src && yarn run build:frontend",
+    "build:src": "tsc -p ./",
+    "build:frontend": "cd media/frontend && yarn install && yarn run build"
   }
 }

@@ -414,7 +414,6 @@
     "build": "yarn run build:client && yarn run build:server",
     "build:client": "cd client && yarn install && yarn run build",
     "build:server": "cd server && yarn install && yarn run build",
-    "build:mark": "cd client/src/mark && npm install && tsc -p ./",
     "watch": "tsc -p -w",
     "pretest": "yarn run compile && yarn run lint",
     "lint": "eslint src --ext ts",

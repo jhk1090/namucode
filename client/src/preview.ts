@@ -10,6 +10,7 @@ export function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptio
 
         // And restrict the webview to only loading content from our extension's `media` directory.
         localResourceRoots: [
+            vscode.Uri.joinPath(extensionUri, "client/media"),
             vscode.Uri.joinPath(extensionUri, "client/out"),
             vscode.Uri.joinPath(extensionUri, "client/out/assets"),
             vscode.Uri.joinPath(extensionUri, "client/out/assets/fonts"),
@@ -168,6 +169,9 @@ export class MarkPreview {
     }
 
     private _getHtmlForWebview(webview: vscode.Webview, document: vscode.TextDocument) {
+        const resetStyleUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "client/media/reset.css"));
+        const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "client/media/script.js"));
+
         const vueAppUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "client/out/client/vite-project.mjs"));
 
         const styleUriList = [];
@@ -215,111 +219,14 @@ export class MarkPreview {
                         content="fullscreen=(self), accelerometer=*, gyroscope=*, encrypted-media=*">
 
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <style>
-                    html.vscode-dark {
-                        background-color: #1c1d1f;
-                    }
-
-                    body.vscode-dark {
-                        color: #e0e0e0
-                    }
-
-                    body.vscode-dark a, body.vscode-dark a code {
-                        color: #ec9f19;
-                        text-decoration: none;
-                    }
-
-                    body.vscode-dark p > a {
-                        text-decoration: unset;
-                    }
-
-                    body.vscode-dark a:hover {
-                        color: #bd7f14;
-                        text-decoration: underline;
-                    }
-
-                    body.vscode-dark code {
-                        color: unset;
-                        background-color: unset;
-                        padding: unset;
-                        border-radius: unset;
-                    }
-
-                    body.vscode-dark pre code {
-                        padding: unset;
-                    }
-
-                    body.vscode-dark blockquote {
-                        background: unset;
-                        border-color: unset;
-                    }
-
-                    html.vscode-light {
-                        background-color: #fff;
-                    }
-
-                    body.vscode-light {
-                        color: #212529
-                    }
-
-                    body.vscode-light a, body.vscode-light a code {
-                        color: #0275d8;
-                        text-decoration: none;
-                    }
-
-                    body.vscode-light p > a {
-                        text-decoration: unset;
-                    }
-
-                    body.vscode-light a:hover {
-                        color: #0263b8;
-                        text-decoration: underline;
-                    }
-
-                    body.vscode-light code {
-                        color: unset;
-                        background-color: unset;
-                        padding: unset;
-                        border-radius: unset;
-                    }
-
-                    body.vscode-light pre code {
-                        padding: unset;
-                    }
-
-                    body.vscode-light blockquote {
-                        background: unset;
-                        border-color: unset;
-                    }
-                </style>
-        ${stylesheetFlatten}
+                <link href="${resetStyleUri}" rel="stylesheet" />
+                ${stylesheetFlatten}
 				<title>Namucode Preview</title>
 		</head>
 		<body>
 				<div id="app"></div>
-				<script nonce="${nonce}">
-						const vscode = acquireVsCodeApi();
-
-                        document.addEventListener('click', function(e) {
-                        // hashChange가 한국어 hash에서는 작동하지 않는 오류 해결 + toc -> wiki-macro-toc
-                        if (e.target.tagName === 'A' && e.target.getAttribute('href').startsWith('#')) {
-                            e.preventDefault();
-
-                            const href = e.target.getAttribute('href');
-                            const targetId = href.slice(1);
-
-                            const decodedId = decodeURIComponent(targetId); 
-                            
-                            if (decodedId == "toc") {
-                                document.getElementsByClassName('wiki-macro-toc')[0]?.scrollIntoView()
-                                return
-                            }
-
-                            const anchorElem = document.getElementById(decodedId);
-                            anchorElem?.scrollIntoView();
-                        }})
-				</script>
 				<script type="text/javascript" src="${vueAppUri}" nonce="${nonce}"></script>
+				<script type="text/javascript" src="${scriptUri}" nonce="${nonce}"></script>
 		</body>
 		</html>
     `;
