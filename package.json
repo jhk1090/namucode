@@ -90,11 +90,6 @@
         "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
       },
       {
-        "command": "namucode.rebootPreviewWorker",
-        "title": "미리보기 Node.js 워커 재시동",
-        "category": "나무코드"
-      },
-      {
         "command": "namucode.preview",
         "title": "미리보기 (베타)",
         "category": "나무코드",

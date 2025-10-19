@@ -1,8 +1,7 @@
 import * as path from "path";
 import * as vscode from "vscode";
 import { ExtensionContext } from "vscode";
-import { ParserWorkerManager, ToHtmlWorkerManager } from './previewWorker';
-import { parser } from "../media/parser/index.js"
+import { parserRemote, toHtmlRemote } from './worker';
 
 export function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptions {
     return {
@@ -31,11 +30,9 @@ export class MarkPreview {
 
     private readonly _context: ExtensionContext;
     private readonly _extensionUri: vscode.Uri;
-    private _toHtmlWorkerManager: ToHtmlWorkerManager;
-    private _parserWorkerManager: ParserWorkerManager;
     private _disposables: vscode.Disposable[] = [];
 
-    public static createOrShow(context: ExtensionContext, extensionUri: vscode.Uri, panelId: string, toHtmlWorkerManager: ToHtmlWorkerManager, parserWorkerManager: ParserWorkerManager) {
+    public static createOrShow(context: ExtensionContext, extensionUri: vscode.Uri, panelId: string) {
         const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
 
         // If we already have a panel, show it.
@@ -52,30 +49,28 @@ export class MarkPreview {
             getWebviewOptions(extensionUri)
         );
 
-        MarkPreview.currentPanels[panelId] = new MarkPreview(panel, context, extensionUri, panelId, toHtmlWorkerManager, parserWorkerManager);
+        MarkPreview.currentPanels[panelId] = new MarkPreview(panel, context, extensionUri, panelId);
     }
 
     public static revive(
         panel: vscode.WebviewPanel,
         context: ExtensionContext,
         extensionUri: vscode.Uri,
-        panelId: string, toHtmlWorkerManager: ToHtmlWorkerManager, parserWorkerManager: ParserWorkerManager
+        panelId: string
     ) {
         console.log(path.basename(panelId), "reviving..");
-        MarkPreview.currentPanels[panelId] = new MarkPreview(panel, context, extensionUri, panelId, toHtmlWorkerManager, parserWorkerManager);
+        MarkPreview.currentPanels[panelId] = new MarkPreview(panel, context, extensionUri, panelId);
     }
 
     private constructor(
         panel: vscode.WebviewPanel,
         context: ExtensionContext,
         extensionUri: vscode.Uri,
-        panelId: string, toHtmlWorkerManager: ToHtmlWorkerManager, parserWorkerManager: ParserWorkerManager
+        panelId: string
     ) {
         this._panel = panel;
         this._context = context;
         this._extensionUri = extensionUri;
-        this._toHtmlWorkerManager = toHtmlWorkerManager;
-        this._parserWorkerManager = parserWorkerManager;
 
         this._panelLastViewState = {
             visible: panel.visible,
@@ -304,6 +299,25 @@ export class MarkPreview {
 				<div id="app"></div>
 				<script nonce="${nonce}">
 						const vscode = acquireVsCodeApi();
+
+                        document.addEventListener('click', function(e) {
+                        // hashChange가 한국어 hash에서는 작동하지 않는 오류 해결 + toc -> wiki-macro-toc
+                        if (e.target.tagName === 'A' && e.target.getAttribute('href').startsWith('#')) {
+                            e.preventDefault();
+
+                            const href = e.target.getAttribute('href');
+                            const targetId = href.slice(1);
+
+                            const decodedId = decodeURIComponent(targetId); 
+                            
+                            if (decodedId == "toc") {
+                                document.getElementsByClassName('wiki-macro-toc')[0]?.scrollIntoView()
+                                return
+                            }
+
+                            const anchorElem = document.getElementById(decodedId);
+                            anchorElem?.scrollIntoView();
+                        }})
 				</script>
 				<script type="text/javascript" src="${vueAppUri}" nonce="${nonce}"></script>
 		</body>
@@ -323,7 +337,7 @@ export class MarkPreview {
 
         (async () => {
             try {
-                const { parsed } = await this._parserWorkerManager.remote(text)
+                const { parsed } = await parserRemote(this._context, text)
                 
                 const files = await vscode.workspace.findFiles("**/*.namu")  
                 const workspaceDocuments = await Promise.all(
@@ -343,7 +357,7 @@ export class MarkPreview {
                 );
                 const namespace = "문서";
                 const title = path.basename(document.fileName, ".namu");
-                const { html, categories } = await this._toHtmlWorkerManager.remote(parsed, { document: { namespace, title }, workspaceDocuments })
+                const { html, categories } = await toHtmlRemote(this._context, parsed, { document: { namespace, title }, workspaceDocuments })
     
                 webview.postMessage({ type: "updateContent", newContent: html, newCategories: categories });
                 this._panelLastContent = text;

@@ -219,10 +219,12 @@ export default {
         time.textContent = result;
       }
 
-      if(!this.discuss) {
-        const anchorElem = document.getElementById(location.hash.slice(1));
-        anchorElem?.scrollIntoView();
-      }
+      // if(!this.discuss) {
+      //   const hash = decodeURIComponent(location.hash.slice(1));
+      //   window.history.pushState(null, null, hash);
+      //   const anchorElem = document.getElementById(hash);
+      //   anchorElem?.scrollIntoView();
+      // }
     },
     setupFootnoteTooltip() {
       let hovering = 0;

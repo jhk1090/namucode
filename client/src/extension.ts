@@ -12,7 +12,7 @@ import { LinkDefinitionProvider } from "./linkdef";
 import { NamuMark } from "namumark-clone-core";
 import * as cheerio from "cheerio";
 import { MarkPreview, getWebviewOptions } from './preview';
-import { ParserWorkerManager, ToHtmlWorkerManager } from './previewWorker';
+import { getWorkerConfig } from './worker';
 
 let client: LanguageClient;
 let activeRules: vscode.Disposable[] = [];
@@ -21,15 +21,8 @@ enum Level {
   DOWN,
 }
 
-let toHtmlWorkerManager: ToHtmlWorkerManager
-let parserWorkerManager: ParserWorkerManager
-
 export function activate(context: ExtensionContext) {
   provideLink(context);
-  toHtmlWorkerManager = new ToHtmlWorkerManager(context);
-  parserWorkerManager = new ParserWorkerManager(context);
-
-  context.subscriptions.push(toHtmlWorkerManager, parserWorkerManager)
   
   vscode.commands.registerCommand("namucode.linkify", () => {
     const editor = vscode.window.activeTextEditor;
@@ -154,21 +147,6 @@ export function activate(context: ExtensionContext) {
     paragraphLeveling(Level.UP);
   });
 
-  vscode.commands.registerCommand("namucode.rebootPreviewWorker", () => {
-    vscode.window.showInformationMessage("Node.js 워커를 재시동하는 중입니다...")
-
-    toHtmlWorkerManager.dispose()
-    parserWorkerManager.dispose()
-
-    toHtmlWorkerManager = new ToHtmlWorkerManager(context);
-    parserWorkerManager = new ParserWorkerManager(context);
-
-    if (toHtmlWorkerManager.isAlive() && parserWorkerManager.isAlive()) {
-      vscode.window.showInformationMessage('Node.js 워커 재시동이 성공적으로 완료되었습니다!');
-      return;
-    }
-  })
-
   const preview = vscode.commands.registerCommand("namucode.preview", async () => {
     const editor = vscode.window.activeTextEditor;
     if (!editor || editor.document.languageId !== 'namu') {
@@ -176,20 +154,20 @@ export function activate(context: ExtensionContext) {
       return;
     }
 
-    if (!toHtmlWorkerManager.isAlive() || !parserWorkerManager.isAlive()) {
-      const previewWorkerError = await vscode.window.showErrorMessage('미리보기에 요구되는 Node.js 워커가 예기치 않게 종료되었습니다. Node.js를 미설치했거나, Node.js 22 이상이 아닐 수 있습니다.', "Node.js 설치", "Node.js 워커 재시동");
-      if (previewWorkerError === "Node.js 설치") {
+    const { errorMessage } = getWorkerConfig(context);
+    if (errorMessage) {
+      const workerError = await vscode.window.showErrorMessage(errorMessage, "Node.js 설치", "재시도");
+      if (workerError === "Node.js 설치") {
         vscode.env.openExternal(vscode.Uri.parse("https://nodejs.org/"));
       }
-      if (previewWorkerError === "Node.js 워커 재시동") {
-        vscode.commands.executeCommand("namucode.rebootPreviewWorker")
+      if (workerError === "재시도") {
+        vscode.commands.executeCommand("namucode.preview")
       }
-
       return;
     }
 
     const filePath = editor.document.uri.fsPath;
-    MarkPreview.createOrShow(context, context.extensionUri, filePath, toHtmlWorkerManager, parserWorkerManager);
+    MarkPreview.createOrShow(context, context.extensionUri, filePath);
   });
 
   if (vscode.window.registerWebviewPanelSerializer) {
@@ -200,7 +178,7 @@ export function activate(context: ExtensionContext) {
           console.log(`Got state: ${state}`);
           // Reset the webview options so we use latest uri for `localResourceRoots`.
           webviewPanel.webview.options = getWebviewOptions(context.extensionUri);
-          MarkPreview.revive(webviewPanel, context, context.extensionUri, filePath, toHtmlWorkerManager, parserWorkerManager);
+          MarkPreview.revive(webviewPanel, context, context.extensionUri, filePath);
         },
       });
     }
@@ -243,8 +221,8 @@ export function activate(context: ExtensionContext) {
 }
 
 export function deactivate(): Thenable<void> | undefined {
-  toHtmlWorkerManager.dispose();
-  parserWorkerManager.dispose();
+  // toHtmlWorkerManager.dispose();
+  // parserWorkerManager.dispose();
   if (!client) {
     return undefined;
   }
