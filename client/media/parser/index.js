@@ -19,7 +19,7 @@ process.on('message', async (message) => {
             process.send({
                 id: message.id,
                 status: 'error',
-                message: error instanceof Error ? error.message : 'Unknown error during toHtml execution.'
+                message: error instanceof Error ? error.message : '렌더링 중 예기치 않은 오류가 발생했습니다.'
             });
         }
 
@@ -27,13 +27,15 @@ process.on('message', async (message) => {
     }
     // if (message.comamnd === "parser") {
     try {
-        const { id, text } = message;
-        const result = parser(text);
+        const { id, text, config } = message;
+        const result = await parser(text, config);
 
         process.send({
             id: id,
             status: 'success',
-            parsed: result
+            parsed: result.parsed,
+            html: result.html,
+            hasError: result.hasError,
         });
 
     } catch (error) {
@@ -41,7 +43,7 @@ process.on('message', async (message) => {
         process.send({
             id: message.id,
             status: 'error',
-            message: error instanceof Error ? error.message : 'Unknown error during toHtml execution.'
+            message: error instanceof Error ? error.message : '파싱 중 예기치 않은 오류가 발생했습니다.'
         });
     }
 

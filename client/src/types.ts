@@ -33,6 +33,8 @@ export interface IWorkerParserResponseSuccess {
     id: string;
     status: 'success';
     parsed: any;
+    html: string;
+    hasError: boolean;
 }
 
 // 자식 -> 부모 응답 (오류)

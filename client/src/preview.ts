@@ -35,6 +35,7 @@ export class MarkPreview {
     private _disposables: vscode.Disposable[] = [];
 
     public static createOrShow(context: ExtensionContext, extensionUri: vscode.Uri, panelId: string) {
+        console.log(panelId)
         const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
 
         // If we already have a panel, show it.
@@ -246,15 +247,32 @@ export class MarkPreview {
 
         (async () => {
             try {
-                const { parsed } = await parserRemote(this._context, text)
-                
                 const workspaceConfig = vscode.workspace.getConfiguration("namucode.preview.parser");
-                const workspaceConfigWorkspaceReference = workspaceConfig.get<boolean>("workspaceReference", true);
+
+                const maxLength = workspaceConfig.get<number>("maxLength", 5000000);
+                const maxRenderingTimeout = workspaceConfig.get<number>("maxRenderingTimeout", 10) * 1000;
+                const maxParsingTimeout = workspaceConfig.get<number>("maxParsingTimeout", 7) * 1000;
+                const config = {
+                    maxLength,
+                    maxRenderingTimeout,
+                    maxParsingTimeout
+                }
+
+                const { parsed, hasError, html: parserHtml } = await parserRemote(this._context, text, config)
+                if (hasError) {
+                    webview.postMessage({ type: "updateContent", newContent: parserHtml, newCategories: [] });
+                    this._panelLastContent = text;
+                    this._panelLastHtmlResult = parserHtml;
+                    this._panelLastCategoriesResult = [];
+                    return
+                }
+
+                const workspaceReference = workspaceConfig.get<boolean>("workspaceReference", true);
                 
                 const parentUri = vscode.workspace.getWorkspaceFolder(this._panelUri).uri
 
                 let workspaceDocuments = []
-                if (workspaceConfigWorkspaceReference) {
+                if (workspaceReference) {
                     const files = await vscode.workspace.findFiles("**/*.namu")  
     
                     workspaceDocuments = await Promise.all(
@@ -274,13 +292,6 @@ export class MarkPreview {
                 }
 
                 const { namespace, title } = await getNamespaceAndTitle(parentUri, document.uri)
-                const workspaceConfigMaxLength = workspaceConfig.get<number>("maxLength", 5000000);
-                const workspaceConfigMaxTimeout = workspaceConfig.get<number>("maxTimeout", 10);
-                const config = {
-                    maxLength: workspaceConfigMaxLength,
-                    maxTimeout: workspaceConfigMaxTimeout * 1000
-                }
-
                 const { html, categories } = await toHtmlRemote(this._context, parsed, { document: { namespace, title }, workspaceDocuments, config })
     
                 webview.postMessage({ type: "updateContent", newContent: html, newCategories: categories });

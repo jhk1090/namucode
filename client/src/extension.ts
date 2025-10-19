@@ -147,6 +147,10 @@ export function activate(context: ExtensionContext) {
     paragraphLeveling(Level.UP);
   });
 
+  vscode.commands.registerCommand("namucode.openPreviewSettings", () => {
+    vscode.commands.executeCommand('workbench.action.openSettings', "@ext:jhk1090.namucode");
+  });
+
   const preview = vscode.commands.registerCommand("namucode.preview", async () => {
     const editor = vscode.window.activeTextEditor;
     if (!editor || editor.document.languageId !== 'namu') {
@@ -167,7 +171,7 @@ export function activate(context: ExtensionContext) {
     }
 
     const filePath = editor.document.uri.fsPath;
-    MarkPreview.createOrShow(context, context.extensionUri, filePath);
+    MarkPreview.createOrShow(context, context.extensionUri, "namucode-webview-" + filePath);
   });
 
   if (vscode.window.registerWebviewPanelSerializer) {
@@ -178,7 +182,7 @@ export function activate(context: ExtensionContext) {
           console.log(`Got state: ${state}`);
           // Reset the webview options so we use latest uri for `localResourceRoots`.
           webviewPanel.webview.options = getWebviewOptions(context.extensionUri);
-          MarkPreview.revive(webviewPanel, context, context.extensionUri, filePath);
+          MarkPreview.revive(webviewPanel, context, context.extensionUri, "namucode-webview-" + filePath);
         },
       });
     }

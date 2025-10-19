@@ -87,7 +87,7 @@ export function toHtmlRemote(context: vscode.ExtensionContext, parsed: any, opti
     });
 }
 
-export function parserRemote(context: vscode.ExtensionContext, text: string): Promise<IWorkerParserResponseSuccess> {
+export function parserRemote(context: vscode.ExtensionContext, text: string, config: any): Promise<IWorkerParserResponseSuccess> {
     return new Promise((resolve, reject) => {
         const { nodePath, workerScriptPath, errorMessage } = getWorkerConfig(context);
         if (errorMessage) {
@@ -132,7 +132,7 @@ export function parserRemote(context: vscode.ExtensionContext, text: string): Pr
             }
         });
 
-        const message: any = { id: id, command: "parser", text };
+        const message: any = { id: id, command: "parser", text, config };
         worker.send(message);
     });
 }

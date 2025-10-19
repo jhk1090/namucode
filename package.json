@@ -1,446 +1,467 @@
 {
-  "name": "namucode",
-  "displayName": "Namucode",
-  "description": "나무위키 VSCode 확장 프로그램",
-  "publisher": "jhk1090",
-  "version": "1.4.5",
-  "engines": {
-    "vscode": "^1.75.0"
-  },
-  "icon": "images/Logo.png",
-  "bugs": {
-    "url": "https://github.com/jhk1090/namucode/issues",
-    "email": "jhk1090.public@gmail.com"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/jhk1090/namucode.git"
-  },
-  "homepage": "https://github.com/jhk1090/namucode/blob/main/README.md",
-  "categories": [
-    "Keymaps",
-    "Programming Languages",
-    "Themes",
-    "Snippets",
-    "Other"
-  ],
-  "activationEvents": [],
-  "main": "./client/out/extension.js",
-  "contributes": {
-    "commands": [
-      {
-        "command": "namucode.paragraphLevelDown",
-        "title": "문단 한단계 낮추기",
-        "category": "나무코드",
-        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
-      },
-      {
-        "command": "namucode.paragraphLevelUp",
-        "title": "문단 한단계 높이기",
-        "category": "나무코드",
-        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
-      },
-      {
-        "command": "namucode.paragraphSort",
-        "title": "문단 자동 정렬",
-        "category": "나무코드",
-        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'",
-        "icon": "$(sort-precedence)"
-      },
-      {
-        "command": "namucode.linkify",
-        "title": "텍스트 링크",
-        "category": "나무코드",
-        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
-      },
-      {
-        "command": "namucode.textBold",
-        "title": "텍스트 굵게",
-        "category": "나무코드",
-        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
-      },
-      {
-        "command": "namucode.textItalic",
-        "title": "텍스트 기울임",
-        "category": "나무코드",
-        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
-      },
-      {
-        "command": "namucode.textUnderline",
-        "title": "텍스트 밑줄",
-        "category": "나무코드",
-        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
-      },
-      {
-        "command": "namucode.textStrike",
-        "title": "텍스트 취소선",
-        "category": "나무코드",
-        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
-      },
-      {
-        "command": "namucode.textSuperscript",
-        "title": "텍스트 위첨자",
-        "category": "나무코드",
-        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
-      },
-      {
-        "command": "namucode.textSubscript",
-        "title": "텍스트 아래첨자",
-        "category": "나무코드",
-        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
-      },
-      {
-        "command": "namucode.preview",
-        "title": "미리보기 (베타)",
-        "category": "나무코드",
-        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'",
-        "icon": "$(open-preview)"
-      }
-    ],
-    "menus": {
-      "editor/title": [
-        {
-          "command": "namucode.preview",
-          "group": "navigation",
-          "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
-        },
-        {
-          "command": "namucode.paragraphSort",
-          "group": "navigation",
-          "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
-        }
-      ]
+    "name": "namucode",
+    "displayName": "Namucode",
+    "description": "나무위키 VSCode 확장 프로그램",
+    "publisher": "jhk1090",
+    "version": "1.4.5",
+    "engines": {
+        "vscode": "^1.75.0"
     },
-    "languages": [
-      {
-        "id": "namu",
-        "aliases": [
-          "나무마크",
-          "Namuwiki Code"
-        ],
-        "extensions": [
-          "namu"
-        ],
-        "configuration": "./language-configuration.json",
-        "icon": {
-          "light": "images/Logo.svg",
-          "dark": "images/Logo.svg"
-        }
-      }
+    "icon": "images/Logo.png",
+    "bugs": {
+        "url": "https://github.com/jhk1090/namucode/issues",
+        "email": "jhk1090.public@gmail.com"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/jhk1090/namucode.git"
+    },
+    "homepage": "https://github.com/jhk1090/namucode/blob/main/README.md",
+    "categories": [
+        "Keymaps",
+        "Programming Languages",
+        "Themes",
+        "Snippets",
+        "Other"
     ],
-    "grammars": [
-      {
-        "language": "namu",
-        "scopeName": "source.namu",
-        "path": "./syntaxes/key.tmLanguage.json",
-        "injectTo": ["source.namu"],
-        "embeddedLanguages": {
-          "meta.embedded.block.javascript": "javascript",
-          "meta.embedded.line.css": "css",
-          "meta.embedded.block.html": "html"
-        }
-      }
-    ],
-    "snippets": [
-      {
-        "language": "namu",
-        "path": "./snippets.json"
-      }
-    ],
-    "keybindings": [
-      {
-        "command": "namucode.paragraphLevelDown",
-        "key": "ctrl+down",
-        "mac": "cmd+down",
-        "when": "editorTextFocus && editorLangId == 'namu'"
-      },
-      {
-        "command": "namucode.paragraphLevelUp",
-        "key": "ctrl+up",
-        "mac": "cmd+up",
-        "when": "editorTextFocus && editorLangId == 'namu'"
-      },
-      {
-        "command": "namucode.linkify",
-        "key": "ctrl+shift+K",
-        "mac": "cmd+shift+K",
-        "when": "editorHasSelection && editorLangId == 'namu'"
-      },
-      {
-        "command": "namucode.textBold",
-        "key": "ctrl+B",
-        "mac": "cmd+B",
-        "when": "editorHasSelection && editorLangId == 'namu'"
-      },
-      {
-        "command": "namucode.textItalic",
-        "key": "ctrl+I",
-        "mac": "cmd+I",
-        "when": "editorHasSelection && editorLangId == 'namu'"
-      },
-      {
-        "command": "namucode.textUnderline",
-        "key": "ctrl+U",
-        "mac": "cmd+U",
-        "when": "editorHasSelection && editorLangId == 'namu'"
-      },
-      {
-        "command": "namucode.textStrike",
-        "key": "ctrl+shift+D",
-        "mac": "cmd+shift+D",
-        "when": "editorHasSelection && editorLangId == 'namu'"
-      },
-      {
-        "command": "namucode.textSuperscript",
-        "key": "ctrl+shift+U",
-        "mac": "cmd+shift+U",
-        "when": "editorHasSelection && editorLangId == 'namu'"
-      },
-      {
-        "command": "namucode.textSubscript",
-        "key": "ctrl+shift+Y",
-        "mac": "cmd+shift+Y",
-        "when": "editorHasSelection && editorLangId == 'namu'"
-      },
-      {
-        "command": "namucode.newParagraph",
-        "key": "ctrl+=",
-        "mac": "cmd+=",
-        "when": "editorHasSelection && editorLangId == 'namu'"
-      },
-      {
-        "command": "editor.action.insertSnippet",
-        "key": "ctrl+alt+I",
-        "mac": "cmd+shift+I",
-        "args": {
-          "langId": "namu",
-          "name": "파일 삽입"
-        }
-      },
-      {
-        "command": "namucode.paragraphSort",
-        "key": "ctrl+k ctrl+s",
-        "mac": "cmd+k cmd+s",
-        "when": "editorTextFocus && editorLangId == 'namu'"
-      },
-      {
-        "command": "namucode.preview",
-        "key": "ctrl+k ctrl+p",
-        "mac": "cmd+k cmd+p",
-        "when": "editorTextFocus && editorLangId == 'namu'"
-      }
-    ],
-    "configurationDefaults": {
-      "editor.tokenColorCustomizations": {
-        "[*Dark*]": {
-          "textMateRules": [
+    "activationEvents": [],
+    "main": "./client/out/extension.js",
+    "contributes": {
+        "commands": [
             {
-              "scope": "string.quoted.double.namu",
-              "settings": {
-                "foreground": "#CE9178"
-              }
+                "command": "namucode.paragraphLevelDown",
+                "title": "문단 한단계 낮추기",
+                "category": "나무코드",
+                "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
             },
             {
-              "scope": "markup.bold.namu",
-              "settings": {
-                "foreground": "#ffffff",
-                "fontStyle": "bold"
-              }
+                "command": "namucode.paragraphLevelUp",
+                "title": "문단 한단계 높이기",
+                "category": "나무코드",
+                "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
             },
             {
-              "scope": "markup.italic.namu",
-              "settings": {
-                "foreground": "#D4D4D4",
-                "fontStyle": "italic"
-              }
+                "command": "namucode.paragraphSort",
+                "title": "문단 자동 정렬",
+                "category": "나무코드",
+                "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'",
+                "icon": "$(sort-precedence)"
             },
             {
-              "scope": "markup.underline.namu",
-              "settings": {
-                "foreground": "#D4D4D4",
-                "fontStyle": "underline"
-              }
+                "command": "namucode.linkify",
+                "title": "텍스트 링크",
+                "category": "나무코드",
+                "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
             },
             {
-              "scope": "markup.deleted.namu",
-              "settings": {
-                "foreground": "#D4D4D4",
-                "fontStyle": "strikethrough"
-              }
+                "command": "namucode.textBold",
+                "title": "텍스트 굵게",
+                "category": "나무코드",
+                "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
             },
             {
-              "scope": "variable.parameter.namu",
-              "settings": {
-                "foreground": "#89DDFF"
-              }
+                "command": "namucode.textItalic",
+                "title": "텍스트 기울임",
+                "category": "나무코드",
+                "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
             },
             {
-              "scope": "keyword.control.namu",
-              "settings": {
-                "foreground": "#569CD6",
-                "fontStyle": ""
-              }
+                "command": "namucode.textUnderline",
+                "title": "텍스트 밑줄",
+                "category": "나무코드",
+                "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
             },
             {
-              "scope": "support.constant.namu",
-              "settings": {
-                "foreground": "#fa7f5a"
-              }
+                "command": "namucode.textStrike",
+                "title": "텍스트 취소선",
+                "category": "나무코드",
+                "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
             },
             {
-              "scope": "keyword.operator.namu",
-              "settings": {
-                "foreground": "#6A9955",
-                "fontStyle": "bold"
-              }
+                "command": "namucode.textSuperscript",
+                "title": "텍스트 위첨자",
+                "category": "나무코드",
+                "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
             },
             {
-              "scope": "comment.line.double-quote.namu",
-              "settings": {
-                "foreground": "#6d6d6d",
-                "fontStyle": "italic"
-              }
+                "command": "namucode.textSubscript",
+                "title": "텍스트 아래첨자",
+                "category": "나무코드",
+                "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
             },
             {
-              "scope": "support.constant.color.namu",
-              "settings": {
-                "foreground": "#fa7f5a",
-                "fontStyle": ""
-              }
+                "command": "namucode.preview",
+                "title": "미리보기",
+                "category": "나무코드",
+                "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'",
+                "icon": "$(open-preview)"
             },
             {
-              "scope": "keyword.control.bracket.namu",
-              "settings": {
-                "foreground": "#fa7f5a",
-                "fontStyle": ""
-              }
-            },
-            {
-              "scope": "variable.parameter.bracket.namu",
-              "settings": {
-                "foreground": "#89DDFF",
-                "fontStyle": ""
-              }
-            },
-            {
-              "scope": "meta.block",
-              "settings": {
-                "foreground": "#EEFFFF",
-                "fontStyle": ""
-              }
-            },
-            {
-              "scope": "punctuation.definition.table.namu",
-              "settings": {
-                "foreground": "#569CD6",
-                "fontStyle": ""
-              }
-            },
-            {
-              "scope": "punctuation.definition.tag.begin.namu",
-              "settings": {
-                "foreground": "#569CD6",
-                "fontStyle": ""
-              }
-            },
-            {
-              "scope": "punctuation.definition.tag.end.namu",
-              "settings": {
-                "foreground": "#569CD6",
-                "fontStyle": ""
-              }
-            },
-            {
-              "scope": "entity.other.attribute-name.table.namu",
-              "settings": {
-                "foreground": "#89DDFF",
-                "fontStyle": ""
-              }
-            },
-            {
-              "scope": "string.unquoted.attribute-value.table.namu",
-              "settings": {
-                "foreground": "#CE9178",
-                "fontStyle": ""
-              }
-            },
-            {
-              "scope": "keyword.control.include.namu",
-              "settings": {
-                "foreground": "#569CD6",
-                "fontStyle": ""
-              }
-            },
-            {
-              "scope": "variable.parameter.key.namu",
-              "settings": {
-                "foreground": "#89DDFF",
-                "fontStyle": ""
-              }
-            },
-            {
-              "scope": "string.unquoted.argument.namu",
-              "settings": {
-                "foreground": "#CE9178",
-                "fontStyle": ""
-              }
+                "command": "namucode.openPreviewSettings",
+                "title": "미리보기 설정 열기",
+                "category": "나무코드",
+                "icon": "$(gear)"
             }
-          ]
-        }
-      }
+        ],
+        "menus": {
+            "editor/title": [
+                {
+                    "command": "namucode.preview",
+                    "group": "navigation",
+                    "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
+                },
+                {
+                    "command": "namucode.paragraphSort",
+                    "group": "navigation",
+                    "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
+                },
+                {
+                    "command": "namucode.openPreviewSettings",
+                    "when": "activeWebviewPanelId =~ /namucode-webview-/",
+                    "group": "navigation@1"
+                }
+            ]
+        },
+        "languages": [
+            {
+                "id": "namu",
+                "aliases": [
+                    "나무마크",
+                    "Namuwiki Code"
+                ],
+                "extensions": [
+                    "namu"
+                ],
+                "configuration": "./language-configuration.json",
+                "icon": {
+                    "light": "images/Logo.svg",
+                    "dark": "images/Logo.svg"
+                }
+            }
+        ],
+        "grammars": [
+            {
+                "language": "namu",
+                "scopeName": "source.namu",
+                "path": "./syntaxes/key.tmLanguage.json",
+                "injectTo": [
+                    "source.namu"
+                ],
+                "embeddedLanguages": {
+                    "meta.embedded.block.javascript": "javascript",
+                    "meta.embedded.line.css": "css",
+                    "meta.embedded.block.html": "html"
+                }
+            }
+        ],
+        "snippets": [
+            {
+                "language": "namu",
+                "path": "./snippets.json"
+            }
+        ],
+        "keybindings": [
+            {
+                "command": "namucode.paragraphLevelDown",
+                "key": "ctrl+down",
+                "mac": "cmd+down",
+                "when": "editorTextFocus && editorLangId == 'namu'"
+            },
+            {
+                "command": "namucode.paragraphLevelUp",
+                "key": "ctrl+up",
+                "mac": "cmd+up",
+                "when": "editorTextFocus && editorLangId == 'namu'"
+            },
+            {
+                "command": "namucode.linkify",
+                "key": "ctrl+shift+K",
+                "mac": "cmd+shift+K",
+                "when": "editorHasSelection && editorLangId == 'namu'"
+            },
+            {
+                "command": "namucode.textBold",
+                "key": "ctrl+B",
+                "mac": "cmd+B",
+                "when": "editorHasSelection && editorLangId == 'namu'"
+            },
+            {
+                "command": "namucode.textItalic",
+                "key": "ctrl+I",
+                "mac": "cmd+I",
+                "when": "editorHasSelection && editorLangId == 'namu'"
+            },
+            {
+                "command": "namucode.textUnderline",
+                "key": "ctrl+U",
+                "mac": "cmd+U",
+                "when": "editorHasSelection && editorLangId == 'namu'"
+            },
+            {
+                "command": "namucode.textStrike",
+                "key": "ctrl+shift+D",
+                "mac": "cmd+shift+D",
+                "when": "editorHasSelection && editorLangId == 'namu'"
+            },
+            {
+                "command": "namucode.textSuperscript",
+                "key": "ctrl+shift+U",
+                "mac": "cmd+shift+U",
+                "when": "editorHasSelection && editorLangId == 'namu'"
+            },
+            {
+                "command": "namucode.textSubscript",
+                "key": "ctrl+shift+Y",
+                "mac": "cmd+shift+Y",
+                "when": "editorHasSelection && editorLangId == 'namu'"
+            },
+            {
+                "command": "namucode.newParagraph",
+                "key": "ctrl+=",
+                "mac": "cmd+=",
+                "when": "editorHasSelection && editorLangId == 'namu'"
+            },
+            {
+                "command": "editor.action.insertSnippet",
+                "key": "ctrl+alt+I",
+                "mac": "cmd+shift+I",
+                "args": {
+                    "langId": "namu",
+                    "name": "파일 삽입"
+                }
+            },
+            {
+                "command": "namucode.paragraphSort",
+                "key": "ctrl+k ctrl+s",
+                "mac": "cmd+k cmd+s",
+                "when": "editorTextFocus && editorLangId == 'namu'"
+            },
+            {
+                "command": "namucode.preview",
+                "key": "ctrl+k ctrl+p",
+                "mac": "cmd+k cmd+p",
+                "when": "editorTextFocus && editorLangId == 'namu'"
+            }
+        ],
+        "configurationDefaults": {
+            "editor.tokenColorCustomizations": {
+                "[*Dark*]": {
+                    "textMateRules": [
+                        {
+                            "scope": "string.quoted.double.namu",
+                            "settings": {
+                                "foreground": "#CE9178"
+                            }
+                        },
+                        {
+                            "scope": "markup.bold.namu",
+                            "settings": {
+                                "foreground": "#ffffff",
+                                "fontStyle": "bold"
+                            }
+                        },
+                        {
+                            "scope": "markup.italic.namu",
+                            "settings": {
+                                "foreground": "#D4D4D4",
+                                "fontStyle": "italic"
+                            }
+                        },
+                        {
+                            "scope": "markup.underline.namu",
+                            "settings": {
+                                "foreground": "#D4D4D4",
+                                "fontStyle": "underline"
+                            }
+                        },
+                        {
+                            "scope": "markup.deleted.namu",
+                            "settings": {
+                                "foreground": "#D4D4D4",
+                                "fontStyle": "strikethrough"
+                            }
+                        },
+                        {
+                            "scope": "variable.parameter.namu",
+                            "settings": {
+                                "foreground": "#89DDFF"
+                            }
+                        },
+                        {
+                            "scope": "keyword.control.namu",
+                            "settings": {
+                                "foreground": "#569CD6",
+                                "fontStyle": ""
+                            }
+                        },
+                        {
+                            "scope": "support.constant.namu",
+                            "settings": {
+                                "foreground": "#fa7f5a"
+                            }
+                        },
+                        {
+                            "scope": "keyword.operator.namu",
+                            "settings": {
+                                "foreground": "#6A9955",
+                                "fontStyle": "bold"
+                            }
+                        },
+                        {
+                            "scope": "comment.line.double-quote.namu",
+                            "settings": {
+                                "foreground": "#6d6d6d",
+                                "fontStyle": "italic"
+                            }
+                        },
+                        {
+                            "scope": "support.constant.color.namu",
+                            "settings": {
+                                "foreground": "#fa7f5a",
+                                "fontStyle": ""
+                            }
+                        },
+                        {
+                            "scope": "keyword.control.bracket.namu",
+                            "settings": {
+                                "foreground": "#fa7f5a",
+                                "fontStyle": ""
+                            }
+                        },
+                        {
+                            "scope": "variable.parameter.bracket.namu",
+                            "settings": {
+                                "foreground": "#89DDFF",
+                                "fontStyle": ""
+                            }
+                        },
+                        {
+                            "scope": "meta.block",
+                            "settings": {
+                                "foreground": "#EEFFFF",
+                                "fontStyle": ""
+                            }
+                        },
+                        {
+                            "scope": "punctuation.definition.table.namu",
+                            "settings": {
+                                "foreground": "#569CD6",
+                                "fontStyle": ""
+                            }
+                        },
+                        {
+                            "scope": "punctuation.definition.tag.begin.namu",
+                            "settings": {
+                                "foreground": "#569CD6",
+                                "fontStyle": ""
+                            }
+                        },
+                        {
+                            "scope": "punctuation.definition.tag.end.namu",
+                            "settings": {
+                                "foreground": "#569CD6",
+                                "fontStyle": ""
+                            }
+                        },
+                        {
+                            "scope": "entity.other.attribute-name.table.namu",
+                            "settings": {
+                                "foreground": "#89DDFF",
+                                "fontStyle": ""
+                            }
+                        },
+                        {
+                            "scope": "string.unquoted.attribute-value.table.namu",
+                            "settings": {
+                                "foreground": "#CE9178",
+                                "fontStyle": ""
+                            }
+                        },
+                        {
+                            "scope": "keyword.control.include.namu",
+                            "settings": {
+                                "foreground": "#569CD6",
+                                "fontStyle": ""
+                            }
+                        },
+                        {
+                            "scope": "variable.parameter.key.namu",
+                            "settings": {
+                                "foreground": "#89DDFF",
+                                "fontStyle": ""
+                            }
+                        },
+                        {
+                            "scope": "string.unquoted.argument.namu",
+                            "settings": {
+                                "foreground": "#CE9178",
+                                "fontStyle": ""
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "configuration": [
+            {
+                "id": "namucodeSetting",
+                "title": "Namucode",
+                "order": 1,
+                "properties": {
+                    "namucode.preview.parser.workspaceReference": {
+                        "type": "boolean",
+                        "default": "true",
+                        "description": "미리보기 시 작업 환경에 있는 다른 namu 파일/이미지 파일을 불러옵니다. 활성화 시, 이미지 삽입과 분류, include 기능을 사용할 수 있습니다."
+                    },
+                    "namucode.preview.parser.nodePath": {
+                        "type": "string",
+                        "default": "node",
+                        "description": "미리보기 파서가 실행될 Node.js 실행 경로입니다."
+                    },
+                    "namucode.preview.parser.maxLength": {
+                        "type": "number",
+                        "default": 5000000,
+                        "title": "문서 렌더링 최대 길이",
+                        "description": "미리보기 파서에서 문서 길이가 김을 판단하는 글자 수 기준입니다."
+                    },
+                    "namucode.preview.parser.maxRenderingTimeout": {
+                        "type": "number",
+                        "default": 10,
+                        "title": "문서 렌더링 최대 대기 시간",
+                        "description": "미리보기 파서에서 문서 렌더링을 기다리는 최대 시간(초)입니다. (파싱 다음에 렌더링이 진행됩니다.)"
+                    },
+                    "namucode.preview.parser.maxParsingTimeout": {
+                        "type": "number",
+                        "default": 7,
+                        "title": "문서 파싱 최대 대기 시간",
+                        "description": "미리보기 파서에서 문서 파싱을 기다리는 최대 시간(초)입니다. (파싱 다음에 렌더링이 진행됩니다.)"
+                    }
+                }
+            }
+        ]
     },
-    "configuration": [{
-      "id": "namucodeSetting",
-      "title": "Namucode",
-      "order": 1,
-      "properties": {
-        "namucode.preview.parser.workspaceReference": {
-          "type": "boolean",
-          "default": "true",
-          "description": "미리보기 시 작업 환경에 있는 다른 namu 파일/이미지 파일을 불러옵니다. 활성화 시, 이미지 삽입과 분류, include 기능을 사용할 수 있습니다."
-        },
-        "namucode.preview.parser.nodePath": {
-          "type": "string",
-          "default": "node",
-          "description": "미리보기 파서가 실행될 Node.js 실행 경로입니다."
-        },
-        "namucode.preview.parser.maxLength": {
-          "type": "number",
-          "default": 5000000,
-          "title": "문서 렌더링 최대 길이",
-          "description": "미리보기 파서에서 문서 길이가 김을 판단하는 글자 수 기준입니다."
-        },
-        "namucode.preview.parser.maxTimeout": {
-          "type": "number",
-          "default": 10,
-          "title": "문서 렌더링 최대 대기 시간",
-          "description": "미리보기 파서에서 문서 렌더링을 기다리는 최대 시간(초)입니다."
-        }
-      }
-    }]
-  },
-  "scripts": {
-    "vscode:prepublish": "yarn run build",
-    "build": "yarn run build:client && yarn run build:server",
-    "build:client": "cd client && yarn install && yarn run build",
-    "build:server": "cd server && yarn install && yarn run build",
-    "watch": "tsc -p -w",
-    "pretest": "yarn run compile && yarn run lint",
-    "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js"
-  },
-  "devDependencies": {
-    "@types/glob": "^7.2.0",
-    "@types/mocha": "^10.0.6",
-    "@types/node": "^18.14.6",
-    "@types/vscode": "^1.68.0",
-    "@typescript-eslint/eslint-plugin": "^7.1.0",
-    "@typescript-eslint/parser": "^7.1.0",
-    "@vscode/test-electron": "^2.1.3",
-    "eslint": "^8.57.0",
-    "glob": "^8.0.3",
-    "mocha": "^10.3.0",
-    "typescript": "^5.3.3"
-  },
-  "dependencies": {}
+    "scripts": {
+        "vscode:prepublish": "yarn run build",
+        "build": "yarn run build:client && yarn run build:server",
+        "build:client": "cd client && yarn install && yarn run build",
+        "build:server": "cd server && yarn install && yarn run build",
+        "watch": "tsc -p -w",
+        "pretest": "yarn run compile && yarn run lint",
+        "lint": "eslint src --ext ts",
+        "test": "node ./out/test/runTest.js"
+    },
+    "devDependencies": {
+        "@types/glob": "^7.2.0",
+        "@types/mocha": "^10.0.6",
+        "@types/node": "^18.14.6",
+        "@types/vscode": "^1.68.0",
+        "@typescript-eslint/eslint-plugin": "^7.1.0",
+        "@typescript-eslint/parser": "^7.1.0",
+        "@vscode/test-electron": "^2.1.3",
+        "eslint": "^8.57.0",
+        "glob": "^8.0.3",
+        "mocha": "^10.3.0",
+        "typescript": "^5.3.3"
+    },
+    "dependencies": {}
 }
