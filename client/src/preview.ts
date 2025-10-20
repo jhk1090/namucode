@@ -132,7 +132,7 @@ export class MarkPreview {
 
         const saveDisposable = vscode.workspace.onDidSaveTextDocument(
             (document) => {
-                if (panelId === document.fileName) {
+                if (panelId.split("namucode-webview-").slice(1).join("namucode-webview-") === document.fileName) {
                     console.log(path.basename(panelId), "just updated!", "in save state");
                     this._update();
                 }
@@ -243,7 +243,7 @@ export class MarkPreview {
                 webview.postMessage({ type: "updateTheme", themeKind: "light" })
                 break;
         }
-        webview.postMessage({ type: "updateContent", newContent: `<div style="width: 100%; text-align: center; word-break: keep-all;"><h2>렌더링이 진행중입니다! 잠시만 기다려주세요..</h2></div>`, newCategories: [] });
+        webview.postMessage({ type: "updateContent", newContent: `<div style="width: 100%; text-align: center; word-break: keep-all;"><h2>미리보기를 준비하는 중입니다.</h2><h3>파싱 중.. (1/2)</h3></div>`, newCategories: [] });
 
         (async () => {
             try {
@@ -266,6 +266,8 @@ export class MarkPreview {
                     this._panelLastCategoriesResult = [];
                     return
                 }
+
+                webview.postMessage({ type: "updateContent", newContent: `<div style="width: 100%; text-align: center; word-break: keep-all;"><h2>미리보기를 준비하는 중입니다.</h2><h3>렌더링 중.. (2/2)</h3></div>`, newCategories: [] });
 
                 const workspaceReference = workspaceConfig.get<boolean>("workspaceReference", true);
                 
