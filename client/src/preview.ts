@@ -281,19 +281,18 @@ export class MarkPreview {
                 webview.postMessage({ type: "updateContent", newContent: `<div style="width: 100%; word-break: keep-all;"><h2>미리보기를 준비하는 중입니다.</h2><h3>작업 환경 리소스 불러오는 중.. (2/3)</h3><h3>파싱 중.. (완료! ${parsingDuration}ms)</h3></div>`, newCategories: [] });
 
                 const workspaceReference = workspaceConfig.get<boolean>("workspaceReference", true);
-                
-                const parentUri = vscode.workspace.getWorkspaceFolder(this._panelUri).uri
 
                 const loadingWorkspaceStart = performance.now();
 
+                const currentFolder = vscode.workspace.getWorkspaceFolder(this._panelUri)
                 let workspaceDocuments = []
-                if (workspaceReference) {
+                if (workspaceReference && currentFolder) {
                     const namuFiles = await vscode.workspace.findFiles("**/*.namu")  
     
                     workspaceDocuments.push(...await Promise.all(
                         namuFiles.map(async (file) => {
                             const document = await vscode.workspace.openTextDocument(file);
-                            const { namespace, title } = await getNamespaceAndTitle(parentUri, file)
+                            const { namespace, title } = await getNamespaceAndTitle(currentFolder.uri.fsPath, file.fsPath)
     
                             const content = document.getText();
         
@@ -309,7 +308,7 @@ export class MarkPreview {
                     const mappedMediaFiles = await Promise.all(
                         mediaFiles.map(async (file) => {
                             try {
-                                let title = path.relative(parentUri.fsPath, file.fsPath)
+                                let title = path.relative(currentFolder.uri.fsPath, file.fsPath)
                                 let namespace = "문서";
 
                                 title = title.replace(/\\/g, "/")
@@ -341,7 +340,7 @@ export class MarkPreview {
 
                 webview.postMessage({ type: "updateContent", newContent: `<div style="width: 100%; word-break: keep-all;"><h2>미리보기를 준비하는 중입니다.</h2><h3>렌더링 중.. (3/3)</h3><h3>작업 환경 리소스 불러오는 중.. (완료! ${loadingWorkspaceDuration}ms)</h3><h3>파싱 중.. (완료! ${parsingDuration}ms)</h3></div>`, newCategories: [] });
 
-                const { namespace, title } = await getNamespaceAndTitle(parentUri, document.uri)
+                const { namespace, title } = await getNamespaceAndTitle(currentFolder ? currentFolder.uri.fsPath : path.dirname(document.uri.fsPath), document.uri.fsPath)
                 let { html, categories, hasError: hasErrorToHtml, errorCode, errorMessage } = await toHtmlRemote(this._context, parsed, { document: { namespace, title }, workspaceDocuments, config })
 
                 if (hasErrorToHtml) {
@@ -382,8 +381,8 @@ function getNonce() {
 }
 
 const allowedNamespace = ["분류", "틀", "사용자"];
-async function getNamespaceAndTitle(parentUri: vscode.Uri, childUri: vscode.Uri) {
-    let relativePath = path.relative(parentUri.fsPath, childUri.fsPath)
+async function getNamespaceAndTitle(parentPath: string, childPath: string) {
+    let relativePath = path.relative(parentPath, childPath)
     let namespace = "문서";
 
     const extension = ".namu"
