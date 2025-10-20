@@ -11,7 +11,6 @@
 - 단축키 폭넓게 추가
 
 - 미리보기
-  - 파일 경로로 이미지 추가 (!!!) - URL 자체를 base64 형식 data:image/~ 로 변경해 이미지 추가 가능
   - 워커 예열하기 (warmup)
   - 미리보기 대기 메세지 추가
   - panel.dispose() 시 child_process 제거

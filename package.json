@@ -463,5 +463,7 @@
         "mocha": "^10.3.0",
         "typescript": "^5.3.3"
     },
-    "dependencies": {}
+    "dependencies": {
+        "image-size": "^2.0.2"
+    }
 }

@@ -1,7 +1,9 @@
 import * as path from "path";
 import * as vscode from "vscode";
+import { promises as fs } from "fs";
 import { ExtensionContext } from "vscode";
 import { parserRemote, toHtmlRemote } from './worker';
+import imageSize from "image-size";
 
 export function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptions {
     return {
@@ -243,7 +245,7 @@ export class MarkPreview {
                 webview.postMessage({ type: "updateTheme", themeKind: "light" })
                 break;
         }
-        webview.postMessage({ type: "updateContent", newContent: `<div style="width: 100%; text-align: center; word-break: keep-all;"><h2>미리보기를 준비하는 중입니다.</h2><h3>파싱 중.. (1/2)</h3></div>`, newCategories: [] });
+        webview.postMessage({ type: "updateContent", newContent: `<div style="width: 100%; text-align: center; word-break: keep-all;"><h2>미리보기를 준비하는 중입니다.</h2><h3>파싱 중.. (1/3)</h3></div>`, newCategories: [] });
 
         (async () => {
             try {
@@ -267,7 +269,7 @@ export class MarkPreview {
                     return
                 }
 
-                webview.postMessage({ type: "updateContent", newContent: `<div style="width: 100%; text-align: center; word-break: keep-all;"><h2>미리보기를 준비하는 중입니다.</h2><h3>렌더링 중.. (2/2)</h3></div>`, newCategories: [] });
+                webview.postMessage({ type: "updateContent", newContent: `<div style="width: 100%; text-align: center; word-break: keep-all;"><h2>미리보기를 준비하는 중입니다.</h2><h3>작업 환경 리소스 불러오는 중.. (2/3)</h3><h3>파싱 중.. (완료)</h3></div>`, newCategories: [] });
 
                 const workspaceReference = workspaceConfig.get<boolean>("workspaceReference", true);
                 
@@ -275,10 +277,10 @@ export class MarkPreview {
 
                 let workspaceDocuments = []
                 if (workspaceReference) {
-                    const files = await vscode.workspace.findFiles("**/*.namu")  
+                    const namuFiles = await vscode.workspace.findFiles("**/*.namu")  
     
-                    workspaceDocuments = await Promise.all(
-                        files.map(async (file) => {
+                    workspaceDocuments.push(...await Promise.all(
+                        namuFiles.map(async (file) => {
                             const document = await vscode.workspace.openTextDocument(file);
                             const { namespace, title } = await getNamespaceAndTitle(parentUri, file)
     
@@ -290,8 +292,42 @@ export class MarkPreview {
                                 content,
                             };
                         })
-                    );
+                    ))
+
+                    const mediaFiles = await vscode.workspace.findFiles("{**/*.png,**/*.jpg,**/*.jpeg,**/*.svg,**/*.gif}")
+                    const mappedMediaFiles = await Promise.all(
+                        mediaFiles.map(async (file) => {
+                            try {
+                                let title = path.relative(parentUri.fsPath, file.fsPath)
+                                let namespace = "문서";
+
+                                title = title.replace(/\\/g, "/")
+                                const fileKey = await imageUriToDataUri(file)
+                                const { fileHeight, fileWidth, fileSize } = await getImageInfo(file)
+
+                                return {
+                                    namespace,
+                                    title: "파일:" + title,
+                                    content: {
+                                        fileKey,
+                                        fileWidth,
+                                        fileHeight,
+                                        fileSize
+                                    }
+                                }
+                            } catch (err) {
+                                console.error(err.message)                     
+                                return null;
+                            }
+                        })
+                    )
+
+                    workspaceDocuments.push(...mappedMediaFiles.filter(v => v !== null))
                 }
+
+                console.log(workspaceDocuments)
+
+                webview.postMessage({ type: "updateContent", newContent: `<div style="width: 100%; text-align: center; word-break: keep-all;"><h2>미리보기를 준비하는 중입니다.</h2><h3>렌더링 중.. (3/3)</h3><h3>작업 환경 리소스 불러오는 중.. (완료)</h3><h3>파싱 중.. (완료)</h3></div>`, newCategories: [] });
 
                 const { namespace, title } = await getNamespaceAndTitle(parentUri, document.uri)
                 const { html, categories } = await toHtmlRemote(this._context, parsed, { document: { namespace, title }, workspaceDocuments, config })
@@ -349,4 +385,51 @@ async function getNamespaceAndTitle(parentUri: vscode.Uri, childUri: vscode.Uri)
     }
 
     return { namespace, title }
+}
+
+function getMimeType(uri: vscode.Uri): string {
+    const extension = path.extname(uri.fsPath).toLowerCase();
+    switch (extension) {
+        case '.png': return 'image/png';
+        case '.jpg':
+        case '.jpeg': return 'image/jpeg';
+        case '.gif': return 'image/gif';
+        case '.svg': return 'image/svg+xml';
+        default: return 'application/octet-stream'; // 알 수 없는 타입
+    }
+}
+
+async function imageUriToDataUri(imageUri: vscode.Uri): Promise<string> {
+    const filePath = imageUri.fsPath;
+    const mimeType = getMimeType(imageUri);
+
+    if (mimeType === 'application/octet-stream') {
+        throw new Error('Unsupported image file type.');
+    }
+
+    return new Promise(async (resolve, reject) => {
+        try {
+            const data = await fs.readFile(filePath);
+            const base64Data = data.toString('base64');
+            const dataUri = `data:${mimeType};base64,${base64Data}`;
+            
+            resolve(dataUri);
+        } catch (err) {
+            reject(new Error(`Failed to read file: ${err.message}`));
+        }
+    });
+}
+
+async function getImageInfo(imageUri: vscode.Uri) {
+    const path = imageUri.fsPath;
+    
+    const stats = await fs.stat(path);
+    const buffer = await fs.readFile(path);
+    const { width, height } = imageSize(buffer);
+
+    return {
+        fileWidth: width,
+        fileHeight: height,
+        fileSize: stats.size,
+    };
 }

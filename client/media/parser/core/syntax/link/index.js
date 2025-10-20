@@ -14,21 +14,21 @@ module.exports = async (obj, options = {}) => {
     let notExist = false;
 
     let isImage = false;
-    // const image = await processImage(obj, link, options);
-    // if(typeof image === 'string') {
-    //     if(!options.includeData) Store.files.push(link);
-    //     return image;
-    // }
-    // else if(typeof image === 'object') {
-    //     if(image.link) link = image.link;
-    //     if(image.text) {
-    //         text = image.text;
-    //         obj.textExists = false;
-    //     }
-    //     if(!options.includeData) Store.files.push(link);
-    //     notExist = true;
-    //     isImage = true;
-    // }
+    const image = await processImage(obj, link, options);
+    if(typeof image === 'string') {
+        if(!options.includeData) Store.files.push(link);
+        return image;
+    }
+    else if(typeof image === 'object') {
+        if(image.link) link = image.link;
+        if(image.text) {
+            text = image.text;
+            obj.textExists = false;
+        }
+        if(!options.includeData) Store.files.push(link);
+        notExist = true;
+        isImage = true;
+    }
 
     if(link.startsWith('분류:'))
         return;
@@ -77,19 +77,19 @@ module.exports = async (obj, options = {}) => {
 
         if(imageDocNames.length && !obj.parsedText.some(a => a.type !== 'link' || !a.link.startsWith('파일:'))) {
             let passedCount = 0;
-            for(let docName of imageDocNames) {
-                // config.external_link_icons == []
-                // let linkRules = config.external_link_icons?.[docName];
-                // if(linkRules != null) {
-                //     if(!Array.isArray(linkRules)) linkRules = [linkRules];
-                //     const splittedRules = linkRules.map(r => r.split('.').reverse().filter(a => a));
-                //     const splittedUrl = parsedLink.hostname.split('.').reverse();
+            // for(let docName of imageDocNames) {
+            //     // config.external_link_icons == []
+            //     // let linkRules = config.external_link_icons?.[docName];
+            //     // if(linkRules != null) {
+            //     //     if(!Array.isArray(linkRules)) linkRules = [linkRules];
+            //     //     const splittedRules = linkRules.map(r => r.split('.').reverse().filter(a => a));
+            //     //     const splittedUrl = parsedLink.hostname.split('.').reverse();
 
-                //     if(splittedRules.some(rule => rule.every((a, i) => a === splittedUrl[i]))) passedCount++;
-                //     else break;
-                // }
-                // else break;
-            }
+            //     //     if(splittedRules.some(rule => rule.every((a, i) => a === splittedUrl[i]))) passedCount++;
+            //     //     else break;
+            //     // }
+            //     // else break;
+            // }
             if(passedCount === imageDocNames.length) hideExternalLinkIcon = true;
         }
     }

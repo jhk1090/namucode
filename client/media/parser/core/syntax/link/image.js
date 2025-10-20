@@ -3,11 +3,11 @@ const querystring = require('querystring');
 const utils = require('../../utils');
 const mainUtils = require('../../mainUtil');
 
-module.exports = async (obj, link, { Store, thread, document: docDocument, dbDocument: docDbDocument, rev: docRev, includeData, disableImageLinkButton }) => {
+module.exports = async (obj, link, { Store, document: docDocument, dbDocument: docDbDocument, rev: docRev, includeData, disableImageLinkButton }) => {
     const document = mainUtils.parseDocumentName(obj.link);
     let { namespace, title } = document;
 
-    if(!namespace.includes('파일')) return;
+    if(!title.startsWith('파일:')) return;
 
     title = document.title = await utils.parseIncludeParams(title, Store.isolateContext);
 
@@ -17,30 +17,30 @@ module.exports = async (obj, link, { Store, thread, document: docDocument, dbDoc
         link,
         text: link
     }
-    if(thread) return fallback;
-
-    let rev;
-    const checkCache = Store.revDocCache.find(a => a.namespace === namespace && a.title === title);
-    if(checkCache && checkCache.rev?.document !== docRev?.document) {
-        if(!checkCache.readable) return fallback;
-        if(!checkCache.rev.fileKey) return fallback;
-        rev = checkCache.rev;
+    const result = Store.workspaceDocuments.find(a => a.namespace === namespace && a.title === title);
+    if (!result) {
+        return fallback;
     }
-    else {
-        // let dbDocument;
-        // let readable = false;
-        if(namespace === docDbDocument?.namespace
-            && title === docDbDocument?.title
-            && docRev?.fileKey) {
-            // dbDocument = docDbDocument;
-            rev = docRev;
-            // readable = true;
-        }
+    // if(checkCache && checkCache.rev?.document !== docRev?.document) {
+    //     if(!checkCache.readable) return fallback;
+    //     if(!checkCache.rev.fileKey) return fallback;
+    //     rev = checkCache.rev;
+    // }
+    // else {
+    //     // let dbDocument;
+    //     // let readable = false;
+    //     if(namespace === docDbDocument?.namespace
+    //         && title === docDbDocument?.title
+    //         && docRev?.fileKey) {
+    //         // dbDocument = docDbDocument;
+    //         rev = docRev;
+    //         // readable = true;
+    //     }
 
-        if(!rev?.fileKey) return fallback;
-    }
+    //     if(!rev?.fileKey) return fallback;
+    // }
 
-    const imgUrl = new URL(rev.fileKey, process.env.S3_PUBLIC_HOST);
+    const imgUrl = new URL(result.content.fileKey);
     if(!includeData) Store.embed.image ??= imgUrl.toString();
 
     options.borderRadius = options['border-radius'];
@@ -135,8 +135,8 @@ module.exports = async (obj, link, { Store, thread, document: docDocument, dbDoc
     return `
 <span class="${imgSpanClassList.join(' ')}" style="${imgSpanStyle}">
 <span class="wiki-image-wrapper" style="${imgWrapperStyle}">
-<img${imgAttrib} style="${imgStyle}" src="data:image/svg+xml;base64,${Buffer.from(`<svg width="${rev.fileWidth}" height="${rev.fileHeight}" xmlns="http://www.w3.org/2000/svg"></svg>`).toString('base64')}">
-<img class="wiki-image"${imgAttrib} style="${imgStyle}" src="${imgUrl}" alt="${fullTitle}" data-filesize="${rev.fileSize}" data-src="${imgUrl}" data-doc="${fullTitle}" loading="lazy">
+<img${imgAttrib} style="${imgStyle}" src="data:image/svg+xml;base64,${Buffer.from(`<svg width="${result.content.fileWidth}" height="${result.content.fileHeight}" xmlns="http://www.w3.org/2000/svg"></svg>`).toString('base64')}">
+<img class="wiki-image"${imgAttrib} style="${imgStyle}" src="${imgUrl}" alt="${fullTitle}" data-filesize="${result.content.fileSize}" data-src="${imgUrl}" data-doc="${fullTitle}" loading="lazy">
 ${disableImageLinkButton || (docDocument.namespace === namespace && docDocument.title === title) 
     ? '' 
     : `<a class="wiki-image-info" href="${utils.escapeHtml(mainUtils.doc_action_link(document, 'w'))}" rel="nofollow noopener"></a>`
