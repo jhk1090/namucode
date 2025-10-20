@@ -5,6 +5,12 @@ import * as vscode from "vscode";
 import { IWorkerParserResponseSuccess, IWorkerResponseError, IWorkerToHtmlResponseSuccess, ToHtmlOptions } from "./types";
 
 export async function warmupWorker(context: vscode.ExtensionContext) {
+    const workspaceConfig = vscode.workspace.getConfiguration("namucode.preview.parser");
+    const doWarmup = workspaceConfig.get<boolean>("doWarmup", true);
+    if (!doWarmup) {
+        return
+    }
+
     const { errorMessage } = getWorkerConfig(context)
     if (!errorMessage) {
         const { parsed } = await parserRemote(context, "", {})
