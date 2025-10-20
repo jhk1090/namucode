@@ -1,5 +1,5 @@
 const mainUtils = require('../../mainUtil');
-const parser = require('../../parser');
+const parser = require('../../parserWorker');
 const ivm = require('isolated-vm');
 
 module.exports = async (params, { toHtml, includeData, workspaceDocuments, Store }, obj) => {
@@ -9,7 +9,7 @@ module.exports = async (params, { toHtml, includeData, workspaceDocuments, Store
     const doc = workspaceDocuments.find(a => a.namespace === docName.namespace && a.title === docName.title);
     if(!doc) return '';
 
-    const result = await parser(doc.content, {
+    const result = parser(doc.content, {
         noTopParagraph: !obj.topParagraph,
         tokens: doc.parseResult.tokens
     });

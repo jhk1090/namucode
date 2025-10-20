@@ -12,7 +12,7 @@ import { LinkDefinitionProvider } from "./linkdef";
 import { NamuMark } from "namumark-clone-core";
 import * as cheerio from "cheerio";
 import { MarkPreview, getWebviewOptions } from './preview';
-import { getWorkerConfig } from './worker';
+import { getWorkerConfig, warmupWorker } from './worker';
 
 let client: LanguageClient;
 let activeRules: vscode.Disposable[] = [];
@@ -21,8 +21,9 @@ enum Level {
   DOWN,
 }
 
-export function activate(context: ExtensionContext) {
+export async function activate(context: ExtensionContext) {
   provideLink(context);
+  await warmupWorker(context);
   
   vscode.commands.registerCommand("namucode.linkify", () => {
     const editor = vscode.window.activeTextEditor;

@@ -46,6 +46,7 @@ module.exports = async (...params) => {
             html: `<h2>${errorMsg}</h2>`,
             errorMsg,
             errorCode: isTimeout ? 'render_timeout' : 'render_failed',
+            errorMessage: e.stack,
             links: [],
             files: [],
             categories: [],

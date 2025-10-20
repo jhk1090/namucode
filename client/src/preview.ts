@@ -4,6 +4,7 @@ import { promises as fs } from "fs";
 import { ExtensionContext } from "vscode";
 import { parserRemote, toHtmlRemote } from './worker';
 import imageSize from "image-size";
+import { performance } from 'perf_hooks';
 
 export function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptions {
     return {
@@ -244,10 +245,11 @@ export class MarkPreview {
                 webview.postMessage({ type: "updateTheme", themeKind: "light" })
                 break;
         }
-        webview.postMessage({ type: "updateContent", newContent: `<div style="width: 100%; text-align: center; word-break: keep-all;"><h2>미리보기를 준비하는 중입니다.</h2><h3>파싱 중.. (1/3)</h3></div>`, newCategories: [] });
-
+        webview.postMessage({ type: "updateContent", newContent: `<div style="width: 100%; word-break: keep-all;"><h2>미리보기를 준비하는 중입니다.</h2><h3>파싱 중.. (1/3)</h3></div>`, newCategories: [] });
         (async () => {
             try {
+                const parsingStart = performance.now();
+
                 const workspaceConfig = vscode.workspace.getConfiguration("namucode.preview.parser");
 
                 const maxLength = workspaceConfig.get<number>("maxLength", 5000000);
@@ -259,8 +261,14 @@ export class MarkPreview {
                     maxParsingTimeout
                 }
 
-                const { parsed, hasError, html: parserHtml } = await parserRemote(this._context, text, config)
+                let { parsed, hasError, html: parserHtml, errorCode: parserErrorCode, errorMessage: parserErrorMessage } = await parserRemote(this._context, text, config)
                 if (hasError) {
+                    if (parserErrorCode === "parsing_failed") {
+                        parserHtml = `<div style="width: 100%; word-break: keep-all;">${parserHtml}<h3>왜 이런 문제가 발생했나요?</h3><p>파일의 텍스트를 파싱하는 과정에서 오류가 발생했기 때문입니다.</p><h3>어떻게 해결할 수 있나요?</h3><p>아래 에러 코드를 <a href="https://github.com/jhk1090/namucode/issues">나무코드 이슈트래커</a>에 제보해주세요.<br /><br /><code style="color: red">${parserErrorMessage}</code></p></div>`
+                    } else {
+                        parserHtml = `<div style="width: 100%; word-break: keep-all;">${parserHtml}<h3>왜 이런 문제가 발생했나요?</h3><p>설정한 파싱 대기 시간을 초과했기 때문입니다. 내용이 너무 크거나, 설정에서 파싱 대기 시간을 너무 짧게 설정했을 수 있습니다.<br />또는 최초 실행했을 때 캐싱이 되지 않아 시간이 오래 걸릴 수도 있습니다. (이는 몇 번 재실행하면 해결됩니다.)</p><h3>어떻게 해결할 수 있나요?</h3><p>내용이 큰 경우, 이 탭의 위 네비게이션 바의 <b>미리보기 설정</b> 버튼을 누르고 설정을 열어 파싱 대기 시간(Max Parsing Timeout)을 늘려보세요.</p></div>`
+                    }
+
                     webview.postMessage({ type: "updateContent", newContent: parserHtml, newCategories: [] });
                     this._panelLastContent = text;
                     this._panelLastHtmlResult = parserHtml;
@@ -268,11 +276,15 @@ export class MarkPreview {
                     return
                 }
 
-                webview.postMessage({ type: "updateContent", newContent: `<div style="width: 100%; text-align: center; word-break: keep-all;"><h2>미리보기를 준비하는 중입니다.</h2><h3>작업 환경 리소스 불러오는 중.. (2/3)</h3><h3>파싱 중.. (완료)</h3></div>`, newCategories: [] });
+                const parsingEnd = performance.now();
+                const parsingDuration = (parsingEnd - parsingStart).toFixed(2)
+                webview.postMessage({ type: "updateContent", newContent: `<div style="width: 100%; word-break: keep-all;"><h2>미리보기를 준비하는 중입니다.</h2><h3>작업 환경 리소스 불러오는 중.. (2/3)</h3><h3>파싱 중.. (완료! ${parsingDuration}ms)</h3></div>`, newCategories: [] });
 
                 const workspaceReference = workspaceConfig.get<boolean>("workspaceReference", true);
                 
                 const parentUri = vscode.workspace.getWorkspaceFolder(this._panelUri).uri
+
+                const loadingWorkspaceStart = performance.now();
 
                 let workspaceDocuments = []
                 if (workspaceReference) {
@@ -324,13 +336,22 @@ export class MarkPreview {
                     workspaceDocuments.push(...mappedMediaFiles.filter(v => v !== null))
                 }
 
-                console.log(workspaceDocuments)
+                const loadingWorkspaceEnd = performance.now();
+                const loadingWorkspaceDuration = (loadingWorkspaceEnd - loadingWorkspaceStart).toFixed(2)
 
-                webview.postMessage({ type: "updateContent", newContent: `<div style="width: 100%; text-align: center; word-break: keep-all;"><h2>미리보기를 준비하는 중입니다.</h2><h3>렌더링 중.. (3/3)</h3><h3>작업 환경 리소스 불러오는 중.. (완료)</h3><h3>파싱 중.. (완료)</h3></div>`, newCategories: [] });
+                webview.postMessage({ type: "updateContent", newContent: `<div style="width: 100%; word-break: keep-all;"><h2>미리보기를 준비하는 중입니다.</h2><h3>렌더링 중.. (3/3)</h3><h3>작업 환경 리소스 불러오는 중.. (완료! ${loadingWorkspaceDuration}ms)</h3><h3>파싱 중.. (완료! ${parsingDuration}ms)</h3></div>`, newCategories: [] });
 
                 const { namespace, title } = await getNamespaceAndTitle(parentUri, document.uri)
-                const { html, categories } = await toHtmlRemote(this._context, parsed, { document: { namespace, title }, workspaceDocuments, config })
-    
+                let { html, categories, hasError: hasErrorToHtml, errorCode, errorMessage } = await toHtmlRemote(this._context, parsed, { document: { namespace, title }, workspaceDocuments, config })
+
+                if (hasErrorToHtml) {
+                    if (errorCode === "render_failed") {
+                        html = `<div style="width: 100%; word-break: keep-all;">${html}<h3>왜 이런 문제가 발생했나요?</h3><p>파싱된 데이터를 HTML 코드로 바꾸는 렌더링을 하는 과정에서 오류가 발생했기 때문입니다.</p><h3>어떻게 해결할 수 있나요?</h3><p>아래 에러 코드를 <a href="https://github.com/jhk1090/namucode/issues">나무코드 이슈트래커</a>에 제보해주세요.<br /><br /><code style="color: red">${errorMessage}</code></p></div>`
+                    } else {
+                        html = `<div style="width: 100%; word-break: keep-all;">${html}<h3>왜 이런 문제가 발생했나요?</h3><p>설정한 렌더링 대기 시간을 초과했기 때문입니다. 내용이 너무 크거나, 설정에서 렌더링 대기 시간을 너무 짧게 설정했을 수 있습니다.<br />또는 최초 실행했을 때 캐싱이 되지 않아 시간이 오래 걸릴 수도 있습니다. (이는 몇 번 재실행하면 해결됩니다.)</p><h3>어떻게 해결할 수 있나요?</h3><p>내용이 큰 경우, 이 탭의 위 네비게이션 바의 <b>미리보기 설정</b> 버튼을 누르고 설정을 열어 렌더링 대기 시간(Max Rendering Timeout)을 늘려보세요.</p></div>`
+                    }
+                }
+
                 webview.postMessage({ type: "updateContent", newContent: html, newCategories: categories });
                 this._panelLastContent = text;
                 this._panelLastHtmlResult = html;

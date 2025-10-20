@@ -27,6 +27,9 @@ export interface IWorkerToHtmlResponseSuccess {
     status: 'success';
     html: string;
     categories: any[];
+    hasError: boolean;
+    errorCode: "render_timeout" | "render_failed";
+    errorMessage: string;
 }
 
 export interface IWorkerParserResponseSuccess {
@@ -35,6 +38,8 @@ export interface IWorkerParserResponseSuccess {
     parsed: any;
     html: string;
     hasError: boolean;
+    errorCode: "parsing_timeout" | "parsing_failed";
+    errorMessage: string;
 }
 
 // 자식 -> 부모 응답 (오류)

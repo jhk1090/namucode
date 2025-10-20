@@ -4,6 +4,14 @@ import * as crypto from "crypto";
 import * as vscode from "vscode";
 import { IWorkerParserResponseSuccess, IWorkerResponseError, IWorkerToHtmlResponseSuccess, ToHtmlOptions } from "./types";
 
+export async function warmupWorker(context: vscode.ExtensionContext) {
+    const { errorMessage } = getWorkerConfig(context)
+    if (!errorMessage) {
+        const { parsed } = await parserRemote(context, "", {})
+        await toHtmlRemote(context, parsed, { document: { namespace: "문서", title: "" }, workspaceDocuments: [], config: {} });
+    }
+}
+
 export function getWorkerConfig(context: vscode.ExtensionContext) {
     const config = vscode.workspace.getConfiguration("namucode.preview.parser");
     const nodePath = config.get<string>("nodePath", "node");

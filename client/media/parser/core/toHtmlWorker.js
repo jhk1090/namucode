@@ -5,7 +5,7 @@ const path = require('path');
 
 const utils = require('./utils');
 const mainUtils = require('./mainUtil'); // ../global 이였으나, ../로 통합
-const parser = require("./parser")
+const parser = require("./parserWorker")
 
 const link = require('./syntax/link');
 const macro = require('./syntax/macro');
@@ -154,7 +154,7 @@ const topToHtml = module.exports = async parameter => {
           if (!doc) continue;
 
           const params = includeParams.find((a) => a.namespace === docName.namespace && a.title === docName.title)?.params ?? [];
-          doc.parseResult = await parser(doc.content);
+          doc.parseResult = parser(doc.content);
           await parsedDocAdder(doc.parseResult, includeDocs, params);
       }
 
@@ -404,6 +404,7 @@ const topToHtml = module.exports = async parameter => {
     }
 
     Store.isolate.dispose();
+
 
     return {
       html: Store.error ? `<h2>${result}</h2>` : result,

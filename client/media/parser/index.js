@@ -6,12 +6,15 @@ process.on('message', async (message) => {
         try {
             const { id, parsed, options } = message;
             const result = await toHtml(parsed, options);
-    
+
             process.send({
                 id: id,
                 status: 'success',
                 html: result.html,
-                categories: result.categories
+                categories: result.categories,
+                hasError: result.hasError,
+                errorCode: result.errorCode,
+                errorMessage: result.errorMessage
             });
     
         } catch (error) {
@@ -36,6 +39,8 @@ process.on('message', async (message) => {
             parsed: result.parsed,
             html: result.html,
             hasError: result.hasError,
+            errorCode: result.errorCode,
+            errorMessage: result.errorMessage
         });
 
     } catch (error) {

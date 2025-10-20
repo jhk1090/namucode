@@ -50,6 +50,8 @@ module.exports = async (...params) => {
         return {
             parsed: null,
             html: `<h2>${errorMsg}</h2>`,
+            errorCode: isTimeout ? "parsing_timeout" : "parsing_failed",
+            errorMessage: e.stack,
             hasError: true
         }
     } finally {
