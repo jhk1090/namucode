@@ -137,6 +137,8 @@ _▲ 나무위키:문법 도움말_
 ## 기여
 프로젝트 발전에 기여하시는 분들을 전부 환영합니다! [Pull Requests](https://github.com/jhk1090/namucode/pulls)를 통해 기여해주실 수 있습니다.
 
+이 프로젝트는 Node.js 22 이상을 필요로 합니다. 기여할 때 참고하시길 바랍니다.
+
 ## 업데이트 로그
 
 업데이트 로그는 [여기](https://github.com/jhk1090/namucode/blob/main/CHANGELOG.md)를 참고하세요.

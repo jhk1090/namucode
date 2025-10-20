@@ -347,8 +347,10 @@ export class MarkPreview {
                 if (hasErrorToHtml) {
                     if (errorCode === "render_failed") {
                         html = `<div style="width: 100%; word-break: keep-all;">${html}<h3>왜 이런 문제가 발생했나요?</h3><p>파싱된 데이터를 HTML 코드로 바꾸는 렌더링을 하는 과정에서 오류가 발생했기 때문입니다.</p><h3>어떻게 해결할 수 있나요?</h3><p>아래 에러 코드를 <a href="https://github.com/jhk1090/namucode/issues">나무코드 이슈트래커</a>에 제보해주세요.<br /><br /><code style="color: red">${errorMessage}</code></p></div>`
-                    } else {
+                    } else if (errorCode === "render_timeout") {
                         html = `<div style="width: 100%; word-break: keep-all;">${html}<h3>왜 이런 문제가 발생했나요?</h3><p>설정한 렌더링 대기 시간을 초과했기 때문입니다. 내용이 너무 크거나, 설정에서 렌더링 대기 시간을 너무 짧게 설정했을 수 있습니다.<br />또는 최초 실행했을 때 캐싱이 되지 않아 시간이 오래 걸릴 수도 있습니다. (이는 몇 번 재실행하면 해결됩니다.)</p><h3>어떻게 해결할 수 있나요?</h3><p>내용이 큰 경우, 이 탭의 위 네비게이션 바의 <b>미리보기 설정</b> 버튼을 누르고 설정을 열어 렌더링 대기 시간(Max Rendering Timeout)을 늘려보세요.</p></div>`
+                    } else {
+                        html = `<div style="width: 100%; word-break: keep-all;">${html}<h3>왜 이런 문제가 발생했나요?</h3><p>렌더링한 HTML 결과값이 표시하기에 너무 크다면 이런 문제가 발생합니다.</p><h3>어떻게 해결할 수 있나요?</h3><p>내용이 큰 경우, 이 탭의 위 네비게이션 바의 <b>미리보기 설정</b> 버튼을 누르고 설정을 열어 문서 최대 길이(Max Length)를 늘려보세요.</p></div>`
                     }
                 }
 

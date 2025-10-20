@@ -152,6 +152,10 @@ export async function activate(context: ExtensionContext) {
     vscode.commands.executeCommand('workbench.action.openSettings', "@ext:jhk1090.namucode");
   });
 
+  vscode.commands.registerCommand("namucode.openPreviewGuideline", () => {
+    vscode.env.openExternal(vscode.Uri.parse("https://github.com/jhk1090/namucode/blob/main/docs/preview.md"));
+  });
+
   const preview = vscode.commands.registerCommand("namucode.preview", async () => {
     const editor = vscode.window.activeTextEditor;
     if (!editor || editor.document.languageId !== 'namu') {

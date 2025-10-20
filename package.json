@@ -3,7 +3,7 @@
     "displayName": "Namucode",
     "description": "나무위키 VSCode 확장 프로그램",
     "publisher": "jhk1090",
-    "version": "1.4.5",
+    "version": "1.5.0",
     "engines": {
         "vscode": "^1.75.0"
     },
@@ -101,6 +101,12 @@
                 "title": "미리보기 설정 열기",
                 "category": "나무코드",
                 "icon": "$(gear)"
+            },
+            {
+                "command": "namucode.openPreviewGuideline",
+                "title": "미리보기 도움말 열기",
+                "category": "나무코드",
+                "icon": "$(question)"
             }
         ],
         "menus": {
@@ -118,7 +124,12 @@
                 {
                     "command": "namucode.openPreviewSettings",
                     "when": "activeWebviewPanelId =~ /namucode-webview-/",
-                    "group": "navigation@1"
+                    "group": "navigation"
+                },
+                {
+                    "command": "namucode.openPreviewGuideline",
+                    "when": "activeWebviewPanelId =~ /namucode-webview-/",
+                    "group": "navigation"
                 }
             ]
         },
