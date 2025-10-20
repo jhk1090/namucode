@@ -5,10 +5,8 @@ let MAXIMUM_TIME = 10000;
 const ERROR_HTML = '문서 렌더링이 실패했습니다.';
 const MAXIMUM_TIME_HTML = '문서 렌더링이 너무 오래 걸립니다.';
 
-let minThreads = parseInt(process.env.MULTITHREAD_MIN_THREADS);
-if(isNaN(minThreads) || minThreads < 1) minThreads = Math.min(4, os.cpus().length);
-let maxThreads = parseInt(process.env.MULTITHREAD_MAX_THREADS);
-if(isNaN(maxThreads) || maxThreads < 1) maxThreads = Math.max(4, os.cpus().length);
+let minThreads = 1
+let maxThreads = 1
 
 module.exports = async (...params) => {
     if (params[1]?.config?.maxRenderingTimeout) {
