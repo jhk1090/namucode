@@ -37,7 +37,6 @@ export class MarkPreview {
     private _disposables: vscode.Disposable[] = [];
 
     public static createOrShow(context: ExtensionContext, extensionUri: vscode.Uri, panelId: string) {
-        console.log(panelId)
         const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
 
         // If we already have a panel, show it.
@@ -294,7 +293,7 @@ export class MarkPreview {
                         })
                     ))
 
-                    const mediaFiles = await vscode.workspace.findFiles("{**/*.png,**/*.jpg,**/*.jpeg,**/*.svg,**/*.gif}")
+                    const mediaFiles = await vscode.workspace.findFiles("{**/*.png,**/*.jpg,**/*.jpeg,**/*.svg,**/*.gif,**/*.webp}")
                     const mappedMediaFiles = await Promise.all(
                         mediaFiles.map(async (file) => {
                             try {
@@ -395,6 +394,7 @@ function getMimeType(uri: vscode.Uri): string {
         case '.jpeg': return 'image/jpeg';
         case '.gif': return 'image/gif';
         case '.svg': return 'image/svg+xml';
+        case '.webp': return 'image/webp';
         default: return 'application/octet-stream'; // 알 수 없는 타입
     }
 }
