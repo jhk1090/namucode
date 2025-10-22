@@ -9,8 +9,8 @@ module.exports = async (obj, options = {}) => {
     const docTitle = mainUtils.doc_fulltitle(document);
 
     let link = obj.link;
-    let text = obj.text = await utils.parseIncludeParams(obj.text, options.Store.isolateContext);
-    const hash = await utils.parseIncludeParams(obj.hash, options.Store.isolateContext);
+    let text = obj.text = await utils.parseIncludeParams(obj.text, options.Store.qjsContext);
+    const hash = await utils.parseIncludeParams(obj.hash, options.Store.qjsContext);
     let notExist = false;
 
     let isImage = false;
@@ -43,7 +43,7 @@ module.exports = async (obj, options = {}) => {
         }
     }
 
-    link = (await utils.parseIncludeParams(link, options.Store.isolateContext)).trim();
+    link = (await utils.parseIncludeParams(link, options.Store.qjsContext)).trim();
     text = text.trim();
 
     // if(!isImage && !obj.textExists && link.slice(1).includes('#')) {

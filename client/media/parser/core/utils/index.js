@@ -147,7 +147,7 @@ module.exports = {
     validateHTMLColorName(color) {
         return color === 'transparent' || validateHTMLColorName(color);
     },
-    async parseIncludeParams(text, isolateContext, includeData) {
+    async parseIncludeParams(text, qjsContext, includeData) {
         if(!text) return text;
 
         let newText = '';
@@ -174,8 +174,17 @@ module.exports = {
             let contextValue;
             if(includeData)
                 contextValue = includeData[key];
-            else if(isolateContext)
-                contextValue = await isolateContext.global.get(key);
+            else if(qjsContext) {
+                let handle;
+                try {
+                    handle = qjsContext.evalCode(`${key}`)
+                    contextValue = qjsContext.dump(handle.value)
+                } catch (e) {}
+                finally {
+                    handle.dispose()
+                }
+                console.log("contextValue", contextValue)
+            }
 
             const finalText = contextValue ?? value;
             newText += finalText;

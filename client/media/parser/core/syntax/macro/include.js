@@ -1,6 +1,6 @@
+const { getQuickJS } = require('quickjs-emscripten');
 const mainUtils = require('../../mainUtil');
 const parser = require('../../parserWorker');
-const ivm = require('isolated-vm');
 
 module.exports = async (params, { toHtml, includeData, workspaceDocuments, Store }, obj) => {
     if(includeData) return '';
@@ -15,8 +15,8 @@ module.exports = async (params, { toHtml, includeData, workspaceDocuments, Store
     });
     // console.log("parsed result", result.tokens?.length)
 
-    const isolate = new ivm.Isolate({ memoryLimit: 8 });
-    const isolateContext = await isolate.createContext();
+    const qjs = await getQuickJS();
+    const qjsContext = qjs.newContext();
     const final = await toHtml(result, {
         document: docName,
         includeData: obj.includeData,
@@ -26,8 +26,8 @@ module.exports = async (params, { toHtml, includeData, workspaceDocuments, Store
                 list: [],
                 html: ''
             },
-            isolate,
-            isolateContext
+            qjs,
+            qjsContext
         }
     });
     // console.log("include result", final.html.length)

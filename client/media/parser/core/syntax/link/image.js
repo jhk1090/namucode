@@ -9,7 +9,7 @@ module.exports = async (obj, link, { Store, document: docDocument, dbDocument: d
 
     if(!title.startsWith('파일:')) return;
 
-    title = document.title = await utils.parseIncludeParams(title, Store.isolateContext);
+    title = document.title = await utils.parseIncludeParams(title, Store.qjsContext);
 
     const options = !obj.textExists ? {} : querystring.parse(obj.text);
 

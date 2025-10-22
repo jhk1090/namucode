@@ -1,5 +1,5 @@
 const { highlight } = require('highlight.js');
-const ivm = require('isolated-vm');
+const { getQuickJS } = require("quickjs-emscripten")
 const fs = require('fs');
 const path = require('path');
 
@@ -26,11 +26,11 @@ const topToHtml = module.exports = async parameter => {
   const [parsed, options = {}] = parameter;
   const { includeData = null, document, workspaceDocuments } = options;
 
-  let isolate;
-  let isolateContext;
+  let qjs;
+  let qjsContext;
   if (options.Store == null) {
-    isolate = new ivm.Isolate({ memoryLimit: 8 });
-    isolateContext = await isolate.createContext();
+    qjs = await getQuickJS();
+    qjsContext = qjs.newContext();
   }
   const Store = (options.Store ??= {
     workspaceDocuments: workspaceDocuments ?? [],
@@ -51,8 +51,8 @@ const topToHtml = module.exports = async parameter => {
       text: null,
       image: null,
     },
-    isolate,
-    isolateContext,
+    qjs,
+    qjsContext,
     ...(options.StorePatch ?? {}),
   });
 
@@ -82,9 +82,9 @@ const topToHtml = module.exports = async parameter => {
   // }
 
   if (isTop) {
-    await Store.isolateContext.eval(jsGlobalRemover);
+    Store.qjsContext.evalCode(jsGlobalRemover);
     if(includeData)
-      await Promise.all(Object.entries(includeData).map(([key, value]) => Store.isolateContext.global.set(key, value)));
+      await Promise.all(Object.entries(includeData).map(([key, value]) => Store.qjsContext.evalCode(`${key} = ${value}`)));
   }
 
   if(parsed.data && !options.skipInit) {
@@ -253,7 +253,7 @@ const topToHtml = module.exports = async parameter => {
       }
 
       case "wikiSyntax":
-        let wikiParamsStr = await utils.parseIncludeParams(obj.wikiParamsStr, Store.isolateContext);
+        let wikiParamsStr = await utils.parseIncludeParams(obj.wikiParamsStr, Store.qjsContext);
 
         const styleCloseStr = '"';
 
@@ -283,7 +283,7 @@ const topToHtml = module.exports = async parameter => {
         result += `<pre><code>${highlight(obj.content, { language: obj.lang }).value}</code></pre>`;
         break;
       case "htmlSyntax":
-        result += utils.sanitizeHtml(await utils.parseIncludeParams(obj.text, Store.isolateContext));
+        result += utils.sanitizeHtml(await utils.parseIncludeParams(obj.text, Store.qjsContext));
         break;
       case "folding":
         result += `<dl class="wiki-folding"><dt>${utils.escapeHtml(obj.text)}</dt><dd class="wiki-folding-close-anim">${await toHtml(
@@ -293,16 +293,23 @@ const topToHtml = module.exports = async parameter => {
       case "ifSyntax":
         if (!utils.checkJavascriptValid(obj.expression)) break;
         let evalResult;
+        let handle;
         try {
-          evalResult = await Store.isolateContext.eval(`with(safeGlobal){${obj.expression}}`, {
-            timeout: 100,
-          });
+          let aborted = false;
+          handle = Store.qjsContext.evalCode(`with(safeGlobal){${obj.expression}}`, {
+            shouldInterrupt: () => aborted,
+          })
+          setTimeout(() => (aborted = true), 100);
+          evalResult = Store.qjsContext.dump(handle.value)
         } catch (e) {}
+        finally {
+          handle.dispose()
+        }
         if (evalResult) result += await toHtml(obj.content);
         break;
 
       case "text":
-        result += utils.escapeHtml(await utils.parseIncludeParams(obj.text, Store.isolateContext)).replaceAll("\n", "<br>");
+        result += utils.escapeHtml(await utils.parseIncludeParams(obj.text, Store.qjsContext)).replaceAll("\n", "<br>");
         break;
       case "bold":
         result += `<strong>${await toHtml(obj.content)}</strong>`;
@@ -354,7 +361,7 @@ const topToHtml = module.exports = async parameter => {
         });
         break;
       case "macro":
-        obj.params = await utils.parseIncludeParams(obj.params, Store.isolateContext);
+        obj.params = await utils.parseIncludeParams(obj.params, Store.qjsContext);
         result += await macro(obj, {
           toHtml,
           Store,
@@ -403,7 +410,7 @@ const topToHtml = module.exports = async parameter => {
         Store.embed.text = embedText.replaceAll("\n", " ").replaceAll("  ", " ").trim().slice(0, 200);
     }
 
-    Store.isolate.dispose();
+    Store.qjsContext.dispose();
 
 
     return {
