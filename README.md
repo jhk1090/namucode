@@ -48,8 +48,6 @@
 
 나무코드는 미리보기를 지원합니다. `F1`을 눌러 **나무코드: 미리보기** 옵션을 누르거나 `*.namu` 파일의 오른쪽 상단에 위치한 미리보기 아이콘을 눌러 미리보기를 조회할 수 있습니다. 미리보기 기능은 the seed 엔진을 모방한 [the tree](https://github.com/wjdgustn/thetree) 엔진 위에서 돌아갑니다.
 
-미리보기 기능을 위해서는 [Node.js 22](https://nodejs.org) 이상을 필요로 합니다. 설치되지 않았다면 사용할 수 없습니다.
-
 | ![Image](./images/namucode_preview_icon.png) | ![Image](./images/namucode_preview_example.png) |
 | :----: | :----: |
 | 미리보기 아이콘<br>위의 **빨간색 네모**로 표시된 아이콘 | 미리보기 예시 |
