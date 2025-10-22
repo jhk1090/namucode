@@ -1,9 +1,28 @@
-import { spawn, ChildProcess, spawnSync } from "child_process";
 import * as path from "path";
-import * as crypto from "crypto";
 import * as vscode from "vscode";
 import { Worker } from "worker_threads";
-import { IWorkerParserResponseSuccess, IWorkerResponseError, IWorkerToHtmlResponseSuccess, ToHtmlOptions } from "./types";
+
+
+export async function warmupWorker(context: vscode.ExtensionContext) {
+    const workspaceConfig = vscode.workspace.getConfiguration("namucode.preview.parser");
+    const doWarmup = workspaceConfig.get<boolean>("doWarmup", true);
+    if (!doWarmup) {
+        return
+    }
+
+    const config = {
+        maxLength: 5000000,
+        maxRenderingTimeout: 10000,
+        maxParsingTimeout: 7000,
+    };
+    const { result: parsedResult } = await parse(context, { text: "", config })
+    await render(context, {
+        parsedResult,
+        document: { namespace: "문서", title: "" },
+        workspaceDocuments: [],
+        config,
+    });
+}
 
 function runWorkerWithTimeout(workerFile: string, params: any, timeoutMs: number) {
     return new Promise((resolve, reject) => {

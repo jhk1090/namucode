@@ -12,6 +12,7 @@ import { LinkDefinitionProvider } from "./linkdef";
 import { NamuMark } from "namumark-clone-core";
 import * as cheerio from "cheerio";
 import { MarkPreview, getWebviewOptions } from './preview';
+import { warmupWorker } from './worker';
 
 let client: LanguageClient;
 let activeRules: vscode.Disposable[] = [];
@@ -21,6 +22,7 @@ enum Level {
 }
 
 export async function activate(context: ExtensionContext) {
+  await warmupWorker(context);
   provideLink(context);
   
   vscode.commands.registerCommand("namucode.linkify", () => {
@@ -160,18 +162,6 @@ export async function activate(context: ExtensionContext) {
       vscode.window.showWarningMessage('이 명령어는 나무마크 파일(*.namu)에서만 사용할 수 있습니다.');
       return;
     }
-
-    // const { errorMessage } = getWorkerConfig(context);
-    // if (errorMessage) {
-    //   const workerError = await vscode.window.showErrorMessage(errorMessage, "Node.js 설치", "재시도");
-    //   if (workerError === "Node.js 설치") {
-    //     vscode.env.openExternal(vscode.Uri.parse("https://nodejs.org/"));
-    //   }
-    //   if (workerError === "재시도") {
-    //     vscode.commands.executeCommand("namucode.preview")
-    //   }
-    //   return;
-    // }
 
     const filePath = editor.document.uri.fsPath;
     MarkPreview.createOrShow(context, context.extensionUri, "namucode-webview-" + filePath);
