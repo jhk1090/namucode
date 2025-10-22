@@ -11,6 +11,7 @@ const link = require('./syntax/link');
 const macro = require('./syntax/macro');
 const table = require('./syntax/table');
 
+const { parentPort } = require('worker_threads');
 
 let MAXIMUM_LENGTH = 5000000;
 const MAXIMUM_LENGTH_HTML = '문서 길이가 너무 깁니다.';
@@ -18,13 +19,14 @@ const MAXIMUM_LENGTH_HTML = '문서 길이가 너무 깁니다.';
 const jsGlobalRemover = fs.readFileSync(path.join(__dirname, "utils/jsGlobalRemover.js"), 'utf8');
 
 const topToHtml = module.exports = async parameter => {
-  if (parameter[1]?.config?.maxLength) {
-    MAXIMUM_LENGTH = parameter[1]?.config?.maxLength
-  }
-  // if(parameter[0]?.batch) return await Promise.all(parameter[0].batch.map(a => topToHtml(a)));
+  if(parameter[0]?.batch) return await Promise.all(parameter[0].batch.map(a => topToHtml(a)));
 
   const [parsed, options = {}] = parameter;
-  const { includeData = null, document, workspaceDocuments } = options;
+  const { includeData = null, config = {}, document, workspaceDocuments } = options;
+
+  if (config.maxLength) {
+    MAXIMUM_LENGTH = config.maxLength
+  }
 
   let qjs;
   let qjsContext;
@@ -385,9 +387,7 @@ const topToHtml = module.exports = async parameter => {
     }
 
     if (result.length > MAXIMUM_LENGTH) {
-      Store.error = MAXIMUM_LENGTH_HTML;
-      Store.errorCode = "too_large_document";
-      break;
+      throw new Error("render_too_long")
     }
   }
 

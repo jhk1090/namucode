@@ -1,61 +1,11 @@
-const Piscina = require('piscina');
-const os = require('os');
+const toHtml = require("./toHtmlWorker")
+const { parentPort } = require('worker_threads');
 
-let MAXIMUM_TIME = 10000;
-const ERROR_HTML = '문서 렌더링이 실패했습니다.';
-const MAXIMUM_TIME_HTML = '문서 렌더링이 너무 오래 걸립니다.';
-
-let minThreads = 1
-let maxThreads = 1
-
-module.exports = async (...params) => {
-    if (params[1]?.config?.maxRenderingTimeout) {
-        MAXIMUM_TIME = params[1]?.config?.maxRenderingTimeout
-    }
-
-    const controller = new AbortController();
-    
-    const timeout = setTimeout(() => {
-        controller.abort()
-    }, MAXIMUM_TIME)
-
-    const worker = new Piscina({
-        filename: require.resolve('./toHtmlWorker'),
-        minThreads,
-        maxThreads
-    });
-    const channel = new MessageChannel();
-
-    console.time('render');
-    try {
-        const result = await worker.run(params, {
-            signal: controller.signal,
-            transferList: [channel.port1]
-        });
-        clearTimeout(timeout)
-        return result;
-    } catch (e) {
-        const isTimeout = e.name === 'AbortError';
-        if(!isTimeout) console.error(e);
-
-        const errorMsg = isTimeout ? MAXIMUM_TIME_HTML : ERROR_HTML;
-        clearTimeout(timeout)
-        return {
-            html: `<h2>${errorMsg}</h2>`,
-            errorMsg,
-            errorCode: isTimeout ? 'render_timeout' : 'render_failed',
-            errorMessage: e.stack,
-            links: [],
-            files: [],
-            categories: [],
-            headings: [],
-            hasError: true,
-            embed: {
-                text: null,
-                image: null
-            }
-        }
-    } finally {
-        console.timeEnd('render');
-    }
-}
+parentPort.on('message', async (params) => {
+  try {
+    const result = await toHtml([params.parsedResult, { document: params.document, workspaceDocuments: params.workspaceDocuments, config: params.config }]);
+    parentPort.postMessage({ result });
+  } catch (err) {
+    parentPort.postMessage({ error: err.message });
+  }
+});

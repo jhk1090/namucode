@@ -2,9 +2,9 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { promises as fs } from "fs";
 import { ExtensionContext } from "vscode";
-import { parserRemote, toHtmlRemote } from './worker';
 import imageSize from "image-size";
 import { performance } from 'perf_hooks';
+import { PARSE_FAILED_HEAD, PARSE_TIMEOUT_HEAD, RENDER_FAILED_HEAD, RENDER_LENGTH_ERROR_HEAD, RENDER_TIMEOUT_HEAD, parse, render } from './worker';
 
 export function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptions {
     return {
@@ -261,17 +261,18 @@ export class MarkPreview {
                     maxParsingTimeout
                 }
 
-                let { parsed, hasError, html: parserHtml, errorCode: parserErrorCode, errorMessage: parserErrorMessage } = await parserRemote(this._context, text, config)
-                if (hasError) {
-                    if (parserErrorCode === "parsing_failed") {
-                        parserHtml = `<div style="width: 100%; word-break: keep-all;">${parserHtml}<h3>왜 이런 문제가 발생했나요?</h3><p>파일의 텍스트를 파싱하는 과정에서 오류가 발생했기 때문입니다.</p><h3>어떻게 해결할 수 있나요?</h3><p>아래 에러 코드를 <a href="https://github.com/jhk1090/namucode/issues">나무코드 이슈트래커</a>에 제보해주세요.<br /><br /><code style="color: red">${parserErrorMessage}</code></p></div>`
+                const { result: parsedResult, error: parseError, errorCode: parseErrorCode, errorMessage: parseErrorMessage } = await parse(this._context, { text, config })
+                let parseHtml = ""
+                if (parseError) {
+                    if (parseErrorCode === "parse_failed") {
+                        parseHtml = `<div style="width: 100%; word-break: keep-all;"><h2>${PARSE_FAILED_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>파일의 텍스트를 파싱하는 과정에서 오류가 발생했기 때문입니다.</p><h3>어떻게 해결할 수 있나요?</h3><p>아래 에러 코드를 <a href="https://github.com/jhk1090/namucode/issues">나무코드 이슈트래커</a>에 제보해주세요.<br /><br /><code style="color: red">${parseErrorMessage}</code></p></div>`
                     } else {
-                        parserHtml = `<div style="width: 100%; word-break: keep-all;">${parserHtml}<h3>왜 이런 문제가 발생했나요?</h3><p>설정한 파싱 대기 시간을 초과했기 때문입니다. 내용이 너무 크거나, 설정에서 파싱 대기 시간을 너무 짧게 설정했을 수 있습니다.<br />또는 최초 실행했을 때 캐싱이 되지 않아 시간이 오래 걸릴 수도 있습니다. (이는 몇 번 재실행하면 해결됩니다.)</p><h3>어떻게 해결할 수 있나요?</h3><p>내용이 큰 경우, 이 탭의 위 네비게이션 바의 <b>미리보기 설정</b> 버튼을 누르고 설정을 열어 파싱 대기 시간(Max Parsing Timeout)을 늘려보세요.</p></div>`
+                        parseHtml = `<div style="width: 100%; word-break: keep-all;"><h2>${PARSE_TIMEOUT_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>설정한 파싱 대기 시간을 초과했기 때문입니다. 내용이 너무 크거나, 설정에서 파싱 대기 시간을 너무 짧게 설정했을 수 있습니다.<br />또는 최초 실행했을 때 캐싱이 되지 않아 시간이 오래 걸릴 수도 있습니다. (이는 몇 번 재실행하면 해결됩니다.)</p><h3>어떻게 해결할 수 있나요?</h3><p>내용이 큰 경우, 이 탭의 위 네비게이션 바의 <b>미리보기 설정</b> 버튼을 누르고 설정을 열어 파싱 대기 시간(Max Parsing Timeout)을 늘려보세요.</p></div>`
                     }
 
-                    webview.postMessage({ type: "updateContent", newContent: parserHtml, newCategories: [] });
+                    webview.postMessage({ type: "updateContent", newContent: parseHtml, newCategories: [] });
                     this._panelLastContent = text;
-                    this._panelLastHtmlResult = parserHtml;
+                    this._panelLastHtmlResult = parseHtml;
                     this._panelLastCategoriesResult = [];
                     return
                 }
@@ -341,22 +342,23 @@ export class MarkPreview {
                 webview.postMessage({ type: "updateContent", newContent: `<div style="width: 100%; word-break: keep-all;"><h2>미리보기를 준비하는 중입니다.</h2><h3>렌더링 중.. (3/3)</h3><h3>작업 환경 리소스 불러오는 중.. (완료! ${loadingWorkspaceDuration}ms)</h3><h3>파싱 중.. (완료! ${parsingDuration}ms)</h3></div>`, newCategories: [] });
 
                 const { namespace, title } = await getNamespaceAndTitle(currentFolder ? currentFolder.uri.fsPath : path.dirname(document.uri.fsPath), document.uri.fsPath)
-                let { html, categories, hasError: hasErrorToHtml, errorCode, errorMessage } = await toHtmlRemote(this._context, parsed, { document: { namespace, title }, workspaceDocuments, config })
 
-                if (hasErrorToHtml) {
-                    if (errorCode === "render_failed") {
-                        html = `<div style="width: 100%; word-break: keep-all;">${html}<h3>왜 이런 문제가 발생했나요?</h3><p>파싱된 데이터를 HTML 코드로 바꾸는 렌더링을 하는 과정에서 오류가 발생했기 때문입니다.</p><h3>어떻게 해결할 수 있나요?</h3><p>아래 에러 코드를 <a href="https://github.com/jhk1090/namucode/issues">나무코드 이슈트래커</a>에 제보해주세요.<br /><br /><code style="color: red">${errorMessage}</code></p></div>`
-                    } else if (errorCode === "render_timeout") {
-                        html = `<div style="width: 100%; word-break: keep-all;">${html}<h3>왜 이런 문제가 발생했나요?</h3><p>설정한 렌더링 대기 시간을 초과했기 때문입니다. 내용이 너무 크거나, 설정에서 렌더링 대기 시간을 너무 짧게 설정했을 수 있습니다.<br />또는 최초 실행했을 때 캐싱이 되지 않아 시간이 오래 걸릴 수도 있습니다. (이는 몇 번 재실행하면 해결됩니다.)</p><h3>어떻게 해결할 수 있나요?</h3><p>내용이 큰 경우, 이 탭의 위 네비게이션 바의 <b>미리보기 설정</b> 버튼을 누르고 설정을 열어 렌더링 대기 시간(Max Rendering Timeout)을 늘려보세요.</p></div>`
+                let { html: renderHtml, categories: renderCategories, error: renderError, errorCode: renderErrorCode, errorMessage: renderErrorMessage } = await render(this._context, { parsedResult,  document: { namespace, title }, workspaceDocuments, config })
+
+                if (renderError) {
+                    if (renderErrorCode === "render_failed") {
+                        renderHtml = `<div style="width: 100%; word-break: keep-all;"><h2>${RENDER_FAILED_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>파싱된 데이터를 HTML 코드로 바꾸는 렌더링을 하는 과정에서 오류가 발생했기 때문입니다.</p><h3>어떻게 해결할 수 있나요?</h3><p>아래 에러 코드를 <a href="https://github.com/jhk1090/namucode/issues">나무코드 이슈트래커</a>에 제보해주세요.<br /><br /><code style="color: red">${renderErrorMessage}</code></p></div>`
+                    } else if (renderErrorCode === "render_timeout") {
+                        renderHtml = `<div style="width: 100%; word-break: keep-all;"><h2>${RENDER_TIMEOUT_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>설정한 렌더링 대기 시간을 초과했기 때문입니다. 내용이 너무 크거나, 설정에서 렌더링 대기 시간을 너무 짧게 설정했을 수 있습니다.<br />또는 최초 실행했을 때 캐싱이 되지 않아 시간이 오래 걸릴 수도 있습니다. (이는 몇 번 재실행하면 해결됩니다.)</p><h3>어떻게 해결할 수 있나요?</h3><p>내용이 큰 경우, 이 탭의 위 네비게이션 바의 <b>미리보기 설정</b> 버튼을 누르고 설정을 열어 렌더링 대기 시간(Max Rendering Timeout)을 늘려보세요.</p></div>`
                     } else {
-                        html = `<div style="width: 100%; word-break: keep-all;">${html}<h3>왜 이런 문제가 발생했나요?</h3><p>렌더링한 HTML 결과값이 표시하기에 너무 크다면 이런 문제가 발생합니다.</p><h3>어떻게 해결할 수 있나요?</h3><p>내용이 큰 경우, 이 탭의 위 네비게이션 바의 <b>미리보기 설정</b> 버튼을 누르고 설정을 열어 문서 최대 길이(Max Length)를 늘려보세요.</p></div>`
+                        renderHtml = `<div style="width: 100%; word-break: keep-all;"><h2>${RENDER_LENGTH_ERROR_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>렌더링한 HTML 결과값이 표시하기에 너무 크다면 이런 문제가 발생합니다.</p><h3>어떻게 해결할 수 있나요?</h3><p>내용이 큰 경우, 이 탭의 위 네비게이션 바의 <b>미리보기 설정</b> 버튼을 누르고 설정을 열어 문서 최대 길이(Max Length)를 늘려보세요.</p></div>`
                     }
                 }
 
-                webview.postMessage({ type: "updateContent", newContent: html, newCategories: categories });
+                webview.postMessage({ type: "updateContent", newContent: renderHtml, newCategories: renderCategories });
                 this._panelLastContent = text;
-                this._panelLastHtmlResult = html;
-                this._panelLastCategoriesResult = categories;
+                this._panelLastHtmlResult = renderHtml;
+                this._panelLastCategoriesResult = renderCategories;
             } catch (error) {
                 this.dispose(this._panelId);
                 const errorMessage = await vscode.window.showErrorMessage(`미리보기 렌더링 중 오류 발생: ${error instanceof Error ? error.message : String(error)}`, "제보하기", "재시도");

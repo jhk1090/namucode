@@ -12,7 +12,6 @@ import { LinkDefinitionProvider } from "./linkdef";
 import { NamuMark } from "namumark-clone-core";
 import * as cheerio from "cheerio";
 import { MarkPreview, getWebviewOptions } from './preview';
-import { getWorkerConfig, warmupWorker } from './worker';
 
 let client: LanguageClient;
 let activeRules: vscode.Disposable[] = [];
@@ -23,7 +22,6 @@ enum Level {
 
 export async function activate(context: ExtensionContext) {
   provideLink(context);
-  await warmupWorker(context);
   
   vscode.commands.registerCommand("namucode.linkify", () => {
     const editor = vscode.window.activeTextEditor;
@@ -163,17 +161,17 @@ export async function activate(context: ExtensionContext) {
       return;
     }
 
-    const { errorMessage } = getWorkerConfig(context);
-    if (errorMessage) {
-      const workerError = await vscode.window.showErrorMessage(errorMessage, "Node.js 설치", "재시도");
-      if (workerError === "Node.js 설치") {
-        vscode.env.openExternal(vscode.Uri.parse("https://nodejs.org/"));
-      }
-      if (workerError === "재시도") {
-        vscode.commands.executeCommand("namucode.preview")
-      }
-      return;
-    }
+    // const { errorMessage } = getWorkerConfig(context);
+    // if (errorMessage) {
+    //   const workerError = await vscode.window.showErrorMessage(errorMessage, "Node.js 설치", "재시도");
+    //   if (workerError === "Node.js 설치") {
+    //     vscode.env.openExternal(vscode.Uri.parse("https://nodejs.org/"));
+    //   }
+    //   if (workerError === "재시도") {
+    //     vscode.commands.executeCommand("namucode.preview")
+    //   }
+    //   return;
+    // }
 
     const filePath = editor.document.uri.fsPath;
     MarkPreview.createOrShow(context, context.extensionUri, "namucode-webview-" + filePath);

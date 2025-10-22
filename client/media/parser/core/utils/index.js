@@ -183,7 +183,7 @@ module.exports = {
                 finally {
                     handle.dispose()
                 }
-                console.log("contextValue", contextValue)
+                // console.log("contextValue", contextValue)
             }
 
             const finalText = contextValue ?? value;
