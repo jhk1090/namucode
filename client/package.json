@@ -19,6 +19,7 @@
     "chevrotain": "^10.5.0",
     "cssfilter": "^0.0.11",
     "highlight.js": "^11.10.0",
+    "image-size": "^2.0.2",
     "isolated-vm": "^6.0.1",
     "katex": "^0.16.21",
     "namumark-clone-core": "^0.0.4",
