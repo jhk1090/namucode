@@ -49,10 +49,6 @@ async function buildProject(entry, outfile, extraOptions = {}) {
       platform: "node",
       outfile,
       external: ["vscode", ...(extraOptions.external || []), ...quickjsPackages],
-      define: {
-          // dist/parser 절대 경로를 루트로 지정
-          __CORE_DIR__: `"${path.resolve(__dirname, "dist/parser").replace(/\\/g, "\\\\")}"`,
-      },
       logLevel: "warning",
       plugins: [esbuildProblemMatcherPlugin]
   });
