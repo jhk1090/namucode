@@ -11,7 +11,8 @@ module.exports = async (params, { toHtml, includeData, workspaceDocuments, Store
 
     const result = parser(doc.content, {
         noTopParagraph: !obj.topParagraph,
-        tokens: doc.parseResult.tokens
+        tokens: doc.parseResult.tokens,
+        maxParsingDepth: Store.config.maxParsingDepth ?? null
     });
     // console.log("parsed result", result.tokens?.length)
 

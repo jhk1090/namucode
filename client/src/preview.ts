@@ -255,10 +255,12 @@ export class MarkPreview {
                 const maxLength = workspaceConfig.get<number>("maxLength", 5000000);
                 const maxRenderingTimeout = workspaceConfig.get<number>("maxRenderingTimeout", 10) * 1000;
                 const maxParsingTimeout = workspaceConfig.get<number>("maxParsingTimeout", 7) * 1000;
+                const maxParsingDepth = workspaceConfig.get<number>("maxParsingDepth", 30);
                 const config = {
                     maxLength,
                     maxRenderingTimeout,
-                    maxParsingTimeout
+                    maxParsingTimeout,
+                    maxParsingDepth
                 }
 
                 const { result: parsedResult, error: parseError, errorCode: parseErrorCode, errorMessage: parseErrorMessage } = await parse(this._context, { text, config })

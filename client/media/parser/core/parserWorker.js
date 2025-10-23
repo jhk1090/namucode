@@ -5,7 +5,7 @@ const {
 
 const utils = require('./utils');
 
-const MAXIMUM_DEPTH = 15;
+let MAXIMUM_DEPTH = 30;
 
 let noCheckStartAtFirst = false;
 const fullLineRegex = (regex, { laterRegex } = {}) => {
@@ -1483,7 +1483,11 @@ const parseBlock = (text, noTopParagraph = false, noLineStart = false) => {
 
 const parser = new NamumarkParser();
 
-module.exports = (text, { tokens = null, editorComment = false, thread = false, noTopParagraph = false } = {}) => {
+module.exports = (text, { tokens = null, editorComment = false, thread = false, noTopParagraph = false, maxParsingDepth = null } = {}) => {
+    if (maxParsingDepth) {
+        MAXIMUM_DEPTH = maxParsingDepth
+    }
+
     text = text?.replaceAll('\r', '');
 
     Store = {

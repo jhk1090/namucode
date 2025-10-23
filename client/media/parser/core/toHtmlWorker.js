@@ -31,6 +31,7 @@ const topToHtml = module.exports = async parameter => {
     qjsContext = qjs.newContext();
   }
   const Store = (options.Store ??= {
+    config,
     workspaceDocuments: workspaceDocuments ?? [],
     parsedIncludes: [],
     links: [],
@@ -84,9 +85,13 @@ const topToHtml = module.exports = async parameter => {
     removerHandle.dispose()
     if(includeData)
       await Promise.all(Object.entries(includeData).map(([key, value]) => {
-        const handle = Store.qjsContext.evalCode(`${key} = "${value}"`)
-        handle.dispose()
+        const valueHandle = Store.qjsContext.newString(value)
+        Store.qjsContext.setProp(Store.qjsContext.global, key, valueHandle)
+        valueHandle.dispose()
       }));
+
+    // console.log("includedata", JSON.stringify(includeData))
+    // console.log("global", JSON.stringify(Store.qjsContext.dump(Store.qjsContext.global)))
   }
 
   if(parsed.data && !options.skipInit) {
@@ -156,7 +161,7 @@ const topToHtml = module.exports = async parameter => {
           if (!doc) continue;
 
           const params = includeParams.find((a) => a.namespace === docName.namespace && a.title === docName.title)?.params ?? [];
-          doc.parseResult = parser(doc.content);
+          doc.parseResult = parser(doc.content, { maxParsingDepth: config.maxParsingDepth ?? null });
           await parsedDocAdder(doc.parseResult, includeDocs, params);
       }
 
