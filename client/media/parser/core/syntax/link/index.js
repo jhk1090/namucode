@@ -23,6 +23,7 @@ module.exports = async (obj, options = {}) => {
         if(image.link) link = image.link;
         if(image.text) {
             text = image.text;
+            text = await utils.parseIncludeParams(image.text, options.Store.qjsContext);
             obj.textExists = false;
         }
         if(!options.includeData) Store.files.push(link);

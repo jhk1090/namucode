@@ -12,16 +12,20 @@ const macro = require('./syntax/macro');
 const table = require('./syntax/table');
 
 let MAXIMUM_LENGTH = 5000000;
-const jsGlobalRemover = fs.readFileSync(path.join(__CORE_DIR__, "utils/jsGlobalRemover.js"), 'utf8');
 
+let jsGlobalRemover = ""
 const topToHtml = module.exports = async parameter => {
   if(parameter[0]?.batch) return await Promise.all(parameter[0].batch.map(a => topToHtml(a)));
-
+  
   const [parsed, options = {}] = parameter;
   const { includeData = null, config = {}, document, workspaceDocuments } = options;
-
+  
   if (config.maxLength) {
     MAXIMUM_LENGTH = config.maxLength
+  }
+
+  if (config.extensionPath && jsGlobalRemover === "") {
+    jsGlobalRemover = fs.readFileSync(path.join(config.extensionPath, "dist/parser/utils/jsGlobalRemover.js"), 'utf8');
   }
 
   let qjs;
@@ -40,6 +44,11 @@ const topToHtml = module.exports = async parameter => {
     heading: {
       list: [],
       html: "",
+    },
+    footnote: {
+      index: 0,
+      values: [],
+      list: []
     },
     error: null,
     errorCode: null,
@@ -378,8 +387,26 @@ const topToHtml = module.exports = async parameter => {
         });
         break;
       case "footnote": {
-        const name = obj.name;
-        const value = await toHtml(obj.value);
+        const index = ++Store.footnote.index;
+        const name = obj.name || index.toString();
+        // const value = await toHtml(obj.value);
+
+        const prevFootnote = Store.footnote.values.find(a => a.name === name);
+        let value = prevFootnote?.content;
+        if(prevFootnote == null) {
+            value = obj.value;
+            Store.footnote.values.push({
+                name,
+                content: value
+            });
+        }
+
+        Store.footnote.list.push({
+            name,
+            index
+        });
+
+        value = await toHtml(value);
         result += `<a class="wiki-fn-content" title="${mainUtils.removeHtmlTags(value)}" href="#fn-${name}"><span id="rfn-${
           obj.index
         }"></span>[${name}]</a>`;

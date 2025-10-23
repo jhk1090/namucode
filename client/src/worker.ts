@@ -14,6 +14,8 @@ export async function warmupWorker(context: vscode.ExtensionContext) {
         maxLength: 5000000,
         maxRenderingTimeout: 10000,
         maxParsingTimeout: 7000,
+        maxParsingDepth: 30,
+        extensionPath: context.extensionUri.fsPath
     };
     const { result: parsedResult } = await parse(context, { text: "", config })
     await render(context, {

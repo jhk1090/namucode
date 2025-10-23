@@ -3,7 +3,7 @@
     "displayName": "Namucode",
     "description": "나무위키 VS Code 확장 프로그램",
     "publisher": "jhk1090",
-    "version": "1.5.5",
+    "version": "1.5.6",
     "engines": {
         "vscode": "^1.75.0"
     },
@@ -428,11 +428,6 @@
                         "type": "boolean",
                         "default": "true",
                         "description": "이 확장이 시작될 때, 미리 파서/렌더러를 돌려놓을 지(워밍업) 여부입니다. 시작 시 단 한 번 실행됩니다. 워밍업 될 경우, 캐싱이 되어 추후 미리보기를 실행할 때 더 빠르게 실행 가능합니다. 다만, 메모리를 소모할 수 있습니다."
-                    },
-                    "namucode.preview.parser.nodePath": {
-                        "type": "string",
-                        "default": "node",
-                        "description": "미리보기 파서가 실행될 Node.js 실행 경로입니다."
                     },
                     "namucode.preview.parser.maxLength": {
                         "type": "number",

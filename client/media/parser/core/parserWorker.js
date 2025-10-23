@@ -597,11 +597,11 @@ let Store = {
         list: [],
         prevLineAdd: 0
     },
-    footnote: {
-        index: 0,
-        values: [],
-        list: []
-    },
+    // footnote: {
+    //     index: 0,
+    //     values: [],
+    //     list: []
+    // },
     commentLines: []
 }
 const originalStore = { ...Store };
@@ -619,13 +619,14 @@ class NamumarkParser extends EmbeddedActionsParser {
                 result.push($.SUBRULE($.rootBlock));
             });
 
-            if(Object.keys(Store.footnote.values).length)
-                result.push({
-                    type: 'macro',
-                    name: 'footnote',
-                    footnoteValues: [...Store.footnote.values],
-                    footnoteList: [...Store.footnote.list]
-                });
+            // if(Object.keys(Store.footnote.values).length)
+            //     result.push({
+            //         type: 'macro',
+            //         name: 'footnote',
+            //         footnoteValues: [...Store.footnote.values],
+            //         footnoteList: [...Store.footnote.list]
+            //     });
+            result.push({ type: "macro", name: "footnote" })
 
             return result;
         });
@@ -1305,38 +1306,39 @@ class NamumarkParser extends EmbeddedActionsParser {
             const splitted = content.split(' ');
 
             const valueInput = splitted.slice(1).join(' ');
+            let value = valueInput
 
             $.ACTION(() => {
-                Store.footnote.index++;
+                value = parseInline(value);
             });
-            const index = Store.footnote.index;
-            const name = splitted[0] || index.toString();
+            // const index = Store.footnote.index;
+            // const name = splitted[0] || index.toString();
 
-            const prevFootnote = Store.footnote.values.find(a => a.name === name);
-            let value = prevFootnote?.content;
-            if(prevFootnote == null) {
-                value = valueInput;
-                $.ACTION(() => {
-                    value = parseInline(value);
-                    Store.footnote.values.push({
-                        name,
-                        content: value
-                    });
-                });
-            }
+            // const prevFootnote = Store.footnote.values.find(a => a.name === name);
+            // let value = prevFootnote?.content;
+            // if(prevFootnote == null) {
+            //     value = valueInput;
+            //     $.ACTION(() => {
+            //         value = parseInline(value);
+            //         Store.footnote.values.push({
+            //             name,
+            //             content: value
+            //         });
+            //     });
+            // }
 
-            $.ACTION(() => {
-                Store.footnote.list.push({
-                    name,
-                    index
-                });
-            });
+            // $.ACTION(() => {
+            //     Store.footnote.list.push({
+            //         name,
+            //         index
+            //     });
+            // });
 
             return {
                 type: 'footnote',
-                name,
+                name: splitted[0] || null,
                 value,
-                index
+                // index
             }
         });
 
@@ -1365,12 +1367,12 @@ class NamumarkParser extends EmbeddedActionsParser {
                     const arr = Store.includeParams[docName] ??= [];
                     arr.push(data.includeData);
                 }
-                else if(name === 'footnote' || name === '각주') {
-                    data.footnoteValues = [...Store.footnote.values];
-                    data.footnoteList = [...Store.footnote.list];
-                    Store.footnote.values.length = 0;
-                    Store.footnote.list.length = 0;
-                }
+                // else if(name === 'footnote' || name === '각주') {
+                //     data.footnoteValues = [...Store.footnote.values];
+                //     data.footnoteList = [...Store.footnote.list];
+                //     Store.footnote.values.length = 0;
+                //     Store.footnote.list.length = 0;
+                // }
                 // else if(name === 'vote') {
                 //     data.parsedSplittedParams = splittedParams.map(a => parseInline(a));
                 // }

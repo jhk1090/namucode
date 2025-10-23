@@ -260,14 +260,15 @@ export class MarkPreview {
                     maxLength,
                     maxRenderingTimeout,
                     maxParsingTimeout,
-                    maxParsingDepth
+                    maxParsingDepth,
+                    extensionPath: this._extensionUri.fsPath
                 }
 
                 const { result: parsedResult, error: parseError, errorCode: parseErrorCode, errorMessage: parseErrorMessage } = await parse(this._context, { text, config })
                 let parseHtml = ""
                 if (parseError) {
                     if (parseErrorCode === "parse_failed") {
-                        parseHtml = `<div style="width: 100%; word-break: keep-all;"><h2>${PARSE_FAILED_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>파일의 텍스트를 파싱하는 과정에서 오류가 발생했기 때문입니다.</p><h3>어떻게 해결할 수 있나요?</h3><p>아래 에러 코드를 <a href="https://github.com/jhk1090/namucode/issues">나무코드 이슈트래커</a>에 제보해주세요.<br /><br /><code style="color: red">${parseErrorMessage}</code></p></div>`
+                        parseHtml = `<div style="width: 100%; word-break: keep-all;"><h2>${PARSE_FAILED_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>파일의 텍스트를 파싱하는 과정에서 오류가 발생했기 때문입니다.</p><h3>어떻게 해결할 수 있나요?</h3><p>아래 에러 코드를 <a href="https://github.com/jhk1090/namucode/issues">나무코드 이슈트래커</a>에 제보해주세요.<br /><br /><pre><code>${parseErrorMessage}</code></pre></p></div>`
                     } else {
                         parseHtml = `<div style="width: 100%; word-break: keep-all;"><h2>${PARSE_TIMEOUT_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>설정한 파싱 대기 시간을 초과했기 때문입니다. 내용이 너무 크거나, 설정에서 파싱 대기 시간을 너무 짧게 설정했을 수 있습니다.<br />또는 최초 실행했을 때 캐싱이 되지 않아 시간이 오래 걸릴 수도 있습니다. (이는 몇 번 재실행하면 해결됩니다.)</p><h3>어떻게 해결할 수 있나요?</h3><p>내용이 큰 경우, 이 탭의 위 네비게이션 바의 <b>미리보기 설정</b> 버튼을 누르고 설정을 열어 파싱 대기 시간(Max Parsing Timeout)을 늘려보세요.</p></div>`
                     }
@@ -349,7 +350,7 @@ export class MarkPreview {
 
                 if (renderError) {
                     if (renderErrorCode === "render_failed") {
-                        renderHtml = `<div style="width: 100%; word-break: keep-all;"><h2>${RENDER_FAILED_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>파싱된 데이터를 HTML 코드로 바꾸는 렌더링을 하는 과정에서 오류가 발생했기 때문입니다.</p><h3>어떻게 해결할 수 있나요?</h3><p>아래 에러 코드를 <a href="https://github.com/jhk1090/namucode/issues">나무코드 이슈트래커</a>에 제보해주세요.<br /><br /><code style="color: red">${renderErrorMessage}</code></p></div>`
+                        renderHtml = `<div style="width: 100%; word-break: keep-all;"><h2>${RENDER_FAILED_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>파싱된 데이터를 HTML 코드로 바꾸는 렌더링을 하는 과정에서 오류가 발생했기 때문입니다.</p><h3>어떻게 해결할 수 있나요?</h3><p>아래 에러 코드를 <a href="https://github.com/jhk1090/namucode/issues">나무코드 이슈트래커</a>에 제보해주세요.<br /><br /><pre><code>${renderErrorMessage}</code></pre></p></div>`
                     } else if (renderErrorCode === "render_timeout") {
                         renderHtml = `<div style="width: 100%; word-break: keep-all;"><h2>${RENDER_TIMEOUT_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>설정한 렌더링 대기 시간을 초과했기 때문입니다. 내용이 너무 크거나, 설정에서 렌더링 대기 시간을 너무 짧게 설정했을 수 있습니다.<br />또는 최초 실행했을 때 캐싱이 되지 않아 시간이 오래 걸릴 수도 있습니다. (이는 몇 번 재실행하면 해결됩니다.)</p><h3>어떻게 해결할 수 있나요?</h3><p>내용이 큰 경우, 이 탭의 위 네비게이션 바의 <b>미리보기 설정</b> 버튼을 누르고 설정을 열어 렌더링 대기 시간(Max Rendering Timeout)을 늘려보세요.</p></div>`
                     } else {
