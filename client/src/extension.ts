@@ -194,7 +194,7 @@ export async function activate(context: ExtensionContext) {
   // );
 
   // Code to connect to sever
-  const serverModule = context.asAbsolutePath(path.join("server", "out", "server.js"));
+  const serverModule = context.asAbsolutePath(path.join("dist", "server.js"));
 
   const serverOptions: ServerOptions = {
     run: { module: serverModule, transport: TransportKind.ipc },

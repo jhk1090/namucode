@@ -33,7 +33,6 @@ function runWorkerWithTimeout(workerFile: string, params: any, timeoutMs: number
         }, timeoutMs);
 
         worker.on("message", (msg) => {
-            console.log("result", msg)
             clearTimeout(timeout);
             if (msg.error) reject(new Error(msg.error));
             else resolve(msg.result);
@@ -41,7 +40,6 @@ function runWorkerWithTimeout(workerFile: string, params: any, timeoutMs: number
         });
 
         worker.on("error", (err) => {
-            console.log("error", err.stack)
             clearTimeout(timeout);
             reject(err);
         });
@@ -70,7 +68,7 @@ interface IParseReturn {
 export const PARSE_FAILED_HEAD = "문서 파싱에 실패했습니다.";
 export const PARSE_TIMEOUT_HEAD = "문서 파싱이 너무 오래 걸립니다.";
 export async function parse(context: vscode.ExtensionContext, params: IParseParams): Promise<IParseReturn> {
-    const workerFile = path.join(context.extensionPath, "client/media/parser/core", "parser.js");
+    const workerFile = path.join(context.extensionPath, "dist/parser", "parser.js");
     try {
         const result = await runWorkerWithTimeout(workerFile, params, params.config.maxParsingTimeout);
         return {
@@ -108,7 +106,7 @@ export const RENDER_FAILED_HEAD = "문서 렌더링이 실패했습니다.";
 export const RENDER_TIMEOUT_HEAD = "문서 렌더링이 너무 오래 걸립니다.";
 export const RENDER_LENGTH_ERROR_HEAD = "문서 길이가 너무 깁니다.";
 export async function render(context: vscode.ExtensionContext, params: IRenderParams): Promise<IRenderReturn> {
-    const workerFile = path.join(context.extensionPath, "client/media/parser/core", "toHtml.js");
+    const workerFile = path.join(context.extensionPath, "dist/parser", "toHtml.js");
     try {
         const result: any = await runWorkerWithTimeout(workerFile, params, params.config.maxRenderingTimeout);
         return {

@@ -234,28 +234,46 @@ module.exports = {
     baseSanitizeHtml: text => sanitizeHtml(text, baseSanitizeHtmlOptions),
     sanitizeHtml: text => sanitizeHtml(text, sanitizeHtmlOptions),
     loadMacros() {
-        const macros = {};
+        const macros = {
+            age: require("../syntax/macro/age"),
+            anchor: require("../syntax/macro/anchor"),
+            br: require("../syntax/macro/br"),
+            clearfix: require("../syntax/macro/clearfix").format,
+            date: require("../syntax/macro/date").format,
+            datetime: require("../syntax/macro/date").format, // date alias
+            dday: require("../syntax/macro/dday"),
+            footnote: require("../syntax/macro/footnote").format,
+            각주: require("../syntax/macro/footnote").format, // footnote alias
+            include: require("../syntax/macro/include"),
+            math: require("../syntax/macro/math"),
+            nicovideo: require("../syntax/macro/nicovideo"),
+            pagecount: require("../syntax/macro/pagecount"),
+            ruby: require("../syntax/macro/ruby"),
+            tableofcontents: require("../syntax/macro/tableofcontents").format,
+            목차: require("../syntax/macro/tableofcontents").format, // tableofcontenst alias
+            youtube: require("../syntax/macro/youtube")
+        };
         const threadMacros = [];
 
-        const macroDir = '../syntax/macro';
-        const files = fs.readdirSync(path.resolve(__dirname, macroDir));
-        for(let file of files) {
-            if(file === 'index.js') continue;
+        // const macroDir = 'syntax/macro';
+        // const files = fs.readdirSync(path.resolve(__CORE_DIR__, macroDir));
+        // for(let file of files) {
+        //     if(file === 'index.js') continue;
 
-            const macroName = file.replace('.js', '').toLowerCase();
+        //     const macroName = file.replace('.js', '').toLowerCase();
 
-            const macroPath = require.resolve(path.resolve(__dirname, macroDir,  `./${file}`));
-            // if(debug) delete require.cache[macroPath];
-            const macro = require(macroPath);
-            macros[macroName] = macro.format ?? macro;
+        //     const macroPath = require.resolve(path.resolve(__CORE_DIR__, macroDir,  `./${file}`));
+        //     // if(debug) delete require.cache[macroPath];
+        //     const macro = require(macroPath);
+        //     macros[macroName] = macro.format ?? macro;
 
-            if(macro.aliases)
-                for(let alias of macro.aliases)
-                    macros[alias] = macro.format;
+        //     if(macro.aliases)
+        //         for(let alias of macro.aliases)
+        //             macros[alias] = macro.format;
 
-            if(macro.allowThread)
-                threadMacros.push(macroName, ...(macro.aliases ?? []));
-        }
+        //     if(macro.allowThread)
+        //         threadMacros.push(macroName, ...(macro.aliases ?? []));
+        // }
 
         if(global.__THETREE__)
             global.__THETREE__.macros = Object.keys(macros);

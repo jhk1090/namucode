@@ -16,14 +16,14 @@ export default defineConfig({
             targets: [
                 {
                     src: "src/assets",
-                    dest: "../../out/client",
+                    dest: ".",
                 },
             ],
         }),
     ],
     build: {
         lib: { entry: "src/main.js", name: "test", formats: ["es"] },
-        outDir: "../../out/client",
+        outDir: "dist",
         cssCodeSplit: false,
         rollupOptions: {
             output: {

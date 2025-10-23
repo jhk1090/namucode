@@ -16,7 +16,7 @@ const { parentPort } = require('worker_threads');
 let MAXIMUM_LENGTH = 5000000;
 const MAXIMUM_LENGTH_HTML = '문서 길이가 너무 깁니다.';
 
-const jsGlobalRemover = fs.readFileSync(path.join(__dirname, "utils/jsGlobalRemover.js"), 'utf8');
+const jsGlobalRemover = fs.readFileSync(path.join(__CORE_DIR__, "utils/jsGlobalRemover.js"), 'utf8');
 
 const topToHtml = module.exports = async parameter => {
   if(parameter[0]?.batch) return await Promise.all(parameter[0].batch.map(a => topToHtml(a)));
@@ -84,9 +84,13 @@ const topToHtml = module.exports = async parameter => {
   // }
 
   if (isTop) {
-    Store.qjsContext.evalCode(jsGlobalRemover);
+    const removerHandle = Store.qjsContext.evalCode(jsGlobalRemover);
+    removerHandle.dispose()
     if(includeData)
-      await Promise.all(Object.entries(includeData).map(([key, value]) => Store.qjsContext.evalCode(`${key} = ${value}`)));
+      await Promise.all(Object.entries(includeData).map(([key, value]) => {
+        const handle = Store.qjsContext.evalCode(`${key} = ${value}`)
+        handle.dispose()
+      }));
   }
 
   if(parsed.data && !options.skipInit) {

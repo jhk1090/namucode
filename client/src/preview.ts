@@ -13,11 +13,11 @@ export function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptio
 
         // And restrict the webview to only loading content from our extension's `media` directory.
         localResourceRoots: [
-            vscode.Uri.joinPath(extensionUri, "client/media"),
-            vscode.Uri.joinPath(extensionUri, "client/out"),
-            vscode.Uri.joinPath(extensionUri, "client/out/assets"),
-            vscode.Uri.joinPath(extensionUri, "client/out/assets/fonts"),
-            vscode.Uri.joinPath(extensionUri, "client/out/assets/fonts/katex"),
+            vscode.Uri.joinPath(extensionUri, "dist/media"),
+            vscode.Uri.joinPath(extensionUri, "dist/frontend"),
+            vscode.Uri.joinPath(extensionUri, "dist/frontend/assets"),
+            vscode.Uri.joinPath(extensionUri, "dist/frontend/assets/fonts"),
+            vscode.Uri.joinPath(extensionUri, "dist/frontend/assets/fonts/katex"),
         ],
     };
 }
@@ -174,14 +174,14 @@ export class MarkPreview {
     }
 
     private _getHtmlForWebview(webview: vscode.Webview, document: vscode.TextDocument) {
-        const resetStyleUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "client/media/reset.css"));
-        const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "client/media/script.js"));
+        const resetStyleUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "dist/media/reset.css"));
+        const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "dist/media/script.js"));
 
-        const vueAppUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "client/out/client/vite-project.mjs"));
+        const vueAppUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "dist/frontend/namucode-client-frontend.mjs"));
 
         const styleUriList = [];
         for (const css of ["default.css", "github-dark-dimmed.min.css", "github.min.css", "ionicons.min.css", "katex.min.css", "wiki.css", "wikiContent.css", "wikiCategory.css", "button.css"]) {
-            styleUriList.push(webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "client/out/client/assets/css/" + css)));
+            styleUriList.push(webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "dist/frontend/assets/css/" + css)));
         }
 
         const stylesheetFlatten = styleUriList
