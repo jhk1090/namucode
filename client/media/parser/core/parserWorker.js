@@ -439,13 +439,26 @@ const Literal = createToken({
 });
 const LegacyMath = createToken({
     name: 'LegacyMath',
-    pattern: /<math>(.*)<\/math>/
+    pattern: /<math>(.*?)<\/math>/
 });
 const Link = createToken({
     name: 'Link',
     // pattern: /\[\[.+?]]|\[\[.*\|[\s\S]+?]]/,
     // line_breaks: true
     ...nestedRegex(/\[\[/, /]]/, true, /\[/, /\]/),
+    start_chars_hint: ['[']
+});
+const categoryWithNewlineRegex = nestedRegex(/\[\[분류:/, /]]\n/, true, /\[/, /\]/);
+const CategoryWithNewline = createToken({
+    name: 'CategoryWithNewline',
+    pattern: (text, startOffset) => {
+        const openLineIndex = text.lastIndexOf('\n', startOffset);
+        const openLine = text.slice(openLineIndex + 1, text.indexOf('\n', openLineIndex + 1));
+        if(openLine.replace(/\[\[분류:(.*?)]]/, '')) return null;
+
+        return categoryWithNewlineRegex.pattern(text, startOffset);
+    },
+    line_breaks: true,
     start_chars_hint: ['[']
 });
 const Footnote = createToken({
@@ -537,6 +550,7 @@ const inlineTokens = [
     Underline,
     Sup,
     Sub,
+    CategoryWithNewline,
     Link,
     Footnote,
     Macro,
@@ -992,6 +1006,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                         { ALT: () => $.SUBRULE($.folding) },
                         { ALT: () => $.SUBRULE($.ifSyntax) },
                         { ALT: () => $.SUBRULE($.literal) },
+                        { ALT: () => $.SUBRULE($.categoryWithNewline) },
                         { ALT: () => $.SUBRULE($.link) },
                         { ALT: () => $.SUBRULE($.footnote) },
                         { ALT: () => $.SUBRULE($.macro) },
@@ -1199,9 +1214,9 @@ class NamumarkParser extends EmbeddedActionsParser {
         }
 
         const LinkSplitRegex = /(?<!\\)\|/;
-        $.RULE('link', () => {
-            const tok = $.CONSUME(Link);
-            const content = tok.image.slice(2, -2);
+        const linkHandler = (token, removeLastNewline = false) => () => {
+            const tok = $.CONSUME(token);
+            const content = tok.image.slice(2, removeLastNewline ? -3 : -2);
             const splitted = content.split(LinkSplitRegex).map(a => a.replaceAll('\\|', '|'));
             let link = splitted[0].replaceAll('\\]', ']');
             const origParsedText = splitted.slice(1).join('|');
@@ -1298,7 +1313,10 @@ class NamumarkParser extends EmbeddedActionsParser {
                 textExists: !!origParsedText,
                 parsedText
             }
-        });
+        }
+
+        $.RULE('categoryWithNewline', linkHandler(CategoryWithNewline, true));
+        $.RULE('link', linkHandler(Link));
 
         $.RULE('footnote', () => {
             const tok = $.CONSUME(Footnote);
