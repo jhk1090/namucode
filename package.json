@@ -458,7 +458,8 @@
         ]
     },
     "scripts": {
-        "vscode:prepublish": "yarn run build",
+        "vscode:prepublish": "yarn run build:production",
+        "build:production": "yarn run build:client && yarn run build:server && yarn run build:frontend && yarn run build:bundle --production",
         "build": "yarn run build:client && yarn run build:server && yarn run build:frontend && yarn run build:bundle",
         "build:client": "cd client && yarn install",
         "build:server": "cd server && yarn install",
