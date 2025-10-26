@@ -19,6 +19,7 @@
 - 다양한 Code Actions 지원
 - key.tmlanguage.json의 name을 모두 TextMate Grammar 컨벤션에 맞게 수정
 - TeX 및 syntax문 언어에 맞는 색상 강조 적용 지원
+- Outline에 쓰인 Parser도 따로 설정 가능하게 수정
 
 ## Undecided
 

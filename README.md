@@ -1,6 +1,6 @@
 # 나무코드 Namucode
 
-[나무위키](https://namu.wiki)의 Monaco 편집기의 VSCode 확장 프로그램 버전입니다. 더 강력한 텍스트 강조, 자동완성, 문서 미리보기 등 여러 기능을 즐겨보세요!
+[나무위키](https://namu.wiki)에 내장된 Monaco 편집기에 영감을 받은 Visual Studio Code 확장 프로그램입니다. 더 강력한 텍스트 강조, 자동완성, 문서 미리보기 등 여러 기능을 즐겨보세요!
 
   - [설치](#설치)
   - [사용법](#사용법)
@@ -111,7 +111,7 @@
 - **텍스트 취소선** `ctrl`(`cmd`)+`shift`+`D` - 선택한 문자를 취소선으로 만든다.
 - **텍스트 위첨자** `ctrl`(`cmd`)+`shift`+`U` - 선택한 문자를 위첨자로 만든다.
 - **텍스트 아래첨자** `ctrl`(`cmd`)+`shift`+`Y` - 선택한 문자를 아래첨자로 만든다.
-- **문단 자동 정렬 기능** `ctrl`(`cmd`)+`k` `ctrl`(`cmd`)+`s` - [문단 자동 정렬 기능](#문단-자동-정렬-기능-auto-sorting-paragraph)을 제공한다.
+- **문단 자동 정렬 기능** `ctrl`(`cmd`)+`k` `ctrl`(`cmd`)+`s` - [문단 자동 정렬 기능](#문단-자동-정렬-기능)을 제공한다.
 - **미리보기** `ctrl`(`cmd`)+`k` `ctrl`(`cmd`)+`p` - [미리보기](#미리보기) 기능을 제공한다.
 - **미리보기 설정 열기** - 미리보기에 관한 설정을 조회합니다.
 
@@ -128,7 +128,7 @@ _▲ 나무위키:문법 도움말_
 
 본 프로젝트는 MIT License 하에 배포됩니다.
 
-단, 프로젝트 일부에는 [정현수](https://github.com/wjdgustn)님의 [the tree](https://github.com/wjdgustn/thetree) 및 [the tree frontend](https://github.com/wjdgustn/thetree-frontend) 프로젝트의 코드가 포함되어 있으며, 이는 원저작자의 명시적 허락을 받아 사용되었습니다. 사용 범위는 `client/media/frontend`의 하위 파일 및 `client/media/parser`의 하위 파일입니다. 해당 부분의 저작권은 원저작자에게 있습니다.
+단, 프로젝트 일부에는 [정현수](https://github.com/wjdgustn)님의 [the tree](https://github.com/wjdgustn/thetree) 및 [the tree frontend](https://github.com/wjdgustn/thetree-frontend) 프로젝트의 코드가 포함되어 있으며, 이는 원저작자의 명시적 허락을 받아 사용되었습니다. 사용 범위는 `client`의 하위 파일 일부입니다. 해당 부분의 저작권은 원저작자에게 있습니다.
 
 이 프로젝트에 사용된 나무위키 아이콘 저작자는 kein, 저작권은 umanle S.R.L.가 소유하고 있으며, CC BY-NC-SA 2.0 KR 하에 배포됩니다. [(참고)](https://namu.wiki/w/%ED%8C%8C%EC%9D%BC:%EB%82%98%EB%AC%B4%EC%9C%84%ED%82%A4%20%EC%95%84%EC%9D%B4%EC%BD%98.svg)
 

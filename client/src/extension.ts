@@ -9,10 +9,8 @@ import * as vscode from "vscode";
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from "vscode-languageclient/node";
 import { EXTENSION_NAME, getConfig } from "./config";
 import { LinkDefinitionProvider } from "./linkdef";
-import { NamuMark } from "namumark-clone-core";
-import * as cheerio from "cheerio";
 import { MarkPreview, getWebviewOptions } from './preview';
-import { warmupWorker } from './worker';
+import { parse, warmupWorker } from './worker';
 
 let client: LanguageClient;
 let activeRules: vscode.Disposable[] = [];
@@ -181,11 +179,11 @@ export async function activate(context: ExtensionContext) {
     }
   }
 
-  const sort = vscode.commands.registerCommand("namucode.paragraphSort", sortParagraph);
+  const sort = vscode.commands.registerCommand("namucode.paragraphSort", async () => { await sortParagraph(context) });
 
   context.subscriptions.push(preview, sort);
 
-  const symbolProvider = new DocumentSymbolProvider();
+  const symbolProvider = new DocumentSymbolProvider(context);
   vscode.languages.registerDocumentSymbolProvider("namu", symbolProvider);
 
   //FIXME: vscode.languages.registerFoldingRangeProvider(
@@ -247,46 +245,97 @@ class ParagraphTreeSymbol extends TreeSymbol {
   }
 }
 
+interface IHeading {
+  line: number;
+  level: number;
+  closed: boolean;
+  sectionNum: number;
+  numText: string;
+  pureText: { type: "text", text: string; }[];
+  actualLevel: number;
+}
+
 class DocumentSymbolProvider implements vscode.DocumentSymbolProvider {
+  private context: vscode.ExtensionContext
+  constructor(context: vscode.ExtensionContext) {
+    this.context = context;
+  }
+
   public provideDocumentSymbols(document: vscode.TextDocument): Thenable<TreeSymbol[]> {
-    return new Promise((resolve, reject) => {
-      let symbols: TreeSymbol[] = [];
-      let parents: TreeSymbol[] = [];
+    return new Promise(async (resolve, reject) => {
+      const text = document.getText();
+      const config = {
+          maxLength: 5000000,
+          maxRenderingTimeout: 10000,
+          maxParsingTimeout: 7000,
+          maxParsingDepth: 30,
+          extensionPath: this.context.extensionUri.fsPath
+      };
+      
+      const { result, error, errorCode } = await parse(this.context, { text, config })
+      if (error) {
+        resolve([])
+        return;
+      }
 
-      for (let i = 0; i < document.lineCount; i++) {
-        let line = document.lineAt(i);
-        const match = line.text.match(/^(={1,6})(#?) (.*) (\2)(\1)$/);
+      const symbols: TreeSymbol[] = [];
+      let curHeadings: [IHeading, TreeSymbol][] = [];
 
-        if (match) {
-          const depth = match[1].length;
-          let name!: string;
-          try {
-            const result = new NamuMark(match[3], { docName: "" }, { data: [] }).parse()[0];
-            const $ = cheerio.load(`<main>${result}</main>`);
-            name = $.text();
-          } catch (err) {
-            console.error(err);
-            name = match[3];
-          }
-          const symbol = new TreeSymbol(name, "", vscode.SymbolKind.TypeParameter, line.range, line.range, depth);
-          if (depth === 1) {
-            symbols.push(symbol);
-            parents = [symbol];
-          } else {
-            while (parents.length > 0 && parents[parents.length - 1].depth >= depth) {
-              parents.pop();
+      const headings: IHeading[] = result.data.headings
+      const makeTreeSymbol = (heading: IHeading) => {
+        return new TreeSymbol(heading.numText + ". " + heading.pureText.map(v => v.text).join(""), "", vscode.SymbolKind.TypeParameter, document.lineAt(heading.line - 1).range, document.lineAt(heading.line - 1).range, heading.actualLevel)
+      }
+      for (const heading of headings) {
+        // 초기 상태
+        if (curHeadings.length == 0) {
+          curHeadings.push([heading, makeTreeSymbol(heading)])
+          continue;
+        }
+
+        // loop
+        for (const [index, [curHeading, curSymbol]] of curHeadings.entries()) {
+          // 상위 또는 같은 문단 => 삭제 및 추가
+          if (heading.actualLevel <= curHeading.actualLevel) {
+
+            // 하위 문단 모두 재귀적으로 상위 문단 삽입
+            let targetHeadings = curHeadings.slice(index);
+            for (let i = targetHeadings.length - 1; i >= 0; i--) {
+              // 모두 삽입 시 상위 문단 남아있음
+              if (i == 0 && index != 0) {
+                curHeadings[index - 1][1].children.push(targetHeadings[i][1])  
+                break;
+              }
+              // 모두 삽입 시 상위 문단 없음 (최고 문단)
+              if (i == 0 && index == 0) {
+                symbols.push(targetHeadings[i][1])  
+                break;
+              }
+
+              targetHeadings[i - 1][1].children.push(targetHeadings[i][1])
             }
-            if (parents.length > 0) {
-              let parent = parents[parents.length - 1];
-              parent.children.push(symbol);
-            } else {
-              symbols.push(symbol);
-            }
-            parents.push(symbol);
+
+            // 하위 문단 제거
+            curHeadings.splice(index, targetHeadings.length);
+            
+            break;
           }
         }
+
+        curHeadings.push([heading, makeTreeSymbol(heading)])
       }
-      resolve(symbols);
+
+      // 후처리
+      for (let i = curHeadings.length - 1; i >= 0; i--) {
+        if (i == 0) {
+          symbols.push(curHeadings[i][1])  
+          break;
+        }
+
+        curHeadings[i - 1][1].children.push(curHeadings[i][1])
+      }
+
+      // console.log(headings, curHeadings, symbols)
+      resolve(symbols)
     });
   }
 }
@@ -324,9 +373,9 @@ class FoldingRangeProvider implements vscode.FoldingRangeProvider {
 }
 */
 // FIXME: Code to sort paragraph
-const sortParagraph = async () => {
+const sortParagraph = async (context: vscode.ExtensionContext) => {
   const editor = vscode.window.activeTextEditor;
-  const symbolProvider = new DocumentSymbolProvider();
+  const symbolProvider = new DocumentSymbolProvider(context);
   const symbolsProvided = await symbolProvider.provideDocumentSymbols(vscode.window.activeTextEditor.document);
   let symbols!: ParagraphTreeSymbol[];
   let isDocumentPerfect = true;
@@ -336,6 +385,8 @@ const sortParagraph = async () => {
     vscode.window.showWarningMessage('이 명령어는 나무마크 파일(*.namu)에서만 사용할 수 있습니다.');
     return;
   }
+
+  const sanitizeName = (name: string) => name.split(". ").slice(1).join(". ")
 
   const modifySymbolTree = (tree: TreeSymbol[], lastLine: vscode.TextLine) => {
     const symbols: ParagraphTreeSymbol[] = [];
@@ -389,9 +440,6 @@ const sortParagraph = async () => {
     return;
   }
 
-  console.log(symbols);
-  console.log(isDocumentPerfect);
-
   if (!isDocumentPerfect) {
     vscode.window.showErrorMessage(`문단 구성이 완벽하지 않습니다. ${imperfectReason}`);
     return;
@@ -403,7 +451,7 @@ const sortParagraph = async () => {
 
     const indexMapList = tree
       .map((v, i) => {
-        return [v.name, i];
+        return [sanitizeName(v.name), i];
       })
       .sort((first, second) => {
         if (first[0] < second[0]) return -1;
