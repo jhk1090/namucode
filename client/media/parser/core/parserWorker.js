@@ -705,7 +705,9 @@ class NamumarkParser extends EmbeddedActionsParser {
                 if(item.type === 'text' || (allowLink && item.type === 'link'))
                     result.push(item);
                 else {
-                    const value = item.parsedText ?? item.content;
+                    const value = Array.isArray(item)
+                        ? item
+                        : item.parsedText ?? item.content;
                     if(value) result.push(...filterInline(value, allowLink));
                 }
             }
