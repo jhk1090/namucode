@@ -170,9 +170,34 @@
                     "source.namu"
                 ],
                 "embeddedLanguages": {
+                    "meta.embedded.block.basic": "bas",
+                    "meta.embedded.block.cpp": "cpp",
+                    "meta.embedded.block.csharp": "cs",
+                    "meta.embedded.block.css": "css",
+                    "meta.embedded.block.erlang": "erl",
+                    "meta.embedded.block.go": "go",
+                    "meta.embedded.block.html": "html",
+                    "meta.embedded.block.java": "java",
                     "meta.embedded.block.javascript": "javascript",
+                    "meta.embedded.block.json": "json",
+                    "meta.embedded.block.kotlin": "kt",
+                    "meta.embedded.block.lisp": "lisp",
+                    "meta.embedded.block.lua": "lua",
+                    "meta.embedded.block.markdown": "markdown",
+                    "meta.embedded.block.objectivec": "m",
+                    "meta.embedded.block.perl": "perl",
+                    "meta.embedded.block.php": "php",
+                    "meta.embedded.block.powershell": "ps1",
+                    "meta.embedded.block.python": "py",
+                    "meta.embedded.block.ruby": "ruby",
+                    "meta.embedded.block.rust": "rust",
+                    "meta.embedded.block.sh": "sh",
+                    "meta.embedded.block.sql": "sql",
+                    "meta.embedded.block.swift": "swift",
+                    "meta.embedded.block.typescript": "typescript",
+                    "meta.embedded.block.xml": "xml",
                     "meta.embedded.line.css": "css",
-                    "meta.embedded.block.html": "html"
+                    "meta.embedded.block.tex": "tex"
                 }
             }
         ],
