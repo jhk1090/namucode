@@ -22,8 +22,17 @@ export function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptio
     };
 }
 
+interface ICreateOrShowParams {
+    context: ExtensionContext;
+    extensionUri?: vscode.Uri;
+    panelId: string;
+    retry: boolean;
+}
+
 export class MarkPreview {
     public static currentPanels: { [key: string]: MarkPreview | undefined } = {};
+    public static currentConfigs: { [key: string]: { retry: boolean; } } = {};
+    public static currentActivePanelId: string | null = null;
 
     private readonly _panel: vscode.WebviewPanel;
     private readonly _panelId: string;
@@ -37,11 +46,16 @@ export class MarkPreview {
     private readonly _extensionUri: vscode.Uri;
     private _disposables: vscode.Disposable[] = [];
 
-    public static createOrShow(context: ExtensionContext, extensionUri: vscode.Uri, panelId: string) {
+    public static createOrShow({context, extensionUri, panelId, retry}: ICreateOrShowParams) {
         const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
 
         // If we already have a panel, show it.
         if (MarkPreview.currentPanels[panelId]) {
+            if (retry) {
+                MarkPreview.currentConfigs[panelId].retry = true;
+                MarkPreview.currentPanels[panelId]._update()
+                return;
+            }
             MarkPreview.currentPanels[panelId]._panel.reveal();
             return;
         }
@@ -55,6 +69,7 @@ export class MarkPreview {
         );
 
         MarkPreview.currentPanels[panelId] = new MarkPreview(panel, context, extensionUri, panelId);
+        MarkPreview.currentConfigs[panelId] = { retry: false }
     }
 
     public static revive(
@@ -105,6 +120,10 @@ export class MarkPreview {
                 const lastColumn = this._panelLastViewState.viewColumn
                 const currentColumn = newState.viewColumn
 
+                if (newState.active) {
+                    MarkPreview.currentActivePanelId = panelId
+                }
+
                 if (wasVisible == false && isVisible == true) {
                     console.log(path.basename(panelId), "just updated!", "due to visibility change");
                     this._update()
@@ -143,11 +162,24 @@ export class MarkPreview {
             this._disposables
         );
 
-        context.subscriptions.push(themeDisposable, saveDisposable);
+        const deleteDisposable = vscode.workspace.onDidDeleteFiles((event) => {
+            for (const file of event.files) {
+                if (panelId.split("namucode-webview-").slice(1).join("namucode-webview-") === file.fsPath) {
+                    this._panel.dispose();
+                }
+            }
+        }, null, this._disposables)
+
+        context.subscriptions.push(themeDisposable, saveDisposable, deleteDisposable);
     }
 
     public dispose(panelId: string) {
+        if (MarkPreview.currentActivePanelId === panelId) {
+            MarkPreview.currentActivePanelId = null;
+        }
+
         MarkPreview.currentPanels[panelId] = undefined;
+        MarkPreview.currentConfigs[panelId] = undefined;
         console.log(path.basename(panelId), "just disposed!");
         // Clean up our resources
         this._panel.dispose();
@@ -193,7 +225,7 @@ export class MarkPreview {
         const nonce = getNonce();
 
         const text = document.getText();
-        if (this._panelLastContent && this._panelLastContent === text) {
+        if (this._panelLastContent && this._panelLastContent === text && !MarkPreview.currentConfigs[this._panelId].retry) {
             switch (vscode.window.activeColorTheme.kind) {
                 case vscode.ColorThemeKind.Dark:
                 case vscode.ColorThemeKind.HighContrast:
@@ -206,6 +238,7 @@ export class MarkPreview {
             webview.postMessage({ type: "updateContent", newContent: this._panelLastHtmlResult, newCategories: this._panelLastCategoriesResult });
             return
         }
+        MarkPreview.currentConfigs[this._panelId].retry = false
 
         webview.html = `
     <!DOCTYPE html>

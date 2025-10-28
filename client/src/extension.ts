@@ -154,15 +154,25 @@ export async function activate(context: ExtensionContext) {
     vscode.env.openExternal(vscode.Uri.parse("https://github.com/jhk1090/namucode/blob/main/docs/preview.md"));
   });
 
-  const preview = vscode.commands.registerCommand("namucode.preview", async () => {
+  const preview = vscode.commands.registerCommand("namucode.preview", async ({ retry = false }) => {
     const editor = vscode.window.activeTextEditor;
+
+    if (retry) {
+      if (!MarkPreview.currentActivePanelId) {
+        vscode.window.showWarningMessage('현재 열려있는 미리보기 탭이 없습니다.');
+        return;
+      }
+      MarkPreview.createOrShow({ context, panelId: MarkPreview.currentActivePanelId, retry });
+      return;
+    }
+
     if (!editor || editor.document.languageId !== 'namu') {
       vscode.window.showWarningMessage('이 명령어는 나무마크 파일(*.namu)에서만 사용할 수 있습니다.');
       return;
     }
 
     const filePath = editor.document.uri.fsPath;
-    MarkPreview.createOrShow(context, context.extensionUri, "namucode-webview-" + filePath);
+    MarkPreview.createOrShow({ context, extensionUri: context.extensionUri, panelId: "namucode-webview-" + filePath, retry });
   });
 
   if (vscode.window.registerWebviewPanelSerializer) {
@@ -179,9 +189,13 @@ export async function activate(context: ExtensionContext) {
     }
   }
 
+  const retryPreview = vscode.commands.registerCommand("namucode.retryPreview", () => {
+    vscode.commands.executeCommand('namucode.preview', { retry: true });
+  });
+
   const sort = vscode.commands.registerCommand("namucode.paragraphSort", async () => { await sortParagraph(context) });
 
-  context.subscriptions.push(preview, sort);
+  context.subscriptions.push(preview, retryPreview, sort);
 
   const symbolProvider = new DocumentSymbolProvider(context);
   vscode.languages.registerDocumentSymbolProvider("namu", symbolProvider);
