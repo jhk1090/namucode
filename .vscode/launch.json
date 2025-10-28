@@ -2,33 +2,15 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Run Extension",
+      "name": "나무코드 실행",
       "type": "extensionHost",
       "request": "launch",
       "runtimeExecutable": "${execPath}",
       "args": ["--extensionDevelopmentPath=${workspaceRoot}"],
       "outFiles": [
-        "${workspaceRoot}/client/out/**/*.js",
-        "${workspaceRoot}/server/out/**/*.js"
+        "${workspaceRoot}/dist/**/*.js"
       ],
       "autoAttachChildProcesses": true
-      // "preLaunchTask": {
-			// 	"type": "npm",
-			// 	"script": "watch"
-			// }
-    },
-
-    {
-      "name": "Extension Tests",
-      "type": "extensionHost",
-      "request": "launch",
-      "runtimeExecutable": "${execPath}",
-      "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}",
-        "--extensionTestsPath=${workspaceFolder}/out/test/suite/index",
-        "${workspaceRoot}/client/testFixture"
-      ],
-      "outFiles": ["${workspaceFolder}/out/test/**/*.js"]
     }
   ]
 }

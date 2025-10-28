@@ -27,6 +27,11 @@ module.exports = async (params, { toHtml, includeData, workspaceDocuments, Store
                 list: [],
                 html: ''
             },
+            footnote: {
+                index: 0,
+                values: [],
+                list: []
+            },
             qjs,
             qjsContext
         }
