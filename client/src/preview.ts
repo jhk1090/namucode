@@ -26,33 +26,35 @@ interface ICreateOrShowParams {
     context: ExtensionContext;
     extensionUri?: vscode.Uri;
     panelId: string;
-    retry: boolean;
+    isRenderRetry?: boolean;
 }
 
 export class MarkPreview {
     public static currentPanels: { [key: string]: MarkPreview | undefined } = {};
-    public static currentConfigs: { [key: string]: { retry: boolean; } } = {};
     public static currentActivePanelId: string | null = null;
 
     private readonly _panel: vscode.WebviewPanel;
     private readonly _panelId: string;
-    private _panelLastViewState: { visible: boolean; active: boolean; viewColumn: vscode.ViewColumn };
     private _panelUri: vscode.Uri;
-    private _panelLastContent: string;
-    private _panelLastHtmlResult: string;
-    private _panelLastCategoriesResult: any[];
+    private _panelPersist: {
+        viewState: { visible: boolean; active: boolean; viewColumn: vscode.ViewColumn };
+        content?: string;
+        htmlResult?: string;
+        categoriesResult?: any[];
+    };
 
     private readonly _context: ExtensionContext;
     private readonly _extensionUri: vscode.Uri;
     private _disposables: vscode.Disposable[] = [];
+    private _isRenderRetry: boolean;
 
-    public static createOrShow({context, extensionUri, panelId, retry}: ICreateOrShowParams) {
+    public static createOrShow({context, extensionUri, panelId, isRenderRetry}: ICreateOrShowParams) {
         const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
 
         // If we already have a panel, show it.
         if (MarkPreview.currentPanels[panelId]) {
-            if (retry) {
-                MarkPreview.currentConfigs[panelId].retry = true;
+            if (isRenderRetry) {
+                MarkPreview.currentPanels[panelId]._isRenderRetry = true;
                 MarkPreview.currentPanels[panelId]._update()
                 return;
             }
@@ -69,7 +71,6 @@ export class MarkPreview {
         );
 
         MarkPreview.currentPanels[panelId] = new MarkPreview(panel, context, extensionUri, panelId);
-        MarkPreview.currentConfigs[panelId] = { retry: false }
     }
 
     public static revive(
@@ -88,16 +89,20 @@ export class MarkPreview {
         extensionUri: vscode.Uri,
         panelId: string
     ) {
-        this._panel = panel;
         this._context = context;
         this._extensionUri = extensionUri;
+
+        this._panel = panel;
         this._panelId = panelId;
 
-        this._panelLastViewState = {
-            visible: panel.visible,
-            active: panel.active,
-            viewColumn: panel.viewColumn
-        }
+        this._panelPersist = {
+            viewState: {
+                visible: panel.visible,
+                active: panel.active,
+                viewColumn: panel.viewColumn,
+            }
+        };
+        this._isRenderRetry = false;
 
         console.log(path.basename(panelId), "just updated!");
         // Set the webview's initial html content
@@ -114,10 +119,10 @@ export class MarkPreview {
                     viewColumn: e.webviewPanel.viewColumn
                 }
 
-                const wasVisible = this._panelLastViewState.visible
+                const wasVisible = this._panelPersist.viewState.visible
                 const isVisible = newState.visible
                 
-                const lastColumn = this._panelLastViewState.viewColumn
+                const lastColumn = this._panelPersist.viewState.viewColumn
                 const currentColumn = newState.viewColumn
 
                 if (newState.active) {
@@ -134,7 +139,7 @@ export class MarkPreview {
                     this._update()
                 }
 
-                this._panelLastViewState = newState
+                this._panelPersist.viewState = newState
 			},
 			null,
 			this._disposables
@@ -179,7 +184,6 @@ export class MarkPreview {
         }
 
         MarkPreview.currentPanels[panelId] = undefined;
-        MarkPreview.currentConfigs[panelId] = undefined;
         console.log(path.basename(panelId), "just disposed!");
         // Clean up our resources
         this._panel.dispose();
@@ -225,7 +229,7 @@ export class MarkPreview {
         const nonce = getNonce();
 
         const text = document.getText();
-        if (this._panelLastContent && this._panelLastContent === text && !MarkPreview.currentConfigs[this._panelId].retry) {
+        if (this._panelPersist.content && this._panelPersist.content === text && !this._isRenderRetry) {
             switch (vscode.window.activeColorTheme.kind) {
                 case vscode.ColorThemeKind.Dark:
                 case vscode.ColorThemeKind.HighContrast:
@@ -235,10 +239,10 @@ export class MarkPreview {
                     webview.postMessage({ type: "updateTheme", themeKind: "light" })
                     break;
             }
-            webview.postMessage({ type: "updateContent", newContent: this._panelLastHtmlResult, newCategories: this._panelLastCategoriesResult });
+            webview.postMessage({ type: "updateContent", newContent: this._panelPersist.htmlResult, newCategories: this._panelPersist.categoriesResult });
             return
         }
-        MarkPreview.currentConfigs[this._panelId].retry = false
+        this._isRenderRetry = false
 
         webview.html = `
     <!DOCTYPE html>
@@ -279,122 +283,148 @@ export class MarkPreview {
                 break;
         }
         webview.postMessage({ type: "updateContent", newContent: `<div style="width: 100%; word-break: keep-all;"><h2>미리보기를 준비하는 중입니다.</h2><h3>파싱 중.. (1/3)</h3></div>`, newCategories: [] });
-        (async () => {
-            try {
-                const parsingStart = performance.now();
 
-                const workspaceConfig = vscode.workspace.getConfiguration("namucode.preview.parser");
+        const getConfig = () => {
+            const workspaceConfig = vscode.workspace.getConfiguration("namucode.preview.parser");
+            const maxLength = workspaceConfig.get<number>("maxLength", 5000000);
+            const maxRenderingTimeout = workspaceConfig.get<number>("maxRenderingTimeout", 10) * 1000;
+            const maxParsingTimeout = workspaceConfig.get<number>("maxParsingTimeout", 7) * 1000;
+            const maxParsingDepth = workspaceConfig.get<number>("maxParsingDepth", 30);
+            return {
+                maxLength,
+                maxRenderingTimeout,
+                maxParsingTimeout,
+                maxParsingDepth,
+                extensionPath: this._extensionUri.fsPath
+            }
+        }
 
-                const maxLength = workspaceConfig.get<number>("maxLength", 5000000);
-                const maxRenderingTimeout = workspaceConfig.get<number>("maxRenderingTimeout", 10) * 1000;
-                const maxParsingTimeout = workspaceConfig.get<number>("maxParsingTimeout", 7) * 1000;
-                const maxParsingDepth = workspaceConfig.get<number>("maxParsingDepth", 30);
-                const config = {
-                    maxLength,
-                    maxRenderingTimeout,
-                    maxParsingTimeout,
-                    maxParsingDepth,
-                    extensionPath: this._extensionUri.fsPath
+        const registerPersist = (content: string, htmlResult: string, categoriesResult: any[]) => {
+            this._panelPersist.content = content;
+            this._panelPersist.htmlResult = htmlResult;
+            this._panelPersist.categoriesResult = categoriesResult;
+        }
+
+        const runParsing = async () => {
+            const startTime = performance.now();
+            const config = getConfig()
+
+            const { result, error, errorCode, errorMessage } = await parse(this._context, { text, config })
+            let html = ""
+
+            if (error) {
+                if (errorCode === "parse_failed") {
+                    html = `<div style="width: 100%; word-break: keep-all;"><h2>${PARSE_FAILED_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>파일의 텍스트를 파싱하는 과정에서 오류가 발생했기 때문입니다.</p><h3>어떻게 해결할 수 있나요?</h3><p>아래 에러 코드를 <a href="https://github.com/jhk1090/namucode/issues">나무코드 이슈트래커</a>에 제보해주세요.<br /><br /><pre><code>${escapeHTML(errorMessage)}</code></pre></p></div>`
+                } else {
+                    html = `<div style="width: 100%; word-break: keep-all;"><h2>${PARSE_TIMEOUT_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>설정한 파싱 대기 시간을 초과했기 때문입니다. 내용이 너무 크거나, 설정에서 파싱 대기 시간을 너무 짧게 설정했을 수 있습니다.<br />또는 최초 실행했을 때 캐싱이 되지 않아 시간이 오래 걸릴 수도 있습니다. (이는 몇 번 재실행하면 해결됩니다.)</p><h3>어떻게 해결할 수 있나요?</h3><p>내용이 큰 경우, 이 탭의 위 네비게이션 바의 <b>미리보기 설정</b> 버튼을 누르고 설정을 열어 파싱 대기 시간(Max Parsing Timeout)을 늘려보세요.</p></div>`
                 }
 
-                const { result: parsedResult, error: parseError, errorCode: parseErrorCode, errorMessage: parseErrorMessage } = await parse(this._context, { text, config })
-                let parseHtml = ""
-                if (parseError) {
-                    if (parseErrorCode === "parse_failed") {
-                        parseHtml = `<div style="width: 100%; word-break: keep-all;"><h2>${PARSE_FAILED_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>파일의 텍스트를 파싱하는 과정에서 오류가 발생했기 때문입니다.</p><h3>어떻게 해결할 수 있나요?</h3><p>아래 에러 코드를 <a href="https://github.com/jhk1090/namucode/issues">나무코드 이슈트래커</a>에 제보해주세요.<br /><br /><pre><code>${escapeHTML(parseErrorMessage)}</code></pre></p></div>`
-                    } else {
-                        parseHtml = `<div style="width: 100%; word-break: keep-all;"><h2>${PARSE_TIMEOUT_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>설정한 파싱 대기 시간을 초과했기 때문입니다. 내용이 너무 크거나, 설정에서 파싱 대기 시간을 너무 짧게 설정했을 수 있습니다.<br />또는 최초 실행했을 때 캐싱이 되지 않아 시간이 오래 걸릴 수도 있습니다. (이는 몇 번 재실행하면 해결됩니다.)</p><h3>어떻게 해결할 수 있나요?</h3><p>내용이 큰 경우, 이 탭의 위 네비게이션 바의 <b>미리보기 설정</b> 버튼을 누르고 설정을 열어 파싱 대기 시간(Max Parsing Timeout)을 늘려보세요.</p></div>`
-                    }
+                registerPersist(text, html, [])
+                return { error: true, result, html, duration: null }
+            }
 
-                    webview.postMessage({ type: "updateContent", newContent: parseHtml, newCategories: [] });
-                    this._panelLastContent = text;
-                    this._panelLastHtmlResult = parseHtml;
-                    this._panelLastCategoriesResult = [];
-                    return
-                }
+            const endTime = performance.now();
+            const duration = (endTime - startTime).toFixed(2)
 
-                const parsingEnd = performance.now();
-                const parsingDuration = (parsingEnd - parsingStart).toFixed(2)
-                webview.postMessage({ type: "updateContent", newContent: `<div style="width: 100%; word-break: keep-all;"><h2>미리보기를 준비하는 중입니다.</h2><h3>작업 환경 리소스 불러오는 중.. (2/3)</h3><h3>파싱 중.. (완료! ${parsingDuration}ms)</h3></div>`, newCategories: [] });
+            html = `<div style="width: 100%; word-break: keep-all;"><h2>미리보기를 준비하는 중입니다.</h2><h3>작업 환경 리소스 불러오는 중.. (2/3)</h3><h3>파싱 중.. (완료! ${duration}ms)</h3></div>`
 
-                const workspaceReference = workspaceConfig.get<boolean>("workspaceReference", true);
+            return { error: false, result, html, duration };
+        }
 
-                const loadingWorkspaceStart = performance.now();
+        const loadWorkspaceResources = async (currentFolder: vscode.WorkspaceFolder, parsingDuration: string) => {
+            const workspaceConfig = vscode.workspace.getConfiguration("namucode.preview.parser");
+            const workspaceReference = workspaceConfig.get<boolean>("workspaceReference", true);
 
-                const currentFolder = vscode.workspace.getWorkspaceFolder(this._panelUri)
-                let workspaceDocuments = []
-                if (workspaceReference && currentFolder) {
-                    const namuFiles = await vscode.workspace.findFiles("**/*.namu")  
+            const startTime = performance.now();
+
+            let workspaceDocuments = []
+            if (workspaceReference && currentFolder) {
+                const namuFiles = await vscode.workspace.findFiles("**/*.namu")  
+
+                workspaceDocuments.push(...await Promise.all(
+                    namuFiles.map(async (file) => {
+                        const document = await vscode.workspace.openTextDocument(file);
+                        const { namespace, title } = await getNamespaceAndTitle(currentFolder.uri.fsPath, file.fsPath)
+
+                        const content = document.getText();
     
-                    workspaceDocuments.push(...await Promise.all(
-                        namuFiles.map(async (file) => {
-                            const document = await vscode.workspace.openTextDocument(file);
-                            const { namespace, title } = await getNamespaceAndTitle(currentFolder.uri.fsPath, file.fsPath)
-    
-                            const content = document.getText();
-        
+                        return {
+                            namespace,
+                            title,
+                            content,
+                        };
+                    })
+                ))
+
+                const mediaFiles = await vscode.workspace.findFiles("{**/*.png,**/*.jpg,**/*.jpeg,**/*.svg,**/*.gif,**/*.webp}")
+                const mappedMediaFiles = await Promise.all(
+                    mediaFiles.map(async (file) => {
+                        try {
+                            let title = path.relative(currentFolder.uri.fsPath, file.fsPath)
+                            let namespace = "문서";
+
+                            title = title.replace(/\\/g, "/")
+                            const fileKey = await imageUriToDataUri(file)
+                            const { fileHeight, fileWidth, fileSize } = await getImageInfo(file)
+
                             return {
                                 namespace,
-                                title,
-                                content,
-                            };
-                        })
-                    ))
-
-                    const mediaFiles = await vscode.workspace.findFiles("{**/*.png,**/*.jpg,**/*.jpeg,**/*.svg,**/*.gif,**/*.webp}")
-                    const mappedMediaFiles = await Promise.all(
-                        mediaFiles.map(async (file) => {
-                            try {
-                                let title = path.relative(currentFolder.uri.fsPath, file.fsPath)
-                                let namespace = "문서";
-
-                                title = title.replace(/\\/g, "/")
-                                const fileKey = await imageUriToDataUri(file)
-                                const { fileHeight, fileWidth, fileSize } = await getImageInfo(file)
-
-                                return {
-                                    namespace,
-                                    title: "파일:" + title,
-                                    content: {
-                                        fileKey,
-                                        fileWidth,
-                                        fileHeight,
-                                        fileSize
-                                    }
+                                title: "파일:" + title,
+                                content: {
+                                    fileKey,
+                                    fileWidth,
+                                    fileHeight,
+                                    fileSize
                                 }
-                            } catch (err) {
-                                console.error(err.message)                     
-                                return null;
                             }
-                        })
-                    )
+                        } catch (err) {
+                            console.error(err.message)                     
+                            return null;
+                        }
+                    })
+                )
 
-                    workspaceDocuments.push(...mappedMediaFiles.filter(v => v !== null))
+                workspaceDocuments.push(...mappedMediaFiles.filter(v => v !== null))
+            }
+
+            const endTime = performance.now();
+            const duration = (endTime - startTime).toFixed(2)
+
+            webview.postMessage({ type: "updateContent", newContent: `<div style="width: 100%; word-break: keep-all;"><h2>미리보기를 준비하는 중입니다.</h2><h3>렌더링 중.. (3/3)</h3><h3>작업 환경 리소스 불러오는 중.. (완료! ${duration}ms)</h3><h3>파싱 중.. (완료! ${parsingDuration}ms)</h3></div>`, newCategories: [] });
+
+            return workspaceDocuments
+        }
+
+        const runRendering = async (currentFolder: vscode.WorkspaceFolder, parsedResult, workspaceDocuments) => {
+            const config = getConfig()
+            const { namespace, title } = await getNamespaceAndTitle(currentFolder ? currentFolder.uri.fsPath : path.dirname(document.uri.fsPath), document.uri.fsPath)
+
+            let { html, categories, error, errorCode, errorMessage } = await render(this._context, { parsedResult,  document: { namespace, title }, workspaceDocuments, config })
+
+            if (error) {
+                if (errorCode === "render_failed") {
+                    html = `<div style="width: 100%; word-break: keep-all;"><h2>${RENDER_FAILED_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>파싱된 데이터를 HTML 코드로 바꾸는 렌더링을 하는 과정에서 오류가 발생했기 때문입니다.</p><h3>어떻게 해결할 수 있나요?</h3><p>아래 에러 코드를 <a href="https://github.com/jhk1090/namucode/issues">나무코드 이슈트래커</a>에 제보해주세요.<br /><br /><pre><code>${escapeHTML(errorMessage)}</code></pre></p></div>`
+                } else if (errorCode === "render_timeout") {
+                    html = `<div style="width: 100%; word-break: keep-all;"><h2>${RENDER_TIMEOUT_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>설정한 렌더링 대기 시간을 초과했기 때문입니다. 내용이 너무 크거나, 설정에서 렌더링 대기 시간을 너무 짧게 설정했을 수 있습니다.<br />또는 최초 실행했을 때 캐싱이 되지 않아 시간이 오래 걸릴 수도 있습니다. (이는 몇 번 재실행하면 해결됩니다.)</p><h3>어떻게 해결할 수 있나요?</h3><p>내용이 큰 경우, 이 탭의 위 네비게이션 바의 <b>미리보기 설정</b> 버튼을 누르고 설정을 열어 렌더링 대기 시간(Max Rendering Timeout)을 늘려보세요.</p></div>`
+                } else {
+                    html = `<div style="width: 100%; word-break: keep-all;"><h2>${RENDER_LENGTH_ERROR_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>렌더링한 HTML 결과값이 표시하기에 너무 크다면 이런 문제가 발생합니다.</p><h3>어떻게 해결할 수 있나요?</h3><p>내용이 큰 경우, 이 탭의 위 네비게이션 바의 <b>미리보기 설정</b> 버튼을 누르고 설정을 열어 문서 최대 길이(Max Length)를 늘려보세요.</p></div>`
                 }
+            }
 
-                const loadingWorkspaceEnd = performance.now();
-                const loadingWorkspaceDuration = (loadingWorkspaceEnd - loadingWorkspaceStart).toFixed(2)
+            webview.postMessage({ type: "updateContent", newContent: html, newCategories: categories });
+            registerPersist(text, html, categories)
+        }
 
-                webview.postMessage({ type: "updateContent", newContent: `<div style="width: 100%; word-break: keep-all;"><h2>미리보기를 준비하는 중입니다.</h2><h3>렌더링 중.. (3/3)</h3><h3>작업 환경 리소스 불러오는 중.. (완료! ${loadingWorkspaceDuration}ms)</h3><h3>파싱 중.. (완료! ${parsingDuration}ms)</h3></div>`, newCategories: [] });
+        (async () => {
+            try {
+                const { error, result: parsedResult, html, duration: parsingDuration } = await runParsing();
+                webview.postMessage({ type: "updateContent", newContent: html, newCategories: [] });
+                if (error) return;
 
-                const { namespace, title } = await getNamespaceAndTitle(currentFolder ? currentFolder.uri.fsPath : path.dirname(document.uri.fsPath), document.uri.fsPath)
+                const currentFolder = vscode.workspace.getWorkspaceFolder(this._panelUri)
+                const workspaceDocuments = await loadWorkspaceResources(currentFolder, parsingDuration);
 
-                let { html: renderHtml, categories: renderCategories, error: renderError, errorCode: renderErrorCode, errorMessage: renderErrorMessage } = await render(this._context, { parsedResult,  document: { namespace, title }, workspaceDocuments, config })
-
-                if (renderError) {
-                    if (renderErrorCode === "render_failed") {
-                        renderHtml = `<div style="width: 100%; word-break: keep-all;"><h2>${RENDER_FAILED_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>파싱된 데이터를 HTML 코드로 바꾸는 렌더링을 하는 과정에서 오류가 발생했기 때문입니다.</p><h3>어떻게 해결할 수 있나요?</h3><p>아래 에러 코드를 <a href="https://github.com/jhk1090/namucode/issues">나무코드 이슈트래커</a>에 제보해주세요.<br /><br /><pre><code>${escapeHTML(renderErrorMessage)}</code></pre></p></div>`
-                    } else if (renderErrorCode === "render_timeout") {
-                        renderHtml = `<div style="width: 100%; word-break: keep-all;"><h2>${RENDER_TIMEOUT_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>설정한 렌더링 대기 시간을 초과했기 때문입니다. 내용이 너무 크거나, 설정에서 렌더링 대기 시간을 너무 짧게 설정했을 수 있습니다.<br />또는 최초 실행했을 때 캐싱이 되지 않아 시간이 오래 걸릴 수도 있습니다. (이는 몇 번 재실행하면 해결됩니다.)</p><h3>어떻게 해결할 수 있나요?</h3><p>내용이 큰 경우, 이 탭의 위 네비게이션 바의 <b>미리보기 설정</b> 버튼을 누르고 설정을 열어 렌더링 대기 시간(Max Rendering Timeout)을 늘려보세요.</p></div>`
-                    } else {
-                        renderHtml = `<div style="width: 100%; word-break: keep-all;"><h2>${RENDER_LENGTH_ERROR_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>렌더링한 HTML 결과값이 표시하기에 너무 크다면 이런 문제가 발생합니다.</p><h3>어떻게 해결할 수 있나요?</h3><p>내용이 큰 경우, 이 탭의 위 네비게이션 바의 <b>미리보기 설정</b> 버튼을 누르고 설정을 열어 문서 최대 길이(Max Length)를 늘려보세요.</p></div>`
-                    }
-                }
-
-                webview.postMessage({ type: "updateContent", newContent: renderHtml, newCategories: renderCategories });
-                this._panelLastContent = text;
-                this._panelLastHtmlResult = renderHtml;
-                this._panelLastCategoriesResult = renderCategories;
+                runRendering(currentFolder, parsedResult, workspaceDocuments)
             } catch (error) {
                 this.dispose(this._panelId);
                 const errorMessage = await vscode.window.showErrorMessage(`미리보기 렌더링 중 오류 발생: ${error instanceof Error ? error.message : String(error)}`, "제보하기", "재시도");

@@ -500,7 +500,8 @@
         "build:client": "cd client && yarn install",
         "build:server": "cd server && yarn install",
         "build:frontend": "cd client/media/frontend && yarn install && yarn run build",
-        "build:bundle": "node esbuild.js"
+        "build:bundle": "node esbuild.js",
+        "watch": "yarn run build:bundle --watch"
     },
     "devDependencies": {
         "@types/glob": "^7.2.0",

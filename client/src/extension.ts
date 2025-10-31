@@ -162,7 +162,7 @@ export async function activate(context: ExtensionContext) {
         vscode.window.showWarningMessage('현재 열려있는 미리보기 탭이 없습니다.');
         return;
       }
-      MarkPreview.createOrShow({ context, panelId: MarkPreview.currentActivePanelId, retry });
+      MarkPreview.createOrShow({ context, panelId: MarkPreview.currentActivePanelId, isRenderRetry: retry });
       return;
     }
 
@@ -172,7 +172,7 @@ export async function activate(context: ExtensionContext) {
     }
 
     const filePath = editor.document.uri.fsPath;
-    MarkPreview.createOrShow({ context, extensionUri: context.extensionUri, panelId: "namucode-webview-" + filePath, retry });
+    MarkPreview.createOrShow({ context, extensionUri: context.extensionUri, panelId: "namucode-webview-" + filePath });
   });
 
   if (vscode.window.registerWebviewPanelSerializer) {
@@ -297,7 +297,7 @@ class DocumentSymbolProvider implements vscode.DocumentSymbolProvider {
 
       const headings: IHeading[] = result.data.headings
       const makeTreeSymbol = (heading: IHeading) => {
-        return new TreeSymbol(heading.numText + ". " + heading.pureText.map(v => v.text).join(""), "", vscode.SymbolKind.TypeParameter, document.lineAt(heading.line - 1).range, document.lineAt(heading.line - 1).range, heading.actualLevel)
+        return new TreeSymbol(heading.numText + ". " + heading.pureText.map(v => v.text).join(""), "", vscode.SymbolKind.String, document.lineAt(heading.line - 1).range, document.lineAt(heading.line - 1).range, heading.actualLevel)
       }
       for (const heading of headings) {
         // 초기 상태
