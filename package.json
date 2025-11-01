@@ -3,7 +3,7 @@
     "displayName": "나무코드 Namucode",
     "description": "나무위키 VS Code 확장 프로그램",
     "publisher": "jhk1090",
-    "version": "1.7.0",
+    "version": "1.7.1",
     "engines": {
         "vscode": "^1.75.0"
     },
@@ -517,7 +517,7 @@
             }
         ],
         "views": {
-            "scm": [
+            "namucode-activitybar": [
                 {
                     "type": "webview",
                     "id": "includeParameterEditor",
@@ -526,6 +526,15 @@
                     "icon": "$(wand)",
                     "contextualTitle": "나무코드"
                 }
+            ]
+        },
+        "viewsContainers": {
+			"activitybar": [
+				{
+					"id": "namucode-activitybar",
+					"title": "나무코드",
+					"icon": "$(wand)"
+				}
             ]
         }
     },

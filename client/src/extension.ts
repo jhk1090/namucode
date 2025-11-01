@@ -264,6 +264,11 @@ export async function activate(context: ExtensionContext) {
                 const reset = document.getElementById("reset");
                 const error = document.getElementById("error");
 
+                const isValid = (content) => {
+                  const fullRe = /^(?:(?:\\\\.|[^=,\\\\])+=(?:\\\\.|[^,\\\\])*)(?:,(?:\\\\.|[^=,\\\\])+=(?:\\\\.|[^,\\\\])*)*$/;
+                  return fullRe.test(content)
+                }
+
                 const parseParams = (content) => {
                     content = content.replaceAll("\\n", "")
                     content = content.replaceAll("\\t", "")
@@ -300,6 +305,14 @@ export async function activate(context: ExtensionContext) {
 
                 // 입력값이 바뀔 때마다 저장
                 textarea.addEventListener('input', () => {
+                  if (isValid(textarea.value)) {
+                    error.style.display = "none";
+                    textarea.style.borderColor = "transparent";
+                  } else {
+                    error.style.display = "block";
+                    textarea.style.borderColor = "red";
+                  }
+
                   vscode.setState({ text: textarea.value });
                   autoResize();
                 });
