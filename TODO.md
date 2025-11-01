@@ -21,7 +21,6 @@
 
 - Outline에 쓰인 Parser도 따로 설정 가능하게 수정
 - 고정주석 따로 미리보기로 띄우기
-- include 매개변수 삽입 시 미리보기
 
 ## Undecided
 

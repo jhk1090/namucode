@@ -49,8 +49,6 @@ export class MarkPreview {
     private _isRenderRetry: boolean;
 
     public static createOrShow({context, extensionUri, panelId, isRenderRetry}: ICreateOrShowParams) {
-        const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
-
         // If we already have a panel, show it.
         if (MarkPreview.currentPanels[panelId]) {
             if (isRenderRetry) {
@@ -398,8 +396,9 @@ export class MarkPreview {
         const runRendering = async (currentFolder: vscode.WorkspaceFolder, parsedResult, workspaceDocuments) => {
             const config = getConfig()
             const { namespace, title } = await getNamespaceAndTitle(currentFolder ? currentFolder.uri.fsPath : path.dirname(document.uri.fsPath), document.uri.fsPath)
+            const includeData = this._context.workspaceState.get("includeParameterEditorInput") as { [key: string]: string } ?? null
 
-            let { html, categories, error, errorCode, errorMessage } = await render(this._context, { parsedResult,  document: { namespace, title }, workspaceDocuments, config })
+            let { html, categories, error, errorCode, errorMessage } = await render(this._context, { parsedResult,  document: { namespace, title }, workspaceDocuments, config, includeData })
 
             if (error) {
                 if (errorCode === "render_failed") {

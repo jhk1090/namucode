@@ -23,6 +23,7 @@ export async function warmupWorker(context: vscode.ExtensionContext) {
         document: { namespace: "문서", title: "" },
         workspaceDocuments: [],
         config,
+        includeData: null
     });
 }
 
@@ -95,6 +96,7 @@ interface IRenderParams {
     document: { namespace: string; title: string };
     workspaceDocuments: any[];
     config: IConfig;
+    includeData: { [key: string]: string };
 }
 interface IRenderReturn {
     html: string;
