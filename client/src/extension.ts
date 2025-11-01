@@ -154,6 +154,10 @@ export async function activate(context: ExtensionContext) {
     vscode.env.openExternal(vscode.Uri.parse("https://github.com/jhk1090/namucode/blob/main/docs/preview.md"));
   });
 
+  vscode.commands.registerCommand("namucode.openIncludeParameterEditorGuideline", () => {
+    vscode.env.openExternal(vscode.Uri.parse("https://github.com/jhk1090/namucode/blob/main/docs/preview.md#틀-매개변수-편집기"));
+  });
+
   const preview = vscode.commands.registerCommand("namucode.preview", async ({ retry = false }) => {
     const editor = vscode.window.activeTextEditor;
 
@@ -247,7 +251,7 @@ export async function activate(context: ExtensionContext) {
               <h3>매개변수 편집기</h3>
               <p>미리보기에 적용될 매개변수를 지정해보세요! <code>매개변수=값</code> 꼴로 지정할 수 있으며, 쉼표로 구분해 여러 매개변수를 넣을 수 있습니다. <code>\\,</code> 또는 <code>\\=</code>와 같은 이스케이프 문자도 적용 가능합니다.</p>
               <p>적용 시 현재 열려있는 미리보기와 앞으로 열리는 미리보기 모두를 대상으로 적용됩니다. 단, 이 기능을 사용하면 중첩 include문 방지로 인해 include 문법을 사용할 수 없습니다.</p>
-              <p id="error" style="display: none; color: red;">매개변수 형식이 잘못되었습니다.</p>
+              <p id="error" style="display: none; color: red;">매개변수 형식이 잘못되었습니다. 도움말이 필요하다면 <a href="https://github.com/jhk1090/namucode/blob/main/docs/preview.md#q-틀-매개변수-편집기-사용-중-매개변수-형식이-잘못되었습니다라고-뜹니다">여기</a>를 참고하세요.</p>
               <textarea id="input" style="width: 100%"></textarea>
               <div style="width: calc(100% - 20px); position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: row; gap: 5px;">
                 <button id="apply" style="width: 100%; padding: 5px;">적용</button>
@@ -318,6 +322,12 @@ export async function activate(context: ExtensionContext) {
                   vscode.setState({ text: textarea.value });
                 })
 
+                window.addEventListener("message", (event) => {
+                  const message = event.data;
+                  textarea.value = message;
+                  vscode.setState({ text: textarea.value });
+                })
+
                 autoResize();
               </script>
             </body>
@@ -337,6 +347,9 @@ export async function activate(context: ExtensionContext) {
             vscode.commands.executeCommand("namucode.retryPreview")
           }
         })
+        // 초기 설정
+        const editorInput = context.workspaceState.get("includeParameterEditorInput") as { [key: string]: string } | null;
+        webviewView.webview.postMessage(editorInput ? Object.entries(editorInput).map(([key, value]) => `${key}=${value}`).join(", ") : "")
       },
     })
   );

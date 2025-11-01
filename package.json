@@ -115,6 +115,12 @@
                 "icon": "$(question)"
             },
             {
+                "command": "namucode.openIncludeParameterEditorGuideline",
+                "title": "틀 매개변수 편집기 도움말 열기",
+                "category": "나무코드",
+                "icon": "$(question)"
+            },
+            {
                 "command": "namucode.openIncludeParameterEditor",
                 "title": "틀 매개변수 편집기 열기",
                 "category": "나무코드",
@@ -151,6 +157,13 @@
                 {
                     "command": "namucode.openIncludeParameterEditor",
                     "when": "activeWebviewPanelId =~ /namucode-webview-/",
+                    "group": "navigation"
+                }
+            ],
+            "view/title": [
+                {
+                    "command": "namucode.openIncludeParameterEditorGuideline",
+                    "when": "view == includeParameterEditor",
                     "group": "navigation"
                 }
             ]
