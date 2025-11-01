@@ -148,24 +148,11 @@
 이 프로젝트에 사용된 나무위키 아이콘 저작자는 kein, 저작권은 umanle S.R.L.가 소유하고 있으며, CC BY-NC-SA 2.0 KR 하에 배포됩니다. [(참고)](https://namu.wiki/w/%ED%8C%8C%EC%9D%BC:%EB%82%98%EB%AC%B4%EC%9C%84%ED%82%A4%20%EC%95%84%EC%9D%B4%EC%BD%98.svg)
 
 ## 기여
-프로젝트 발전에 기여하시는 분들을 전부 환영합니다! [Pull Requests](https://github.com/jhk1090/namucode/pulls)를 통해 기여해주실 수 있습니다.
-
-### 프로젝트 환경
- - Node.js 20 이상 (추천)
- - yarn 사용 환경
- - vscode 1.75.0 이상
-
-### 프로젝트 빌드
-1. 최상위 폴더에서 아래와 같이 프로젝트를 빌드합니다.
-```sh
-yarn run build
-```
-
-2. 빌드가 성공적으로 끝났다면, `F5`를 눌러 확장 기능을 실험해 볼 수 있습니다.
+**▶ 기여 관련은 [여기](./CONTRIBUTING.md)를 참고하세요.**
 
 
 ## 업데이트 로그
-**▶ 업데이트 로그는 [여기](https://github.com/jhk1090/namucode/blob/main/CHANGELOG.md)를 참고하세요.**
+**▶ 업데이트 로그는 [여기](./CHANGELOG.md)를 참고하세요.**
 
 ## 참고
 

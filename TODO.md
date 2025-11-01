@@ -27,4 +27,3 @@
 - VSCode 내 inline 미리보기 지원
 - 폭넓은 option 지원
 - 색상 입력 시 색상 피커 지원, 헥스코드 도감 내장
-- math, syntax, html 문법 내에서 타 언어 문법 강조
