@@ -175,15 +175,9 @@ module.exports = {
             if(includeData)
                 contextValue = includeData[key];
             else if(qjsContext) {
-                let handle;
                 try {
-                    handle = qjsContext.evalCode(`${key}`)
-                    contextValue = qjsContext.dump(handle.value)
+                    contextValue = qjsContext.getProp(qjsContext.global, key).consume(qjsContext.dump)
                 } catch (e) {}
-                finally {
-                    handle.dispose()
-                }
-                // console.log("contextValue", contextValue)
             }
 
             const finalText = contextValue ?? value;
