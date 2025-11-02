@@ -47,6 +47,7 @@ export class MarkPreview {
     private readonly _extensionUri: vscode.Uri;
     private _disposables: vscode.Disposable[] = [];
     private _isRenderRetry: boolean;
+    private _workerTerminator: AbortController;
 
     public static createOrShow({context, extensionUri, panelId, isRenderRetry}: ICreateOrShowParams) {
         // If we already have a panel, show it.
@@ -101,6 +102,7 @@ export class MarkPreview {
             }
         };
         this._isRenderRetry = false;
+        this._workerTerminator = new AbortController()
 
         console.log(path.basename(panelId), "just updated!");
         // Set the webview's initial html content
@@ -177,6 +179,8 @@ export class MarkPreview {
     }
 
     public dispose(panelId: string) {
+        this._workerTerminator.abort()
+        
         if (MarkPreview.currentActivePanelId === panelId) {
             MarkPreview.currentActivePanelId = null;
         }
@@ -195,6 +199,9 @@ export class MarkPreview {
     }
 
     private _update() {
+        this._workerTerminator.abort();
+        this._workerTerminator = new AbortController();
+
         if (!this._panelUri) {
             this._panelUri = vscode.window.activeTextEditor.document.uri
         }
@@ -307,18 +314,20 @@ export class MarkPreview {
             const startTime = performance.now();
             const config = getConfig()
 
-            const { result, error, errorCode, errorMessage } = await parse(this._context, { text, config })
+            const { result, error, errorCode, errorMessage } = await parse(this._context, { text, config, signal: this._workerTerminator.signal })
             let html = ""
 
             if (error) {
-                if (errorCode === "parse_failed") {
+                if (errorCode === "aborted") {
+                    return { error: true, errorCode }
+                } else if (errorCode === "parse_failed") {
                     html = `<div style="width: 100%; word-break: keep-all;"><h2>${PARSE_FAILED_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>파일의 텍스트를 파싱하는 과정에서 오류가 발생했기 때문입니다.</p><h3>어떻게 해결할 수 있나요?</h3><p>아래 에러 코드를 <a href="https://github.com/jhk1090/namucode/issues">나무코드 이슈트래커</a>에 제보해주세요.<br /><br /><pre><code>${escapeHTML(errorMessage)}</code></pre></p></div>`
                 } else {
                     html = `<div style="width: 100%; word-break: keep-all;"><h2>${PARSE_TIMEOUT_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>설정한 파싱 대기 시간을 초과했기 때문입니다. 내용이 너무 크거나, 설정에서 파싱 대기 시간을 너무 짧게 설정했을 수 있습니다.<br />또는 최초 실행했을 때 캐싱이 되지 않아 시간이 오래 걸릴 수도 있습니다. (이는 몇 번 재실행하면 해결됩니다.)</p><h3>어떻게 해결할 수 있나요?</h3><p>내용이 큰 경우, 이 탭의 위 네비게이션 바의 <b>미리보기 설정</b> 버튼을 누르고 설정을 열어 파싱 대기 시간(Max Parsing Timeout)을 늘려보세요.</p></div>`
                 }
 
                 registerPersist(text, html, [])
-                return { error: true, result, html, duration: null }
+                return { error: true, errorCode, result, html, duration: null }
             }
 
             const endTime = performance.now();
@@ -398,10 +407,12 @@ export class MarkPreview {
             const { namespace, title } = await getNamespaceAndTitle(currentFolder ? currentFolder.uri.fsPath : path.dirname(document.uri.fsPath), document.uri.fsPath)
             const includeData = this._context.workspaceState.get("includeParameterEditorInput") as { [key: string]: string } ?? null
 
-            let { html, categories, error, errorCode, errorMessage } = await render(this._context, { parsedResult,  document: { namespace, title }, workspaceDocuments, config, includeData })
+            let { html, categories, error, errorCode, errorMessage } = await render(this._context, { parsedResult,  document: { namespace, title }, workspaceDocuments, config, includeData, signal: this._workerTerminator.signal })
 
             if (error) {
-                if (errorCode === "render_failed") {
+                if (errorCode === "aborted") {
+                    return
+                } else if (errorCode === "render_failed") {
                     html = `<div style="width: 100%; word-break: keep-all;"><h2>${RENDER_FAILED_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>파싱된 데이터를 HTML 코드로 바꾸는 렌더링을 하는 과정에서 오류가 발생했기 때문입니다.</p><h3>어떻게 해결할 수 있나요?</h3><p>아래 에러 코드를 <a href="https://github.com/jhk1090/namucode/issues">나무코드 이슈트래커</a>에 제보해주세요.<br /><br /><pre><code>${escapeHTML(errorMessage)}</code></pre></p></div>`
                 } else if (errorCode === "render_timeout") {
                     html = `<div style="width: 100%; word-break: keep-all;"><h2>${RENDER_TIMEOUT_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>설정한 렌더링 대기 시간을 초과했기 때문입니다. 내용이 너무 크거나, 설정에서 렌더링 대기 시간을 너무 짧게 설정했을 수 있습니다.<br />또는 최초 실행했을 때 캐싱이 되지 않아 시간이 오래 걸릴 수도 있습니다. (이는 몇 번 재실행하면 해결됩니다.)</p><h3>어떻게 해결할 수 있나요?</h3><p>내용이 큰 경우, 이 탭의 위 네비게이션 바의 <b>미리보기 설정</b> 버튼을 누르고 설정을 열어 렌더링 대기 시간(Max Rendering Timeout)을 늘려보세요.</p></div>`
@@ -416,8 +427,10 @@ export class MarkPreview {
 
         (async () => {
             try {
-                const { error, result: parsedResult, html, duration: parsingDuration } = await runParsing();
-                webview.postMessage({ type: "updateContent", newContent: html, newCategories: [] });
+                const { error, errorCode, result: parsedResult, html, duration: parsingDuration } = await runParsing();
+                if (!errorCode || errorCode !== "aborted") {
+                    webview.postMessage({ type: "updateContent", newContent: html, newCategories: [] });
+                }
                 if (error) return;
 
                 const currentFolder = vscode.workspace.getWorkspaceFolder(this._panelUri)

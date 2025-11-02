@@ -467,8 +467,8 @@ class DocumentSymbolProvider implements vscode.DocumentSymbolProvider {
           maxParsingDepth: 30,
           extensionPath: this.context.extensionUri.fsPath
       };
-      
-      const { result, error, errorCode } = await parse(this.context, { text, config })
+      const controller = new AbortController();
+      const { result, error, errorCode } = await parse(this.context, { text, config, signal: controller.signal })
       if (error) {
         resolve([])
         return;

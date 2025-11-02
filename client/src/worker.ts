@@ -17,23 +17,29 @@ export async function warmupWorker(context: vscode.ExtensionContext) {
         maxParsingDepth: 30,
         extensionPath: context.extensionUri.fsPath
     };
-    const { result: parsedResult } = await parse(context, { text: "", config })
+    const { signal } = new AbortController();
+    const { result: parsedResult } = await parse(context, { text: "", config, signal })
     await render(context, {
         parsedResult,
         document: { namespace: "문서", title: "" },
         workspaceDocuments: [],
         config,
+        signal,
         includeData: null
     });
 }
 
-function runWorkerWithTimeout(workerFile: string, params: any, timeoutMs: number) {
+function runWorkerWithTimeout(workerFile: string, params: any, timeoutMs: number, signal: AbortSignal) {
     return new Promise((resolve, reject) => {
         const worker = new Worker(workerFile);
 
         const timeout = setTimeout(() => {
             worker.terminate().then(() => reject(new Error("Timeout"))); // 강제 종료
         }, timeoutMs);
+
+        signal.addEventListener("abort", () => {
+            worker.terminate().then(() => reject(new Error("Abort"))); // 강제 종료
+        })
 
         worker.on("message", (msg) => {
             clearTimeout(timeout);
@@ -60,11 +66,12 @@ interface IConfig {
 interface IParseParams {
     text: string;
     config: IConfig;
+    signal: AbortSignal;
 }
 interface IParseReturn {
     result: any;
     error: boolean;
-    errorCode?: "parse_timeout" | "parse_failed";
+    errorCode?: "parse_timeout" | "parse_failed" | "aborted";
     errorMessage?: string;
 }
 
@@ -73,19 +80,20 @@ export const PARSE_TIMEOUT_HEAD = "문서 파싱이 너무 오래 걸립니다."
 export async function parse(context: vscode.ExtensionContext, params: IParseParams): Promise<IParseReturn> {
     const workerFile = path.join(context.extensionPath, "dist/parser", "parser.js");
     try {
-        const result = await runWorkerWithTimeout(workerFile, params, params.config.maxParsingTimeout);
+        const result = await runWorkerWithTimeout(workerFile, params, params.config.maxParsingTimeout, params.signal);
         return {
             result,
             error: false,
         };
     } catch (err) {
         const isTimeout = err.message == "Timeout";
+        const isAborted = err.message == "Abort";
         if (!isTimeout) console.error(err);
 
         return {
             result: null,
             error: true,
-            errorCode: isTimeout ? "parse_timeout" : "parse_failed",
+            errorCode: isAborted ? "aborted" : isTimeout ? "parse_timeout" : "parse_failed",
             errorMessage: err.stack,
         };
     }
@@ -97,12 +105,13 @@ interface IRenderParams {
     workspaceDocuments: any[];
     config: IConfig;
     includeData: { [key: string]: string };
+    signal: AbortSignal;
 }
 interface IRenderReturn {
     html: string;
     categories: any[];
     error: boolean;
-    errorCode?: "render_timeout" | "render_failed" | "render_too_long";
+    errorCode?: "render_timeout" | "render_failed" | "render_too_long" | "aborted";
     errorMessage?: string;
 }
 
@@ -112,7 +121,7 @@ export const RENDER_LENGTH_ERROR_HEAD = "문서 길이가 너무 깁니다.";
 export async function render(context: vscode.ExtensionContext, params: IRenderParams): Promise<IRenderReturn> {
     const workerFile = path.join(context.extensionPath, "dist/parser", "toHtml.js");
     try {
-        const result: any = await runWorkerWithTimeout(workerFile, params, params.config.maxRenderingTimeout);
+        const result: any = await runWorkerWithTimeout(workerFile, params, params.config.maxRenderingTimeout, params.signal);
         return {
             html: result.html,
             categories: result.categories,
@@ -121,13 +130,14 @@ export async function render(context: vscode.ExtensionContext, params: IRenderPa
     } catch (err) {
         const isTimeout = err.message == "Timeout";
         const isTooLong = err.message == "render_too_long";
+        const isAborted = err.message == "Abort";
         if (!isTimeout) console.error(err);
 
         return {
             html: "",
             categories: [],
             error: true,
-            errorCode: isTimeout ? "render_timeout" : isTooLong ? "render_too_long" : "render_failed",
+            errorCode: isAborted ? "aborted" : isTimeout ? "render_timeout" : isTooLong ? "render_too_long" : "render_failed",
             errorMessage: err.stack,
         };
     }
