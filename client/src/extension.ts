@@ -382,10 +382,28 @@ export async function activate(context: ExtensionContext) {
   const symbolProvider = new DocumentSymbolProvider(context);
   vscode.languages.registerDocumentSymbolProvider("namu", symbolProvider);
 
-  //FIXME: vscode.languages.registerFoldingRangeProvider(
+  // vscode.languages.registerFoldingRangeProvider(
   //   "namu",
-  //   new FoldingRangeProvider(symbolProvider)
+  //   new FoldingRangeProvider(context)
   // );
+
+  // vscode.workspace.onDidDeleteFiles(e => {
+  //   e.files.forEach(file => {
+  //     if (path.extname(file.fsPath) === "namu") {
+  //       FoldingRangeProvider.foldingCache.delete(file.toString())
+  //       FoldingRangeProvider.versionCache.delete(file.toString())
+  //     }
+  //   })
+  // })
+
+  // vscode.workspace.onDidRenameFiles(e => {
+  //   e.files.forEach(({ oldUri, newUri }) => {
+  //     if (path.extname(oldUri.fsPath) === "namu" && path.extname(newUri.fsPath) === "namu") {
+  //       FoldingRangeProvider.foldingCache.delete(oldUri.toString())
+  //       FoldingRangeProvider.versionCache.delete(oldUri.toString())
+  //     }
+  //   })
+  // })
 
   // Code to connect to sever
   const serverModule = context.asAbsolutePath(path.join("dist", "server.js"));
@@ -536,38 +554,62 @@ class DocumentSymbolProvider implements vscode.DocumentSymbolProvider {
   }
 }
 
-//TODO: Code to provide fold
-/*
-class FoldingRangeProvider implements vscode.FoldingRangeProvider {
-  constructor(private symbolProvider: DocumentSymbolProvider) {}
 
-  provideFoldingRanges(
-    document: vscode.TextDocument,
-    context: vscode.FoldingContext,
-    token: vscode.CancellationToken
-  ): Thenable<vscode.FoldingRange[]> {
-    return this.symbolProvider
-      .provideDocumentSymbols(document)
-      .then((symbols) => {
-        console.log("ES");
-        let ranges: vscode.FoldingRange[] = [];
+// class FoldingRangeProvider implements vscode.FoldingRangeProvider {
+//   static foldingCache = new Map<string, vscode.FoldingRange[]>();
+//   static versionCache = new Map<string, number>();
 
-        const addFoldingRanges = (symbol: vscode.DocumentSymbol) => {
-          const start = symbol.range.start.line;
-          const end = symbol.children[symbol.children.length - 1].range.end.line;
-          ranges.push(new vscode.FoldingRange(start, end));
-          symbol.children.forEach(addFoldingRanges);
-        };
+//   constructor(private context: ExtensionContext) {}
 
-        symbols.forEach((symbol) => {
-          addFoldingRanges(symbol);
-          console.log(ranges);
-        });
-        return ranges;
-      });
-  }
-}
-*/
+//   async provideFoldingRanges(
+//     document: vscode.TextDocument,
+//     context: vscode.FoldingContext,
+//     token: vscode.CancellationToken
+//   ): Promise<vscode.FoldingRange[]> {
+//     console.log("FOLDING")
+//     const cachedVersion = FoldingRangeProvider.versionCache.get(document.uri.toString());
+//     if (cachedVersion === document.version) {
+//       return FoldingRangeProvider.foldingCache.get(document.uri.toString()) || [];
+//     }
+//     let ranges: vscode.FoldingRange[] = [];
+
+//     const text = document.getText();
+//     const config = {
+//         maxLength: 5000000,
+//         maxRenderingTimeout: 10000,
+//         maxParsingTimeout: 7000,
+//         maxParsingDepth: 30,
+//         extensionPath: this.context.extensionUri.fsPath
+//     };
+//     const controller = new AbortController();
+//     const { result, error, errorCode } = await parse(this.context, { text, config, signal: controller.signal })
+//     if (error) {
+//       return ranges;
+//     }
+
+//     const headings: IHeading[] = result.data.headings
+
+//     for (let index = 0; index < headings.length; index++) {
+//       const heading = headings[index];
+//       const nextHeading = headings[index + 1];
+
+//       const start = heading.line - 1;
+//       let end = -1;
+
+//       if (nextHeading) {
+//         end = nextHeading.line - 2;
+//       } else {
+//         end = document.lineCount;
+//       }
+//       ranges.push(new vscode.FoldingRange(start, end))
+//     }
+
+//     FoldingRangeProvider.foldingCache.set(document.uri.toString(), ranges)
+//     FoldingRangeProvider.versionCache.set(document.uri.toString(), document.version)
+
+//     return ranges;
+//   }
+// }
 // FIXME: Code to sort paragraph
 const sortParagraph = async (context: vscode.ExtensionContext) => {
   const editor = vscode.window.activeTextEditor;
