@@ -457,7 +457,7 @@ class DocumentSymbolProvider implements vscode.DocumentSymbolProvider {
     this.context = context;
   }
 
-  public provideDocumentSymbols(document: vscode.TextDocument): Thenable<TreeSymbol[]> {
+  public provideDocumentSymbols(document: vscode.TextDocument, token: vscode.CancellationToken): Thenable<TreeSymbol[]> {
     return new Promise(async (resolve, reject) => {
       const text = document.getText();
       const config = {
@@ -474,6 +474,8 @@ class DocumentSymbolProvider implements vscode.DocumentSymbolProvider {
         resolve([])
         return;
       }
+
+      token.onCancellationRequested(() => controller.abort())
 
       const symbols: TreeSymbol[] = [];
       let curHeadings: [IHeading, TreeSymbol][] = [];
@@ -617,7 +619,9 @@ class DocumentSymbolProvider implements vscode.DocumentSymbolProvider {
 const sortParagraph = async (context: vscode.ExtensionContext) => {
   const editor = vscode.window.activeTextEditor;
   const symbolProvider = new DocumentSymbolProvider(context);
-  const symbolsProvided = await symbolProvider.provideDocumentSymbols(vscode.window.activeTextEditor.document);
+
+  const cts = new vscode.CancellationTokenSource();
+  const symbolsProvided = await symbolProvider.provideDocumentSymbols(vscode.window.activeTextEditor.document, cts.token);
   let symbols!: ParagraphTreeSymbol[];
   let isDocumentPerfect = true;
   let imperfectReason = "";
