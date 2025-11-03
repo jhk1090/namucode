@@ -61,6 +61,7 @@ interface IConfig {
     maxLength: number;
     maxRenderingTimeout: number;
     maxParsingTimeout: number;
+    onlyHeading?: boolean;
 }
 
 interface IParseParams {

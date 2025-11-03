@@ -77,6 +77,8 @@ const nestedRegex = (openRegex, closeRegex, allowNewline = false, openCheckRegex
                     const content = str.slice(0, closeIndex + closeMatch[0].length);
                     if(!allowNewline && content.replace(LiteralRegex, '').includes('\n'))
                         return null;
+                    if(HeadingRegex.test(content))
+                        return null;
                     return [content];
                 }
 
@@ -216,9 +218,10 @@ const Text = createToken({
     pattern: /[^\\'\r\n_\[\]~\-^,|{#]+|['\r\n_\[\]~\-^,|{#]/
 });
 
+const HeadingRegex = /^(={1,6})(#)? +(.+?) +\2\1$/m;
 const Heading = createToken({
     name: 'Heading',
-    ...fullLineRegex(/^(={1,6})(#)? +(.+?) +\2\1$/m)
+    ...fullLineRegex(HeadingRegex)
 });
 const Hr = createToken({
     name: 'Hr',
@@ -265,6 +268,10 @@ const TableRow = createToken({
             let result = LineRegex.exec(str)[0];
             if(result.endsWith('\n')) result = result.slice(0, -1);
             else if(!result) result = null;
+
+            if(result != null && HeadingRegex.test(result))
+                result = null;
+
             if(result != null) {
                 const openOrCloses = (result.match(OpenOrClosesRegex) || []);
                 for(let match of openOrCloses) {
@@ -345,7 +352,7 @@ const Italic = createToken({
     name: 'Italic',
     // pattern: /''([\s\S]+?)''/,
     // line_breaks: true
-    ...inlineRegex(/''/),
+    ...inlineRegex(/''(?!')/, /''/),
     start_chars_hint: [`'`]
 });
 const Strike = createToken({
@@ -387,7 +394,7 @@ const Sub = createToken({
 });
 const ScaleText = createToken({
     name: 'ScaleText',
-    ...nestedRegex(/{{{[+-][1-5] /, /}}}/, true, /{{{/),
+    ...nestedRegex(/{{{[+-][1-5][\n ]/, /}}}/, true, /{{{/),
     start_chars_hint: ['{']
 });
 const WikiSyntax = createToken({
@@ -1161,7 +1168,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             const tok = $.CONSUME(Literal);
             const text = tok.image.slice(3, -3);
 
-            const splittedText = text.split(' ');
+            const splittedText = text.split(/[\n ]/);
             if(text.startsWith('#') && splittedText.length > 1) {
                 const colorParams = splittedText[0].split(',');
 
@@ -1505,7 +1512,7 @@ const parseBlock = (text, noTopParagraph = false, noLineStart = false) => {
 
 const parser = new NamumarkParser();
 
-module.exports = (text, { tokens = null, editorComment = false, thread = false, noTopParagraph = false, maxParsingDepth = null } = {}) => {
+module.exports = (text, { tokens = null, editorComment = false, thread = false, noTopParagraph = false, maxParsingDepth = null, onlyHeading = null } = {}) => {
     if (maxParsingDepth) {
         MAXIMUM_DEPTH = maxParsingDepth
     }
@@ -1547,6 +1554,11 @@ module.exports = (text, { tokens = null, editorComment = false, thread = false, 
 
         // console.timeEnd('tokenize');
     }
+
+    if (onlyHeading) {
+        tokens = tokens.filter(token => token.tokenType.name == "Heading")
+    }
+
     parser.noTopParagraph = noTopParagraph;
     parser.input = tokens ?? [];
     // console.time('cst');

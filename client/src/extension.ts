@@ -382,28 +382,10 @@ export async function activate(context: ExtensionContext) {
   const symbolProvider = new DocumentSymbolProvider(context);
   vscode.languages.registerDocumentSymbolProvider("namu", symbolProvider);
 
-  // vscode.languages.registerFoldingRangeProvider(
-  //   "namu",
-  //   new FoldingRangeProvider(context)
-  // );
-
-  // vscode.workspace.onDidDeleteFiles(e => {
-  //   e.files.forEach(file => {
-  //     if (path.extname(file.fsPath) === "namu") {
-  //       FoldingRangeProvider.foldingCache.delete(file.toString())
-  //       FoldingRangeProvider.versionCache.delete(file.toString())
-  //     }
-  //   })
-  // })
-
-  // vscode.workspace.onDidRenameFiles(e => {
-  //   e.files.forEach(({ oldUri, newUri }) => {
-  //     if (path.extname(oldUri.fsPath) === "namu" && path.extname(newUri.fsPath) === "namu") {
-  //       FoldingRangeProvider.foldingCache.delete(oldUri.toString())
-  //       FoldingRangeProvider.versionCache.delete(oldUri.toString())
-  //     }
-  //   })
-  // })
+  vscode.languages.registerFoldingRangeProvider(
+    "namu",
+    new FoldingRangeProvider(context)
+  );
 
   // Code to connect to sever
   const serverModule = context.asAbsolutePath(path.join("dist", "server.js"));
@@ -483,6 +465,7 @@ class DocumentSymbolProvider implements vscode.DocumentSymbolProvider {
           maxRenderingTimeout: 10000,
           maxParsingTimeout: 7000,
           maxParsingDepth: 30,
+          onlyHeading: true,
           extensionPath: this.context.extensionUri.fsPath
       };
       const controller = new AbortController();
@@ -555,61 +538,63 @@ class DocumentSymbolProvider implements vscode.DocumentSymbolProvider {
 }
 
 
-// class FoldingRangeProvider implements vscode.FoldingRangeProvider {
-//   static foldingCache = new Map<string, vscode.FoldingRange[]>();
-//   static versionCache = new Map<string, number>();
+class FoldingRangeProvider implements vscode.FoldingRangeProvider {
+  static foldingCache = new Map<string, vscode.FoldingRange[]>();
+  static versionCache = new Map<string, number>();
 
-//   constructor(private context: ExtensionContext) {}
+  constructor(private context: ExtensionContext) {}
 
-//   async provideFoldingRanges(
-//     document: vscode.TextDocument,
-//     context: vscode.FoldingContext,
-//     token: vscode.CancellationToken
-//   ): Promise<vscode.FoldingRange[]> {
-//     console.log("FOLDING")
-//     const cachedVersion = FoldingRangeProvider.versionCache.get(document.uri.toString());
-//     if (cachedVersion === document.version) {
-//       return FoldingRangeProvider.foldingCache.get(document.uri.toString()) || [];
-//     }
-//     let ranges: vscode.FoldingRange[] = [];
+  async provideFoldingRanges(
+    document: vscode.TextDocument,
+    context: vscode.FoldingContext,
+    token: vscode.CancellationToken
+  ): Promise<vscode.FoldingRange[]> {
+    console.log("FOLDING")
+    const cachedVersion = FoldingRangeProvider.versionCache.get(document.uri.toString());
+    if (cachedVersion === document.version) {
+      return FoldingRangeProvider.foldingCache.get(document.uri.toString()) || [];
+    }
+    let ranges: vscode.FoldingRange[] = [];
 
-//     const text = document.getText();
-//     const config = {
-//         maxLength: 5000000,
-//         maxRenderingTimeout: 10000,
-//         maxParsingTimeout: 7000,
-//         maxParsingDepth: 30,
-//         extensionPath: this.context.extensionUri.fsPath
-//     };
-//     const controller = new AbortController();
-//     const { result, error, errorCode } = await parse(this.context, { text, config, signal: controller.signal })
-//     if (error) {
-//       return ranges;
-//     }
+    const text = document.getText();
+    const config = {
+        maxLength: 5000000,
+        maxRenderingTimeout: 10000,
+        maxParsingTimeout: 7000,
+        maxParsingDepth: 30,
+        extensionPath: this.context.extensionUri.fsPath,
+        onlyHeading: true
+    };
+    const controller = new AbortController();
+    const { result, error, errorCode } = await parse(this.context, { text, config, signal: controller.signal })
+    if (error) {
+      return ranges;
+    }
 
-//     const headings: IHeading[] = result.data.headings
+    const headings: IHeading[] = result.data.headings
 
-//     for (let index = 0; index < headings.length; index++) {
-//       const heading = headings[index];
-//       const nextHeading = headings[index + 1];
+    for (let index = 0; index < headings.length; index++) {
+      const heading = headings[index];
+      const nextHeading = headings[index + 1];
 
-//       const start = heading.line - 1;
-//       let end = -1;
+      const start = heading.line - 1;
+      let end = -1;
 
-//       if (nextHeading) {
-//         end = nextHeading.line - 2;
-//       } else {
-//         end = document.lineCount;
-//       }
-//       ranges.push(new vscode.FoldingRange(start, end))
-//     }
+      if (nextHeading) {
+        end = nextHeading.line - 2;
+      } else {
+        end = document.lineCount - 1;
+      }
+      ranges.push(new vscode.FoldingRange(start, end))
+    }
 
-//     FoldingRangeProvider.foldingCache.set(document.uri.toString(), ranges)
-//     FoldingRangeProvider.versionCache.set(document.uri.toString(), document.version)
+    FoldingRangeProvider.foldingCache.set(document.uri.toString(), ranges)
+    FoldingRangeProvider.versionCache.set(document.uri.toString(), document.version)
 
-//     return ranges;
-//   }
-// }
+    return ranges;
+  }
+}
+
 // FIXME: Code to sort paragraph
 const sortParagraph = async (context: vscode.ExtensionContext) => {
   const editor = vscode.window.activeTextEditor;
