@@ -4,7 +4,7 @@ const {
 } = require('validate-color');
 
 const utils = require('./utils');
-const {AllowedLanguages} = require('./utils');
+const { AllowedLanguages } = require('./utils');
 
 let MAXIMUM_DEPTH = 30;
 
@@ -41,7 +41,13 @@ const fullLineRegex = (regex, { laterRegex } = {}) => {
     });
 }
 
-const nestedRegex = (openRegex, closeRegex, allowNewline = false, openCheckRegex = null, closeCheckRegex = null) => {
+const nestedRegex = (openRegex, closeRegex, {
+    allowNewline = false,
+    openCheckRegex = null,
+    closeCheckRegex = null,
+    breakByHeading = true,
+    postCheck = null
+} = {}) => {
     openCheckRegex ??= openRegex;
     closeCheckRegex ??= closeRegex;
     openRegex = new RegExp('^' + openRegex.source, 'i');
@@ -77,9 +83,18 @@ const nestedRegex = (openRegex, closeRegex, allowNewline = false, openCheckRegex
                     const content = str.slice(0, closeIndex + closeMatch[0].length);
                     if(!allowNewline && content.replace(LiteralRegex, '').includes('\n'))
                         return null;
-                    if(HeadingRegex.test(content))
+                    
+                    const result = [content];
+                    const payload = result.payload = {};
+                    if(postCheck && !postCheck(content, { payload, startOffset }))
                         return null;
-                    return [content];
+
+                    if(breakByHeading && HeadingRegex.test(content)) {
+                        Store.noLiteralPos.push(startOffset);
+                        return null;
+                    }
+
+                    return result;
                 }
 
                 tokIndex = (
@@ -394,17 +409,27 @@ const Sub = createToken({
 });
 const ScaleText = createToken({
     name: 'ScaleText',
-    ...nestedRegex(/{{{[+-][1-5][\n ]/, /}}}/, true, /{{{/),
+    ...nestedRegex(/{{{[+-][1-5][\n ]/, /}}}/, {
+        allowNewline: true,
+        openCheckRegex: /{{{/
+    }),
     start_chars_hint: ['{']
 });
 const WikiSyntax = createToken({
     name: 'WikiSyntax',
-    ...nestedRegex(/{{{#!wiki(\s)+?/, /}}}/, true, /{{{/),
+    ...nestedRegex(/{{{#!wiki(\s)+?/, /}}}/, {
+        allowNewline: true,
+        openCheckRegex: /{{{/
+    }),
     start_chars_hint: ['{']
 });
 const SyntaxSyntax = createToken({
     name: 'SyntaxSyntax',
-    ...nestedRegex(new RegExp(`{{{#!syntax (${utils.AllowedLanguages.join('|')})`), /}}}/, true, /{{{/),
+    ...nestedRegex(new RegExp(`{{{#!syntax (${utils.AllowedLanguages.join('|')})`), /}}}/, {
+        allowNewline: true,
+        openCheckRegex: /{{{/,
+        breakByHeading: false
+    }),
     start_chars_hint: ['{']
 });
 const HtmlRegex = /{{{#!html([\s\S]*?)}}}/y;
@@ -432,17 +457,69 @@ const CommentNumber = createToken({
 });
 const Folding = createToken({
     name: 'Folding',
-    ...nestedRegex(/{{{#!folding(\s)+?/, /}}}/, true, /{{{/),
+    ...nestedRegex(/{{{#!folding(\s)+?/, /}}}/, {
+        allowNewline: true,
+        openCheckRegex: /{{{/
+    }),
     start_chars_hint: ['{']
 });
 const IfSyntax = createToken({
     name: 'IfSyntax',
-    ...nestedRegex(/{{{#!if(\s)+?/, /}}}/, true, /{{{/),
+    ...nestedRegex(/{{{#!if(\s)+?/, /}}}/, {
+        allowNewline: true,
+        openCheckRegex: /{{{/
+    }),
     start_chars_hint: ['{']
+});
+const ColorText = createToken({
+    name: 'ColorText',
+    ...nestedRegex(/{{{#/, /}}}/, {
+        allowNewline: true,
+        openCheckRegex: /{{{/,
+        postCheck: (match, { payload }) => {
+            const text = match.slice(3, -3);
+            const splittedText = text.split(/[\n ]/);
+            if(splittedText.length <= 1) return null;
+
+            const colorParams = splittedText[0].split(',');
+
+            let color;
+            let darkColor;
+
+            if(validateHTMLColorHex(colorParams[0]))
+                color = colorParams[0];
+            else if(utils.validateHTMLColorName(colorParams[0].slice(1)))
+                color = colorParams[0].slice(1);
+
+            if(!color) return null;
+
+            if(!colorParams[1] || colorParams[1].startsWith('#')) {
+                if(colorParams[1]) {
+                    if(validateHTMLColorHex(colorParams[1]))
+                        darkColor = colorParams[1];
+                    else if(utils.validateHTMLColorName(colorParams[1].slice(1)))
+                        darkColor = colorParams[1].slice(1);
+                }
+            }
+
+            if(colorParams[1] && !darkColor) return null;
+
+            payload.content = splittedText.slice(1).join(' ');
+            payload.color = color;
+            payload.darkColor = darkColor;
+            return true;
+        }
+    })
 });
 const Literal = createToken({
     name: 'Literal',
-    ...nestedRegex(/{{{/, /}}}/, true),
+    ...nestedRegex(/{{{/, /}}}/, {
+        allowNewline: true,
+        breakByHeading: false,
+        postCheck: (content, { startOffset }) => {
+            return !Store.noLiteralPos.includes(startOffset);
+        }
+    }),
     start_chars_hint: ['{']
 });
 const LegacyMath = createToken({
@@ -550,6 +627,7 @@ const inlineTokens = [
     CommentNumber,
     Folding,
     IfSyntax,
+    ColorText,
     Literal,
     // Comment,
     Bold,
@@ -624,7 +702,8 @@ let Store = {
     //     values: [],
     //     list: []
     // },
-    commentLines: []
+    commentLines: [],
+    noLiteralPos: []
 }
 const originalStore = { ...Store };
 
@@ -1015,6 +1094,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                         { ALT: () => $.SUBRULE($.commentNumber) },
                         { ALT: () => $.SUBRULE($.folding) },
                         { ALT: () => $.SUBRULE($.ifSyntax) },
+                        { ALT: () => $.SUBRULE($.colorText) },
                         { ALT: () => $.SUBRULE($.literal) },
                         { ALT: () => $.SUBRULE($.categoryWithNewline) },
                         { ALT: () => $.SUBRULE($.link) },
@@ -1164,44 +1244,24 @@ class NamumarkParser extends EmbeddedActionsParser {
             }
         });
 
+        $.RULE('colorText', () => {
+            const tok = $.CONSUME(ColorText);
+            let { content, color, darkColor } = tok.payload || {};
+            $.ACTION(() => {
+                content = parseBlock(content, true);
+            });
+
+            return {
+                type: 'colorText',
+                color,
+                darkColor,
+                content
+            }
+        });
+
         $.RULE('literal', () => {
             const tok = $.CONSUME(Literal);
             const text = tok.image.slice(3, -3);
-
-            const splittedText = text.split(/[\n ]/);
-            if(text.startsWith('#') && splittedText.length > 1) {
-                const colorParams = splittedText[0].split(',');
-
-                let color;
-                let darkColor;
-
-                if(validateHTMLColorHex(colorParams[0]))
-                    color = colorParams[0];
-                else if(utils.validateHTMLColorName(colorParams[0].slice(1)))
-                    color = colorParams[0].slice(1);
-                if(color && (!colorParams[1] || colorParams[1].startsWith('#'))) {
-                    if(colorParams[1]) {
-                        if(validateHTMLColorHex(colorParams[1]))
-                            darkColor = colorParams[1];
-                        else if(utils.validateHTMLColorName(colorParams[1].slice(1)))
-                            darkColor = colorParams[1].slice(1);
-                    }
-
-                    if(!colorParams[1] || darkColor) {
-                        let content = splittedText.slice(1).join(' ');
-                        $.ACTION(() => {
-                            content = parseBlock(content, true);
-                        });
-
-                        return {
-                            type: 'colorText',
-                            color,
-                            darkColor,
-                            content
-                        }
-                    }
-                }
-            }
 
             return {
                 type: 'literal',
