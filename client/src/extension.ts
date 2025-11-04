@@ -452,12 +452,42 @@ interface IHeading {
 }
 
 class DocumentSymbolProvider implements vscode.DocumentSymbolProvider {
+  static cache = new Map<string, { version: number; promise: Promise<TreeSymbol[]> }>();
   private context: vscode.ExtensionContext
   constructor(context: vscode.ExtensionContext) {
     this.context = context;
   }
+  
+  public async provideDocumentSymbols(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<TreeSymbol[]> {
+    const key = document.uri.toString();
+    const version = document.version;
 
-  public provideDocumentSymbols(document: vscode.TextDocument, token: vscode.CancellationToken): Thenable<TreeSymbol[]> {
+    const cached = DocumentSymbolProvider.cache.get(key);
+    if (cached && cached.version === version) {
+      console.log("♻️ Promise 재활용: ", decodeURIComponent(path.basename(key)));
+      return cached.promise;
+    }
+
+    console.log("⚙️ Promise 생성: ", decodeURIComponent(path.basename(key)), "v", version);
+    const promise = this.createSymbolPromise(document, token);
+
+    DocumentSymbolProvider.cache.set(key, { version, promise });
+
+    try {
+      const result = await promise;
+      return result;
+    } finally {
+      if (token.isCancellationRequested) {
+        console.log("❌ 요청 취소: ", decodeURIComponent(path.basename(key)));
+        DocumentSymbolProvider.cache.delete(key);
+      }
+    }
+  }
+
+  private async createSymbolPromise(
+    document: vscode.TextDocument,
+    token: vscode.CancellationToken
+  ): Promise<TreeSymbol[]> {
     return new Promise(async (resolve, reject) => {
       const text = document.getText();
       const config = {
@@ -469,11 +499,14 @@ class DocumentSymbolProvider implements vscode.DocumentSymbolProvider {
           extensionPath: this.context.extensionUri.fsPath
       };
       const controller = new AbortController();
+      // let parseStart = performance.now()
       const { result, error, errorCode } = await parse(this.context, { text, config, signal: controller.signal })
       if (error) {
         resolve([])
         return;
       }
+      // let parseEnd = performance.now()
+      // console.log("📌 파싱 중...", decodeURIComponent(path.basename(document.uri.toString())), "v", document.version, "(time: ", (parseEnd - parseStart).toFixed(2), "ms)")
 
       token.onCancellationRequested(() => controller.abort())
 

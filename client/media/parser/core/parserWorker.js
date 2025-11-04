@@ -683,6 +683,21 @@ const tableRowLexer = new Lexer([
     ...inlineTokens
 ]);
 
+const onlyHeadingLexer = new Lexer([
+    ...importantTokens,
+    Newline,
+    Heading,
+    ScaleText,
+    WikiSyntax,
+    SyntaxSyntax,
+    HtmlSyntax,
+    CommentNumber,
+    Folding,
+    IfSyntax,
+    ColorText,
+    Literal
+])
+
 const instances = [];
 let currDepth = 0;
 
@@ -1584,6 +1599,11 @@ module.exports = (text, { tokens = null, editorComment = false, thread = false, 
         thread
     }
 
+    if (onlyHeading) {
+        const lexed = onlyHeadingLexer.tokenize(text)
+        tokens = lexed.tokens.filter(token => token.tokenType.name == "Heading")
+    }
+
     if(!tokens && text) {
         // console.time('tokenize');
         const preLexed = editorComment ? null : inlineLexer.tokenize(text);
@@ -1613,10 +1633,6 @@ module.exports = (text, { tokens = null, editorComment = false, thread = false, 
         tokens = lexed.tokens;
 
         // console.timeEnd('tokenize');
-    }
-
-    if (onlyHeading) {
-        tokens = tokens.filter(token => token.tokenType.name == "Heading")
     }
 
     parser.noTopParagraph = noTopParagraph;
