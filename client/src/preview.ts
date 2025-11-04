@@ -27,6 +27,7 @@ interface ICreateOrShowParams {
     extensionUri?: vscode.Uri;
     panelId: string;
     isRenderRetry?: boolean;
+    isEditorComment?: boolean;
 }
 
 export class MarkPreview {
@@ -47,13 +48,15 @@ export class MarkPreview {
     private readonly _extensionUri: vscode.Uri;
     private _disposables: vscode.Disposable[] = [];
     private _isRenderRetry: boolean;
+    private _isEditorComment: boolean;
     private _workerTerminator: AbortController;
 
-    public static createOrShow({context, extensionUri, panelId, isRenderRetry}: ICreateOrShowParams) {
+    public static createOrShow({context, extensionUri, panelId, isRenderRetry, isEditorComment}: ICreateOrShowParams) {
         // If we already have a panel, show it.
         if (MarkPreview.currentPanels[panelId]) {
             if (isRenderRetry) {
                 MarkPreview.currentPanels[panelId]._isRenderRetry = true;
+                MarkPreview.currentPanels[panelId]._isEditorComment = isEditorComment
                 MarkPreview.currentPanels[panelId]._update()
                 return;
             }
@@ -102,6 +105,7 @@ export class MarkPreview {
             }
         };
         this._isRenderRetry = false;
+        this._isEditorComment = false;
         this._workerTerminator = new AbortController()
 
         console.log(path.basename(panelId), "just updated!");
@@ -300,7 +304,8 @@ export class MarkPreview {
                 maxRenderingTimeout,
                 maxParsingTimeout,
                 maxParsingDepth,
-                extensionPath: this._extensionUri.fsPath
+                extensionPath: this._extensionUri.fsPath,
+                isEditorComment: this._isEditorComment
             }
         }
 
@@ -447,6 +452,7 @@ export class MarkPreview {
                     vscode.commands.executeCommand("namucode.preview")
                 }
             }
+            this._isEditorComment = false
         })()
     }
 }

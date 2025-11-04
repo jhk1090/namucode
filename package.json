@@ -125,6 +125,12 @@
                 "title": "틀 매개변수 편집기 열기",
                 "category": "나무코드",
                 "icon": "$(wand)"
+            },
+            {
+                "command": "namucode.previewEditorComment",
+                "title": "고정 주석 미리보기",
+                "category": "나무코드",
+                "icon": "$(book)"
             }
         ],
         "menus": {
@@ -158,11 +164,16 @@
                     "command": "namucode.openIncludeParameterEditor",
                     "when": "activeWebviewPanelId =~ /namucode-webview-/",
                     "group": "navigation"
+                },
+                {
+                    "command": "namucode.previewEditorComment",
+                    "when": "activeWebviewPanelId =~ /namucode-webview-/",
+                    "group": "navigation"
                 }
             ],
             "view/title": [
                 {
-                    "command": "namucode.openIncludeParameterEditorGuideline",
+                    "command": "namucode.previewEditorComment",
                     "when": "view == includeParameterEditor",
                     "group": "navigation"
                 }

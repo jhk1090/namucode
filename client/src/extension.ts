@@ -158,7 +158,7 @@ export async function activate(context: ExtensionContext) {
     vscode.env.openExternal(vscode.Uri.parse("https://github.com/jhk1090/namucode/blob/main/docs/preview.md#틀-매개변수-편집기"));
   });
 
-  const preview = vscode.commands.registerCommand("namucode.preview", async ({ retry = false }) => {
+  const preview = vscode.commands.registerCommand("namucode.preview", async ({ retry = false, editorComment = false }) => {
     const editor = vscode.window.activeTextEditor;
 
     if (retry) {
@@ -166,7 +166,7 @@ export async function activate(context: ExtensionContext) {
         vscode.window.showWarningMessage('현재 열려있는 미리보기 탭이 없습니다.');
         return;
       }
-      MarkPreview.createOrShow({ context, panelId: MarkPreview.currentActivePanelId, isRenderRetry: retry });
+      MarkPreview.createOrShow({ context, panelId: MarkPreview.currentActivePanelId, isRenderRetry: retry, isEditorComment: editorComment });
       return;
     }
 
@@ -375,9 +375,13 @@ export async function activate(context: ExtensionContext) {
     vscode.commands.executeCommand('namucode.preview', { retry: true });
   });
 
+  const previewEditorComment = vscode.commands.registerCommand("namucode.previewEditorComment", () => {
+    vscode.commands.executeCommand('namucode.preview', { retry: true, editorComment: true });
+  });
+
   const sort = vscode.commands.registerCommand("namucode.paragraphSort", async () => { await sortParagraph(context) });
 
-  context.subscriptions.push(preview, retryPreview, sort);
+  context.subscriptions.push(preview, retryPreview, previewEditorComment, sort);
 
   const symbolProvider = new DocumentSymbolProvider(context);
   vscode.languages.registerDocumentSymbolProvider("namu", symbolProvider);

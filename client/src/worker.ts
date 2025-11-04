@@ -62,6 +62,7 @@ interface IConfig {
     maxRenderingTimeout: number;
     maxParsingTimeout: number;
     onlyHeading?: boolean;
+    isEditorComment?: boolean;
 }
 
 interface IParseParams {

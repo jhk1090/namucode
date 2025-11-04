@@ -12,15 +12,11 @@
 
 ## Soon
 
-- TODO: 접기 구현
 - View docs: 문법 도움말 페이지로 연결
 - Snippet 더 추가 (표, 기타 매크로, wiki-style 단축어 등)
 - 표, 파일 매개변수 자동 완성
 - 다양한 Code Actions 지원
 - key.tmlanguage.json의 name을 모두 TextMate Grammar 컨벤션에 맞게 수정
-
-- Outline에 쓰인 Parser도 따로 설정 가능하게 수정
-- 고정주석 따로 미리보기로 띄우기
 
 ## Undecided
 
