@@ -478,7 +478,9 @@ const ColorText = createToken({
         openCheckRegex: /{{{/,
         postCheck: (match, { payload }) => {
             const text = match.slice(3, -3);
-            const splittedText = text.split(/[\n ]/);
+            const splitMatch = text.match(/[\n ]/);
+            if(!splitMatch) return null;
+            const splittedText = [text.slice(0, splitMatch.index), text.slice(splitMatch.index + 1)];
             if(splittedText.length <= 1) return null;
 
             const colorParams = splittedText[0].split(',');
@@ -504,7 +506,7 @@ const ColorText = createToken({
 
             if(colorParams[1] && !darkColor) return null;
 
-            payload.content = splittedText.slice(1).join(' ');
+            payload.content = splittedText[1];
             payload.color = color;
             payload.darkColor = darkColor;
             return true;
@@ -530,10 +532,18 @@ const Link = createToken({
     name: 'Link',
     // pattern: /\[\[.+?]]|\[\[.*\|[\s\S]+?]]/,
     // line_breaks: true
-    ...nestedRegex(/\[\[/, /]]/, true, /\[/, /\]/),
+    ...nestedRegex(/\[\[/, /]]/, {
+        allowNewline: true,
+        openCheckRegex: /\[/,
+        closeCheckRegex: /]/
+    }),
     start_chars_hint: ['[']
 });
-const categoryWithNewlineRegex = nestedRegex(/\[\[분류:/, /]]\n/, true, /\[/, /\]/);
+const categoryWithNewlineRegex = nestedRegex(/\[\[분류:/, /]]\n/, {
+    allowNewline: true,
+    openCheckRegex: /\[/,
+    closeCheckRegex: /]/
+});
 const CategoryWithNewline = createToken({
     name: 'CategoryWithNewline',
     pattern: (text, startOffset) => {
@@ -571,7 +581,9 @@ const Footnote = createToken({
     //     }
     // },
     // line_breaks: true
-    ...nestedRegex(/\[\*/, /]/, false, /\[/),
+    ...nestedRegex(/\[\*/, /]/, {
+        openCheckRegex: /\[/
+    }),
     start_chars_hint: ['[']
 });
 const MacroRegex = /\[[^\]]+?\([\s\S]*?\)]|\[\S+?]/y;
