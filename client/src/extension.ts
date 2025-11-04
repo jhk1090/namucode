@@ -382,10 +382,10 @@ export async function activate(context: ExtensionContext) {
   const symbolProvider = new DocumentSymbolProvider(context);
   vscode.languages.registerDocumentSymbolProvider("namu", symbolProvider);
 
-  // vscode.languages.registerFoldingRangeProvider(
-  //   "namu",
-  //   new FoldingRangeProvider(context)
-  // );
+  vscode.languages.registerFoldingRangeProvider(
+    "namu",
+    new FoldingRangeProvider(context)
+  );
 
   // Code to connect to sever
   const serverModule = context.asAbsolutePath(path.join("dist", "server.js"));
@@ -572,81 +572,49 @@ class DocumentSymbolProvider implements vscode.DocumentSymbolProvider {
   }
 }
 
-// interface IHeadingToken {
-//   startOffset: number;
-//   endOffset: number;
-// }
+function flattenSymbols(symbols: TreeSymbol[]): TreeSymbol[] {
+  const result: TreeSymbol[] = [];
 
-// function getLineNumberFromOffset(text, offset) {
-//     if (offset < 0 || offset > text.length) {
-//         return -1;
-//     }
+  for (const sym of symbols) {
+    result.push(sym);
+    if (sym.children?.length) {
+      result.push(...flattenSymbols(sym.children));
+    }
+  }
 
-//     const subText = text.substring(0, offset);
-//     const matches = subText.match(/\n/g);
-//     const lineNumber = (matches ? matches.length : 0) + 1;
+  return result;
+}
 
-//     return lineNumber;
-// }
+class FoldingRangeProvider implements vscode.FoldingRangeProvider {
+  constructor(private context: ExtensionContext) {}
 
-// class FoldingRangeProvider implements vscode.FoldingRangeProvider {
-//   static foldingCache = new Map<string, vscode.FoldingRange[]>();
-//   static versionCache = new Map<string, number>();
+  async provideFoldingRanges(document: vscode.TextDocument, context: vscode.FoldingContext, token: vscode.CancellationToken): Promise<vscode.FoldingRange[]> {
+    console.log("folding", decodeURIComponent(path.basename(document.uri.path)))
 
-//   constructor(private context: ExtensionContext) {}
+    const symbolProvider = new DocumentSymbolProvider(this.context);
+    const symbols = await symbolProvider.provideDocumentSymbols(document, token);
 
-//   async provideFoldingRanges(
-//     document: vscode.TextDocument,
-//     context: vscode.FoldingContext,
-//     token: vscode.CancellationToken
-//   ): Promise<vscode.FoldingRange[]> {
-//     console.log("FOLDING")
-//     const cachedVersion = FoldingRangeProvider.versionCache.get(document.uri.toString());
-//     if (cachedVersion === document.version) {
-//       return FoldingRangeProvider.foldingCache.get(document.uri.toString()) || [];
-//     }
-//     let ranges: vscode.FoldingRange[] = [];
+    const allSymbols = flattenSymbols(symbols);
+    const ranges = [];
 
-//     const text = document.getText();
-//     const textWithLF = text.replace(/\r\n/g, '\n');
+    for (let index = 0; index < allSymbols.length; index++) {
+      const symbol = allSymbols[index];
+      const nextSymbol = allSymbols[index + 1];
 
-//     const config = {
-//         maxLength: 5000000,
-//         maxRenderingTimeout: 10000,
-//         maxParsingTimeout: 7000,
-//         maxParsingDepth: 30,
-//         extensionPath: this.context.extensionUri.fsPath,
-//         onlyHeading: true,
-//         onlyHeadingTokens: true
-//     };
-//     const controller = new AbortController();
-//     const { result, error, errorCode } = await parse(this.context, { text, config, signal: controller.signal })
-//     if (error) {
-//       return ranges;
-//     }
-//     const headings: IHeadingToken[] = result.tokens
+      const start = symbol.range.start.line;
+      let end = -1;
 
-//     for (let index = 0; index < headings.length; index++) {
-//       const heading = headings[index];
-//       const nextHeading = headings[index + 1];
+      if (nextSymbol) {
+        end = nextSymbol.range.start.line - 1;
+      } else {
+        end = document.lineCount - 1;
+      }
+      ranges.push(new vscode.FoldingRange(start, end))
+    }
 
-//       const start = getLineNumberFromOffset(heading.startOffset, textWithLF);
-//       let end = -1;
-
-//       if (nextHeading) {
-//         end = getLineNumberFromOffset(nextHeading.startOffset - 1, textWithLF)
-//       } else {
-//         end = document.lineCount - 1;
-//       }
-//       ranges.push(new vscode.FoldingRange(start, end))
-//     }
-
-//     FoldingRangeProvider.foldingCache.set(document.uri.toString(), ranges)
-//     FoldingRangeProvider.versionCache.set(document.uri.toString(), document.version)
-
-//     return ranges;
-//   }
-// }
+    return ranges;
+  }
+}
 
 // FIXME: Code to sort paragraph
 const sortParagraph = async (context: vscode.ExtensionContext) => {
@@ -742,7 +710,7 @@ const sortParagraph = async (context: vscode.ExtensionContext) => {
         const childrenIndexed = indexTree(value.children);
         const childrenRangeStart = value.children[0].contentRange.start;
         const noChildrenContentRange = new vscode.Range(value.contentRange.start, editor.document.lineAt(childrenRangeStart.line - 1).range.end);
-        console.log([editor.document.getText(noChildrenContentRange)]);
+        // console.log([editor.document.getText(noChildrenContentRange)]);
         indexed.push(...[editor.document.getText(noChildrenContentRange).replaceAll("\r", ""), ...childrenIndexed]);
       } else {
         indexed.push(editor.document.getText(value.contentRange).replaceAll("\r", ""));
@@ -789,7 +757,7 @@ const paragraphLeveling = (type: Level) => {
       const paragraphRegex = /(^(={1,5})(#?) (.*) (\2)(\1)(?<returnChar>\r)?$)/;
       for (let i = 0; i < lines.length; i++) {
         const execResult = paragraphRegex.exec(lines[i]);
-        console.log(execResult);
+        // console.log(execResult);
         if (execResult !== null) {
           if (execResult.groups?.returnChar === "\r") {
             lines[i] = lines[i].replace("\r", "");
