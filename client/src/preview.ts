@@ -4,8 +4,8 @@ import { promises as fs } from "fs";
 import { ExtensionContext } from "vscode";
 import imageSize from "image-size";
 import { performance } from 'perf_hooks';
-import { RENDER_FAILED_HEAD, RENDER_LENGTH_ERROR_HEAD, RENDER_TIMEOUT_HEAD, render } from './worker';
 import { DocumentSymbolProvider } from './extension';
+const renderer = require("../media/parser/core/toHtmlWorker.js")
 
 export function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptions {
     return {
@@ -403,15 +403,19 @@ export class MarkPreview {
             const { namespace, title } = await getNamespaceAndTitle(currentFolder ? currentFolder.uri.fsPath : path.dirname(document.uri.fsPath), document.uri.fsPath)
             const includeData = this._context.workspaceState.get("includeParameterEditorInput") as { [key: string]: string } ?? null
 
-            let { html, categories, error, errorCode, errorMessage } = await render(this._context, { parsedResult,  document: { namespace, title }, workspaceDocuments, config, includeData, signal: this._workerTerminator.signal })
+            const timeout = setTimeout(() => {
+                this._workerTerminator.abort()
+            }, config.maxRenderingTimeout)
+            
+            let { html, categories, error, errorCode, errorMessage } = await RendererProvider.createRendererPromise(document, { parsedResult,  document: { namespace, title }, workspaceDocuments, config, includeData, signal: this._workerTerminator.signal })
+            
+            clearTimeout(timeout)
 
             if (error) {
                 if (errorCode === "aborted") {
-                    return
+                    html = `<div style="width: 100%; word-break: keep-all;"><h2>${RENDER_TIMEOUT_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>설정한 렌더링 대기 시간을 초과했거나, 중도 강제 종료되었기 때문입니다. 내용이 너무 크거나, 설정에서 렌더링 대기 시간을 너무 짧게 설정했을 수 있습니다.<br />또는 최초 실행했을 때 캐싱이 되지 않아 시간이 오래 걸릴 수도 있습니다. (이는 몇 번 재실행하면 해결됩니다.)</p><h3>어떻게 해결할 수 있나요?</h3><p>내용이 큰 경우, 이 탭의 위 네비게이션 바의 <b>미리보기 설정</b> 버튼을 누르고 설정을 열어 렌더링 대기 시간(Max Rendering Timeout)을 늘려보세요.</p></div>`
                 } else if (errorCode === "render_failed") {
                     html = `<div style="width: 100%; word-break: keep-all;"><h2>${RENDER_FAILED_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>파싱된 데이터를 HTML 코드로 바꾸는 렌더링을 하는 과정에서 오류가 발생했기 때문입니다.</p><h3>어떻게 해결할 수 있나요?</h3><p>아래 에러 코드를 <a href="https://github.com/jhk1090/namucode/issues">나무코드 이슈트래커</a>에 제보해주세요.<br /><br /><pre><code>${escapeHTML(errorMessage)}</code></pre></p></div>`
-                } else if (errorCode === "render_timeout") {
-                    html = `<div style="width: 100%; word-break: keep-all;"><h2>${RENDER_TIMEOUT_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>설정한 렌더링 대기 시간을 초과했기 때문입니다. 내용이 너무 크거나, 설정에서 렌더링 대기 시간을 너무 짧게 설정했을 수 있습니다.<br />또는 최초 실행했을 때 캐싱이 되지 않아 시간이 오래 걸릴 수도 있습니다. (이는 몇 번 재실행하면 해결됩니다.)</p><h3>어떻게 해결할 수 있나요?</h3><p>내용이 큰 경우, 이 탭의 위 네비게이션 바의 <b>미리보기 설정</b> 버튼을 누르고 설정을 열어 렌더링 대기 시간(Max Rendering Timeout)을 늘려보세요.</p></div>`
                 } else {
                     html = `<div style="width: 100%; word-break: keep-all;"><h2>${RENDER_LENGTH_ERROR_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>렌더링한 HTML 결과값이 표시하기에 너무 크다면 이런 문제가 발생합니다.</p><h3>어떻게 해결할 수 있나요?</h3><p>내용이 큰 경우, 이 탭의 위 네비게이션 바의 <b>미리보기 설정</b> 버튼을 누르고 설정을 열어 문서 최대 길이(Max Length)를 늘려보세요.</p></div>`
                 }
@@ -537,4 +541,86 @@ function escapeHTML(str) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+const RENDER_FAILED_HEAD = "문서 렌더링이 실패했습니다.";
+const RENDER_TIMEOUT_HEAD = "문서 렌더링이 중단되었습니다.";
+const RENDER_LENGTH_ERROR_HEAD = "문서 길이가 너무 깁니다.";
+
+interface IRendererParams {
+    parsedResult: any;
+    document: { namespace: string; title: string };
+    workspaceDocuments: any[];
+    config: { maxParsingDepth: number; extensionPath: string; isEditorComment: boolean; };
+    includeData: { [key: string]: string };
+    signal: AbortSignal;
+}
+
+interface IRendererReturn {
+    html: string;
+    categories: any[];
+    error: boolean;
+    errorCode?: "render_timeout" | "render_failed" | "render_too_long" | "aborted";
+    errorMessage?: string;
+}
+
+export class RendererProvider {
+    static cache = new Map<string, { version: number; params: { config: { maxParsingDepth: number;  extensionPath: string; isEditorComment: boolean; }, includeData: Record<string, string>; }; promise: Promise<any> }>();
+
+    static async createRendererPromise(document: vscode.TextDocument, params: IRendererParams): Promise<IRendererReturn> {
+        const key = document.uri.toString();
+        const version = document.version;
+
+        const cached = RendererProvider.cache.get(key);
+        if (
+            cached &&
+            cached.version === version &&
+            params.config.extensionPath === cached.params.config.extensionPath &&
+            JSON.stringify(params.includeData) === JSON.stringify(cached.params.includeData) &&
+            params.config.maxParsingDepth === cached.params.config.maxParsingDepth &&
+            params.config.isEditorComment === cached.params.config.isEditorComment
+        ) {
+            console.log("[Renderer] ♻️ Promise 재활용: ", decodeURIComponent(path.basename(key)));
+            return cached.promise;
+        }
+
+        const promise: Promise<IRendererReturn> = new Promise(async (resolve, reject) => {
+            let parseStart = performance.now();
+            let result!: IRendererReturn;
+            try {
+                result = await renderer([params.parsedResult, { document: params.document, workspaceDocuments: params.workspaceDocuments, config: params.config, includeData: params.includeData, signal: params.signal }])
+            } catch (err) {
+                const isTimeout = err.message == "Timeout";
+                const isTooLong = err.message == "render_too_long";
+                const isAborted = err.message == "Abort";
+                if (!isTimeout) console.error(err);
+
+                return resolve({
+                    html: "",
+                    categories: [],
+                    error: true,
+                    errorCode: isAborted ? "aborted" : isTimeout ? "render_timeout" : isTooLong ? "render_too_long" : "render_failed",
+                    errorMessage: err.stack,
+                });
+            }
+            
+            let parseEnd = performance.now();
+            console.log(
+                "[Renderer] 📌 렌더링 중...",
+                decodeURIComponent(path.basename(document.uri.toString())),
+                "v",
+                document.version,
+                "(time: ",
+                (parseEnd - parseStart).toFixed(2),
+                "ms)"
+            );
+
+            resolve(result);
+        });
+
+        console.log("[Renderer] ⚙️ Promise 생성: ", decodeURIComponent(path.basename(key)), "v", version);
+
+        RendererProvider.cache.set(key, { ...cached, version, promise, params });
+        return promise;
+    }
 }

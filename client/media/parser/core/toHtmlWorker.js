@@ -18,7 +18,11 @@ const topToHtml = module.exports = async parameter => {
   if(parameter[0]?.batch) return await Promise.all(parameter[0].batch.map(a => topToHtml(a)));
   
   const [parsed, options = {}] = parameter;
-  const { includeData = null, config = {}, document, workspaceDocuments } = options;
+  const { includeData = null, config = {}, document, workspaceDocuments, signal } = options;
+
+  if (signal.aborted) {
+    throw new Error("Abort")
+  }
   
   if (config.maxLength) {
     MAXIMUM_LENGTH = config.maxLength
@@ -210,6 +214,10 @@ const topToHtml = module.exports = async parameter => {
 
   let result = "";
   for (let obj of doc) {
+    if (signal.aborted) {
+      throw new Error("Abort")
+    }
+
     if (Store.error) break;
 
     if (Array.isArray(obj)) {

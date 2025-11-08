@@ -10,7 +10,6 @@ import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } f
 import { EXTENSION_NAME, getConfig } from "./config";
 import { LinkDefinitionProvider } from "./linkdef";
 import { MarkPreview, getWebviewOptions } from './preview';
-import { warmupWorker } from './worker';
 const parser = require("../media/parser/core/parser.js")
 
 let client: LanguageClient;
@@ -21,7 +20,6 @@ enum Level {
 }
 
 export async function activate(context: ExtensionContext) {
-  await warmupWorker(context);
   provideLink(context);
   
   vscode.commands.registerCommand("namucode.linkify", () => {
