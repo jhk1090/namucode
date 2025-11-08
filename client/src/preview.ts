@@ -220,24 +220,6 @@ export class MarkPreview {
     }
 
     private _getHtmlForWebview(webview: vscode.Webview, document: vscode.TextDocument) {
-        const resetStyleUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "dist/media/reset.css"));
-        const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "dist/media/script.js"));
-
-        const vueAppUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "dist/frontend/namucode-client-frontend.mjs"));
-
-        const styleUriList = [];
-        for (const css of ["default.css", "github-dark-dimmed.min.css", "github.min.css", "ionicons.min.css", "katex.min.css", "wiki.css", "wikiContent.css", "wikiCategory.css", "button.css"]) {
-            styleUriList.push(webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "dist/frontend/assets/css/" + css)));
-        }
-
-        const stylesheetFlatten = styleUriList
-            .map((v) => `<link href="${v}" rel="stylesheet" />`)
-            .map((v) => v.toString())
-            .join("\n");
-
-        // Use a nonce to only allow specific scripts to be run
-        const nonce = getNonce();
-
         const text = document.getText();
         if (this._panelPersist.content && this._panelPersist.content === text && !this._isRenderRetry) {
             switch (vscode.window.activeColorTheme.kind) {
@@ -254,34 +236,55 @@ export class MarkPreview {
         }
         this._isRenderRetry = false
 
-        webview.html = `
-    <!DOCTYPE html>
-		<html lang="en">
-		<head>
-				<meta charset="utf-8" />
+        if (webview.html === "") {
+            const resetStyleUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "dist/media/reset.css"));
+            const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "dist/media/script.js"));
 
-				<meta http-equiv="Content-Security-Policy" content="default-src 'none';
-						style-src ${webview.cspSource} 'unsafe-inline';
-						img-src ${webview.cspSource} https://i.ytimg.com data: 'unsafe-inline';
-                        font-src ${webview.cspSource} 'unsafe-inline';
-                        frame-src https://www.youtube.com https://*.nicovideo.jp;
-						script-src 'nonce-${nonce}';">
+            const vueAppUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "dist/frontend/namucode-client-frontend.mjs"));
 
-                <meta http-equiv="Permissions-Policy"
-                        content="fullscreen=(self), accelerometer=*, gyroscope=*, encrypted-media=*">
+            const styleUriList = [];
+            for (const css of ["default.css", "github-dark-dimmed.min.css", "github.min.css", "ionicons.min.css", "katex.min.css", "wiki.css", "wikiContent.css", "wikiCategory.css", "button.css"]) {
+                styleUriList.push(webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "dist/frontend/assets/css/" + css)));
+            }
 
-				<meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <link href="${resetStyleUri}" rel="stylesheet" />
-                ${stylesheetFlatten}
-				<title>Namucode Preview</title>
-		</head>
-		<body>
-				<div id="app"></div>
-				<script type="text/javascript" src="${vueAppUri}" nonce="${nonce}"></script>
-				<script type="text/javascript" src="${scriptUri}" nonce="${nonce}"></script>
-		</body>
-		</html>
-    `;
+            const stylesheetFlatten = styleUriList
+                .map((v) => `<link href="${v}" rel="stylesheet" />`)
+                .map((v) => v.toString())
+                .join("\n");
+
+            // Use a nonce to only allow specific scripts to be run
+            const nonce = getNonce();
+
+            webview.html = `
+        <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                    <meta charset="utf-8" />
+    
+                    <meta http-equiv="Content-Security-Policy" content="default-src 'none';
+                            style-src ${webview.cspSource} 'unsafe-inline';
+                            img-src ${webview.cspSource} https://i.ytimg.com data: 'unsafe-inline';
+                            font-src ${webview.cspSource} 'unsafe-inline';
+                            frame-src https://www.youtube.com https://*.nicovideo.jp;
+                            script-src 'nonce-${nonce}';">
+    
+                    <meta http-equiv="Permissions-Policy"
+                            content="fullscreen=(self), accelerometer=*, gyroscope=*, encrypted-media=*">
+    
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <link href="${resetStyleUri}" rel="stylesheet" />
+                    ${stylesheetFlatten}
+                    <title>Namucode Preview</title>
+            </head>
+            <body>
+                    <div id="app"></div>
+                    <script type="text/javascript" src="${vueAppUri}" nonce="${nonce}"></script>
+                    <script type="text/javascript" src="${scriptUri}" nonce="${nonce}"></script>
+            </body>
+            </html>
+        `;
+            webview.postMessage({ type: "updateContent", newContent: "<h2>미리보기를 준비중입니다. 잠시만 기다려주세요...</h2>", newCategories: [] });
+        }
 
         switch (vscode.window.activeColorTheme.kind) {
             case vscode.ColorThemeKind.Dark:
@@ -292,7 +295,6 @@ export class MarkPreview {
                 webview.postMessage({ type: "updateTheme", themeKind: "light" })
                 break;
         }
-        webview.postMessage({ type: "updateContent", newContent: `<div style="width: 100%; word-break: keep-all;"><h2>미리보기를 준비하는 중입니다.</h2><h3>파싱 중.. (1/3)</h3></div>`, newCategories: [] });
 
         const getConfig = () => {
             const workspaceConfig = vscode.workspace.getConfiguration("namucode.preview.parser");
@@ -319,22 +321,15 @@ export class MarkPreview {
         }
 
         const runParsing = async () => {
-            const startTime = performance.now();
             const config = getConfig()
 
             const provider = new DocumentSymbolProvider(this._context)
             const result = await provider.createParserPromise(document, { editorComment: config.isEditorComment, maxParsingDepth: config.maxParsingDepth })
-            let html = ""
 
-            const endTime = performance.now();
-            const duration = (endTime - startTime).toFixed(2)
-
-            html = `<div style="width: 100%; word-break: keep-all;"><h2>미리보기를 준비하는 중입니다.</h2><h3>작업 환경 리소스 불러오는 중.. (2/3)</h3><h3>파싱 중.. (완료! ${duration}ms)</h3></div>`
-
-            return { result, html, duration };
+            return result;
         }
 
-        const loadWorkspaceResources = async (currentFolder: vscode.WorkspaceFolder, parsingDuration: string) => {
+        const loadWorkspaceResources = async (currentFolder: vscode.WorkspaceFolder) => {
             const workspaceConfig = vscode.workspace.getConfiguration("namucode.preview.parser");
             const workspaceReference = workspaceConfig.get<boolean>("workspaceReference", true);
 
@@ -392,8 +387,7 @@ export class MarkPreview {
 
             const endTime = performance.now();
             const duration = (endTime - startTime).toFixed(2)
-
-            webview.postMessage({ type: "updateContent", newContent: `<div style="width: 100%; word-break: keep-all;"><h2>미리보기를 준비하는 중입니다.</h2><h3>렌더링 중.. (3/3)</h3><h3>작업 환경 리소스 불러오는 중.. (완료! ${duration}ms)</h3><h3>파싱 중.. (완료! ${parsingDuration}ms)</h3></div>`, newCategories: [] });
+            console.log(`[Workspace Resource] ▶️ ${duration}ms 걸림`)
 
             return workspaceDocuments
         }
@@ -404,20 +398,22 @@ export class MarkPreview {
             const includeData = this._context.workspaceState.get("includeParameterEditorInput") as { [key: string]: string } ?? null
 
             const timeout = setTimeout(() => {
+                console.log("Termination")
                 this._workerTerminator.abort()
             }, config.maxRenderingTimeout)
             
             let { html, categories, error, errorCode, errorMessage } = await RendererProvider.createRendererPromise(document, { parsedResult,  document: { namespace, title }, workspaceDocuments, config, includeData, signal: this._workerTerminator.signal })
-            
             clearTimeout(timeout)
 
             if (error) {
-                if (errorCode === "aborted") {
-                    html = `<div style="width: 100%; word-break: keep-all;"><h2>${RENDER_TIMEOUT_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>설정한 렌더링 대기 시간을 초과했거나, 중도 강제 종료되었기 때문입니다. 내용이 너무 크거나, 설정에서 렌더링 대기 시간을 너무 짧게 설정했을 수 있습니다.<br />또는 최초 실행했을 때 캐싱이 되지 않아 시간이 오래 걸릴 수도 있습니다. (이는 몇 번 재실행하면 해결됩니다.)</p><h3>어떻게 해결할 수 있나요?</h3><p>내용이 큰 경우, 이 탭의 위 네비게이션 바의 <b>미리보기 설정</b> 버튼을 누르고 설정을 열어 렌더링 대기 시간(Max Rendering Timeout)을 늘려보세요.</p></div>`
-                } else if (errorCode === "render_failed") {
-                    html = `<div style="width: 100%; word-break: keep-all;"><h2>${RENDER_FAILED_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>파싱된 데이터를 HTML 코드로 바꾸는 렌더링을 하는 과정에서 오류가 발생했기 때문입니다.</p><h3>어떻게 해결할 수 있나요?</h3><p>아래 에러 코드를 <a href="https://github.com/jhk1090/namucode/issues">나무코드 이슈트래커</a>에 제보해주세요.<br /><br /><pre><code>${escapeHTML(errorMessage)}</code></pre></p></div>`
-                } else {
-                    html = `<div style="width: 100%; word-break: keep-all;"><h2>${RENDER_LENGTH_ERROR_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>렌더링한 HTML 결과값이 표시하기에 너무 크다면 이런 문제가 발생합니다.</p><h3>어떻게 해결할 수 있나요?</h3><p>내용이 큰 경우, 이 탭의 위 네비게이션 바의 <b>미리보기 설정</b> 버튼을 누르고 설정을 열어 문서 최대 길이(Max Length)를 늘려보세요.</p></div>`
+                RendererProvider.removeRendererPromise(document)
+                const errorQuestion = await vscode.window.showErrorMessage(
+                    errorCode === "aborted" ? "렌더링에 실패했습니다: 렌더링이 중단되었습니다." : errorCode === "render_too_long" ? "렌더링에 실패했습니다: 문서가 너무 깁니다." : `렌더링에 실패했습니다: 예기치 않은 오류가 발생했습니다.\n${errorMessage}`, "제보하기", "재시도")
+                if (errorQuestion === "제보하기") {
+                    vscode.env.openExternal(vscode.Uri.parse("https://github.com/jhk1090/namucode/issues"));
+                }
+                if (errorQuestion === "재시도") {
+                    vscode.commands.executeCommand("namucode.retryPreview")
                 }
             }
 
@@ -427,11 +423,9 @@ export class MarkPreview {
 
         (async () => {
             try {
-                const { result: parsedResult, html, duration: parsingDuration } = await runParsing();
-                webview.postMessage({ type: "updateContent", newContent: html, newCategories: [] });
-
+                const parsedResult = await runParsing();
                 const currentFolder = vscode.workspace.getWorkspaceFolder(this._panelUri)
-                const workspaceDocuments = await loadWorkspaceResources(currentFolder, parsingDuration);
+                const workspaceDocuments = await loadWorkspaceResources(currentFolder);
 
                 runRendering(currentFolder, parsedResult, workspaceDocuments)
             } catch (error) {
@@ -622,5 +616,10 @@ export class RendererProvider {
 
         RendererProvider.cache.set(key, { ...cached, version, promise, params });
         return promise;
+    }
+
+    static removeRendererPromise(document: vscode.TextDocument) {
+        const key = document.uri.toString();
+        RendererProvider.cache.delete(key)
     }
 }

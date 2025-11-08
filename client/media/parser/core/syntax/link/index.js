@@ -38,7 +38,7 @@ module.exports = async (obj, options = {}) => {
         const slicedLink = link.slice(1);
         const isSpecialLink = slicedLink.startsWith('파일:') || slicedLink.startsWith('분류:');
 
-        if([].some(a => slicedLink.startsWith(a + ':'))) {
+        if(["파일", "분류"].some(a => slicedLink.startsWith(a + ':'))) {
             link = slicedLink;
             if(isSpecialLink && !obj.textExists) text = text.slice(1);
         }
@@ -171,7 +171,7 @@ module.exports = async (obj, options = {}) => {
     const parsedTitle = obj.textExists ? await toHtml(obj.parsedText, { disableImageLinkButton: true }) : utils.escapeHtml(text);
 
     const titleDocName = titleDocument ? mainUtils.doc_fulltitle(titleDocument) : null;
-    const html = `<a href="${link.startsWith('#') ? safeLink : config.internalLinkDomain + safeLink}" title="${link.startsWith('#') ? '' : utils.escapeHtml(titleDocName ?? link)}" class="${classList.join(' ')}" rel="${rel.join(' ')}"${parsedLink ? 'target="_blank"' : ''}>${parsedTitle}</a>`;
+    const html = `<a href="${link.startsWith('#') || !classList.includes("wiki-link-internal") ? safeLink : config.internalLinkDomain + safeLink}" title="${link.startsWith('#') ? '' : utils.escapeHtml(titleDocName ?? link)}" class="${classList.join(' ')}" rel="${rel.join(' ')}"${parsedLink ? 'target="_blank"' : ''}>${parsedTitle}</a>`;
 
     if(titleDocName
         && !parsedLink
