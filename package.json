@@ -490,6 +490,11 @@
                 "title": "Namucode",
                 "order": 1,
                 "properties": {
+                    "namucode.preview.parser.internalLinkDomain": {
+                        "type": "string",
+                        "default": "https://namu.wiki",
+                        "description": "미리보기에서 내부 링크가 걸릴 때 도메인 주소를 설정합니다. `[[나무코드]]`가 미리보기에서 표시된다면 `<도메인 주소>/w/나무코드`로 링크가 걸립니다."
+                    },
                     "namucode.parser.maxCharacter": {
                         "type": "number",
                         "default": 1500000,

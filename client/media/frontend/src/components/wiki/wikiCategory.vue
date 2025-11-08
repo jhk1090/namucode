@@ -4,7 +4,7 @@
     <ul>
       <template v-for="c in categories">
         <li :class="{ blur: c.blur }">
-          <a :class="{ 'not-exist': c.notExist }" :href="doc_action_link(c.document, 'w')">{{c.document}}</a>
+          <a :class="{ 'not-exist': c.notExist }" :href="c.domain + doc_action_link(c.document, 'w')">{{c.document}}</a>
         </li>
       </template>
     </ul>

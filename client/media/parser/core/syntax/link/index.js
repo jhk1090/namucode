@@ -4,7 +4,7 @@ const utils = require('../../utils');
 const mainUtils = require('../../mainUtil');
 
 module.exports = async (obj, options = {}) => {
-    const { document, Store, toHtml } = options;
+    const { document, Store, toHtml, config } = options;
 
     const docTitle = mainUtils.doc_fulltitle(document);
 
@@ -171,7 +171,7 @@ module.exports = async (obj, options = {}) => {
     const parsedTitle = obj.textExists ? await toHtml(obj.parsedText, { disableImageLinkButton: true }) : utils.escapeHtml(text);
 
     const titleDocName = titleDocument ? mainUtils.doc_fulltitle(titleDocument) : null;
-    const html = `<a href="${safeLink}" title="${link.startsWith('#') ? '' : utils.escapeHtml(titleDocName ?? link)}" class="${classList.join(' ')}" rel="${rel.join(' ')}"${parsedLink ? 'target="_blank"' : ''}>${parsedTitle}</a>`;
+    const html = `<a href="${link.startsWith('#') ? safeLink : config.internalLinkDomain + safeLink}" title="${link.startsWith('#') ? '' : utils.escapeHtml(titleDocName ?? link)}" class="${classList.join(' ')}" rel="${rel.join(' ')}"${parsedLink ? 'target="_blank"' : ''}>${parsedTitle}</a>`;
 
     if(titleDocName
         && !parsedLink

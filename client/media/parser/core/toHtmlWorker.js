@@ -178,6 +178,7 @@ const topToHtml = module.exports = async parameter => {
       for (let obj of Store.categories) {
           const cache = Store.workspaceDocuments.find((cache) => cache.namespace === "분류" && cache.title === obj.document);
           obj.notExist = cache === undefined;
+          obj.domain = config.internalLinkDomain;
       }
   }
 
@@ -373,7 +374,8 @@ const topToHtml = module.exports = async parameter => {
           toHtml,
           Store,
           includeData,
-          workspaceDocuments: Store.workspaceDocuments
+          workspaceDocuments: Store.workspaceDocuments,
+          config
         });
         break;
       case "macro":

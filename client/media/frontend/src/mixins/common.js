@@ -40,6 +40,11 @@ export default {
                 '\\'
             ];
 
+            // 이 함수는 분류에서만 사용
+            document = {
+                title: document,
+                namespace: "분류"
+            }
             const title = typeof document === 'string' ? document : this.doc_fulltitle(document);
             let str;
             if(specialUrls.includes(title) || route.startsWith('a/')) {

@@ -300,11 +300,13 @@ export class MarkPreview {
             const maxRenderingTimeout = workspaceConfig.get<number>("maxRenderingTimeout", 10) * 1000;
             const maxParsingTimeout = workspaceConfig.get<number>("maxParsingTimeout", 7) * 1000;
             const maxParsingDepth = workspaceConfig.get<number>("maxParsingDepth", 30);
+            const internalLinkDomain = workspaceConfig.get<string>("internalLinkDomain", "https://namu.wiki")
             return {
                 maxLength,
                 maxRenderingTimeout,
                 maxParsingTimeout,
                 maxParsingDepth,
+                internalLinkDomain,
                 extensionPath: this._extensionUri.fsPath,
                 isEditorComment: this._isEditorComment
             }
