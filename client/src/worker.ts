@@ -2,7 +2,6 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { Worker } from "worker_threads";
 
-
 export async function warmupWorker(context: vscode.ExtensionContext) {
     const workspaceConfig = vscode.workspace.getConfiguration("namucode.preview.parser");
     const doWarmup = workspaceConfig.get<boolean>("doWarmup", true);
@@ -18,14 +17,23 @@ export async function warmupWorker(context: vscode.ExtensionContext) {
         extensionPath: context.extensionUri.fsPath
     };
     const { signal } = new AbortController();
-    const { result: parsedResult } = await parse(context, { text: "", config, signal })
     await render(context, {
-        parsedResult,
+        parsedResult: {
+            tokens: null,
+            result: [],
+            data: {
+                links: [],
+                categories: [],
+                includes: [],
+                includeParams: {},
+                headings: [],
+            },
+        },
         document: { namespace: "문서", title: "" },
         workspaceDocuments: [],
         config,
         signal,
-        includeData: null
+        includeData: null,
     });
 }
 
@@ -63,42 +71,6 @@ interface IConfig {
     maxParsingTimeout: number;
     onlyHeading?: boolean;
     isEditorComment?: boolean;
-}
-
-interface IParseParams {
-    text: string;
-    config: IConfig;
-    signal: AbortSignal;
-}
-interface IParseReturn {
-    result: any;
-    error: boolean;
-    errorCode?: "parse_timeout" | "parse_failed" | "aborted";
-    errorMessage?: string;
-}
-
-export const PARSE_FAILED_HEAD = "문서 파싱에 실패했습니다.";
-export const PARSE_TIMEOUT_HEAD = "문서 파싱이 너무 오래 걸립니다.";
-export async function parse(context: vscode.ExtensionContext, params: IParseParams): Promise<IParseReturn> {
-    const workerFile = path.join(context.extensionPath, "dist/parser", "parser.js");
-    try {
-        const result = await runWorkerWithTimeout(workerFile, params, params.config.maxParsingTimeout, params.signal);
-        return {
-            result,
-            error: false,
-        };
-    } catch (err) {
-        const isTimeout = err.message == "Timeout";
-        const isAborted = err.message == "Abort";
-        if (!isTimeout) console.error(err);
-
-        return {
-            result: null,
-            error: true,
-            errorCode: isAborted ? "aborted" : isTimeout ? "parse_timeout" : "parse_failed",
-            errorMessage: err.stack,
-        };
-    }
 }
 
 interface IRenderParams {

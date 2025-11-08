@@ -10,7 +10,8 @@ import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } f
 import { EXTENSION_NAME, getConfig } from "./config";
 import { LinkDefinitionProvider } from "./linkdef";
 import { MarkPreview, getWebviewOptions } from './preview';
-import { parse, warmupWorker } from './worker';
+import { warmupWorker } from './worker';
+const parser = require("../media/parser/core/parser.js")
 
 let client: LanguageClient;
 let activeRules: vscode.Disposable[] = [];
@@ -416,8 +417,6 @@ export async function activate(context: ExtensionContext) {
 }
 
 export function deactivate(): Thenable<void> | undefined {
-  // toHtmlWorkerManager.dispose();
-  // parserWorkerManager.dispose();
   if (!client) {
     return undefined;
   }
@@ -455,65 +454,66 @@ interface IHeading {
   actualLevel: number;
 }
 
-class DocumentSymbolProvider implements vscode.DocumentSymbolProvider {
-  static cache = new Map<string, { version: number; promise: Promise<TreeSymbol[]> }>();
+export class DocumentSymbolProvider implements vscode.DocumentSymbolProvider {
+  static cache = new Map<string, { version: number; config: { editorComment: boolean; maxParsingDepth: number; }; promise: Promise<any>; isMaxCharacterAlerted: boolean; }>();
   private context: vscode.ExtensionContext
   constructor(context: vscode.ExtensionContext) {
     this.context = context;
   }
   
   public async provideDocumentSymbols(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<TreeSymbol[]> {
+    const rootConfig = vscode.workspace.getConfiguration("namucode");
+    const maxParsingDepth = rootConfig.get<number>("preview.parser.maxParsingDepth", 30);
+    const maxCharacter = rootConfig.get<number>("parser.maxCharacter", 1500000);
+
+    const key = document.uri.toString();
+
+    const cached = DocumentSymbolProvider.cache.get(key);
+    if (document.getText().length > maxCharacter) {
+      if (!cached.isMaxCharacterAlerted) {
+        DocumentSymbolProvider.cache.set(key, { ...cached, isMaxCharacterAlerted: true });
+        vscode.window.showWarningMessage(`최대 글자 수인 ${maxCharacter}자가 넘어가 목차 및 접기 기능을 사용할 수 없습니다. 글자 수를 줄이거나 설정에서 "목차 및 접기 기능 사용 시 문서 최대 글자 수"를 늘일 수 있습니다.`)
+      }
+
+      return []
+    } else {
+      DocumentSymbolProvider.cache.set(key, { ...cached, isMaxCharacterAlerted: false });
+    }
+
+    const config = { editorComment: false, maxParsingDepth }
+    const promise = this.createParserPromise(document, config);
+
+    const result = await promise;
+    return this.createSymbol(document, result);
+  }
+
+  public async createParserPromise(document: vscode.TextDocument, { editorComment = false, maxParsingDepth = null }): Promise<any> {
     const key = document.uri.toString();
     const version = document.version;
 
     const cached = DocumentSymbolProvider.cache.get(key);
-    if (cached && cached.version === version) {
+    if (cached && cached.version === version && cached.config.editorComment === editorComment && cached.config.maxParsingDepth === maxParsingDepth) {
       console.log("♻️ Promise 재활용: ", decodeURIComponent(path.basename(key)));
       return cached.promise;
     }
+    
+    const promise = new Promise(async (resolve, reject) => {
+      const text = document.getText();
+      let parseStart = performance.now()
+      const result = parser(text, { editorComment, maxParsingDepth });
+      let parseEnd = performance.now()
+      console.log("📌 파싱 중...", decodeURIComponent(path.basename(document.uri.toString())), "v", document.version, "(time: ", (parseEnd - parseStart).toFixed(2), "ms)")
+
+      resolve(result)
+    })
 
     console.log("⚙️ Promise 생성: ", decodeURIComponent(path.basename(key)), "v", version);
-    const promise = this.createSymbolPromise(document, token);
 
-    DocumentSymbolProvider.cache.set(key, { version, promise });
-
-    try {
-      const result = await promise;
-      return result;
-    } finally {
-      if (token.isCancellationRequested) {
-        console.log("❌ 요청 취소: ", decodeURIComponent(path.basename(key)));
-        DocumentSymbolProvider.cache.delete(key);
-      }
-    }
+    DocumentSymbolProvider.cache.set(key, { ...cached, version, promise, config: { editorComment, maxParsingDepth } });
+    return promise;
   }
 
-  private async createSymbolPromise(
-    document: vscode.TextDocument,
-    token: vscode.CancellationToken
-  ): Promise<TreeSymbol[]> {
-    return new Promise(async (resolve, reject) => {
-      const text = document.getText();
-      const config = {
-          maxLength: 5000000,
-          maxRenderingTimeout: 10000,
-          maxParsingTimeout: 7000,
-          maxParsingDepth: 30,
-          onlyHeading: true,
-          extensionPath: this.context.extensionUri.fsPath
-      };
-      const controller = new AbortController();
-      // let parseStart = performance.now()
-      const { result, error, errorCode } = await parse(this.context, { text, config, signal: controller.signal })
-      if (error) {
-        resolve([])
-        return;
-      }
-      // let parseEnd = performance.now()
-      // console.log("📌 파싱 중...", decodeURIComponent(path.basename(document.uri.toString())), "v", document.version, "(time: ", (parseEnd - parseStart).toFixed(2), "ms)")
-
-      token.onCancellationRequested(() => controller.abort())
-
+  private createSymbol(document: vscode.TextDocument, result: any) {
       const symbols: TreeSymbol[] = [];
       let curHeadings: [IHeading, TreeSymbol][] = [];
 
@@ -571,8 +571,7 @@ class DocumentSymbolProvider implements vscode.DocumentSymbolProvider {
       }
 
       // console.log(headings, curHeadings, symbols)
-      resolve(symbols)
-    });
+      return symbols
   }
 }
 

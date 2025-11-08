@@ -148,9 +148,8 @@ async function main() {
   await buildProject('server/src/server.ts', 'dist/server.js');
 
   // Parser Workers & Core
-  await buildProject('client/media/parser/core/parserWorker.js', 'dist/parser/parserWorker.js');
-  await buildProject('client/media/parser/core/toHtmlWorker.js', 'dist/parser/toHtmlWorker.js');
   await buildProject('client/media/parser/core/parser.js', 'dist/parser/parser.js');
+  await buildProject('client/media/parser/core/toHtmlWorker.js', 'dist/parser/toHtmlWorker.js');
   await buildProject('client/media/parser/core/toHtml.js', 'dist/parser/toHtml.js');
 
   // 빌드 끝나면 utils, syntax 폴더 복사

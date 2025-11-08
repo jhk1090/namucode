@@ -5,7 +5,7 @@ const path = require('path');
 
 const utils = require('./utils');
 const mainUtils = require('./mainUtil'); // ../global 이였으나, ../로 통합
-const parser = require("./parserWorker")
+const parser = require("./parser")
 
 const link = require('./syntax/link');
 const macro = require('./syntax/macro');

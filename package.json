@@ -3,7 +3,7 @@
     "displayName": "나무코드 Namucode",
     "description": "나무위키 VS Code 확장 프로그램",
     "publisher": "jhk1090",
-    "version": "1.7.3",
+    "version": "1.7.4",
     "engines": {
         "vscode": "^1.75.0"
     },
@@ -173,7 +173,7 @@
             ],
             "view/title": [
                 {
-                    "command": "namucode.previewEditorComment",
+                    "command": "namucode.openIncludeParameterEditorGuideline",
                     "when": "view == includeParameterEditor",
                     "group": "navigation"
                 }
@@ -490,6 +490,12 @@
                 "title": "Namucode",
                 "order": 1,
                 "properties": {
+                    "namucode.parser.maxCharacter": {
+                        "type": "number",
+                        "default": 1500000,
+                        "title": "목차 및 접기 기능 사용 시 문서 최대 글자 수",
+                        "description": "목차 또는 접기 기능에 관여하는 파서의 입력값으로 들어가는 문서의 최대 글자 수입니다. 문서 글자 수가 이 글자 수를 넘기면 목차 및 접기 기능이 작동되지 않습니다."
+                    },
                     "namucode.preview.parser.workspaceReference": {
                         "type": "boolean",
                         "default": "true",

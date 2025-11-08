@@ -4,7 +4,8 @@ import { promises as fs } from "fs";
 import { ExtensionContext } from "vscode";
 import imageSize from "image-size";
 import { performance } from 'perf_hooks';
-import { PARSE_FAILED_HEAD, PARSE_TIMEOUT_HEAD, RENDER_FAILED_HEAD, RENDER_LENGTH_ERROR_HEAD, RENDER_TIMEOUT_HEAD, parse, render } from './worker';
+import { RENDER_FAILED_HEAD, RENDER_LENGTH_ERROR_HEAD, RENDER_TIMEOUT_HEAD, render } from './worker';
+import { DocumentSymbolProvider } from './extension';
 
 export function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptions {
     return {
@@ -319,28 +320,16 @@ export class MarkPreview {
             const startTime = performance.now();
             const config = getConfig()
 
-            const { result, error, errorCode, errorMessage } = await parse(this._context, { text, config, signal: this._workerTerminator.signal })
+            const provider = new DocumentSymbolProvider(this._context)
+            const result = await provider.createParserPromise(document, { editorComment: config.isEditorComment, maxParsingDepth: config.maxParsingDepth })
             let html = ""
-
-            if (error) {
-                if (errorCode === "aborted") {
-                    return { error: true, errorCode }
-                } else if (errorCode === "parse_failed") {
-                    html = `<div style="width: 100%; word-break: keep-all;"><h2>${PARSE_FAILED_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>파일의 텍스트를 파싱하는 과정에서 오류가 발생했기 때문입니다.</p><h3>어떻게 해결할 수 있나요?</h3><p>아래 에러 코드를 <a href="https://github.com/jhk1090/namucode/issues">나무코드 이슈트래커</a>에 제보해주세요.<br /><br /><pre><code>${escapeHTML(errorMessage)}</code></pre></p></div>`
-                } else {
-                    html = `<div style="width: 100%; word-break: keep-all;"><h2>${PARSE_TIMEOUT_HEAD}</h2><h3>왜 이런 문제가 발생했나요?</h3><p>설정한 파싱 대기 시간을 초과했기 때문입니다. 내용이 너무 크거나, 설정에서 파싱 대기 시간을 너무 짧게 설정했을 수 있습니다.<br />또는 최초 실행했을 때 캐싱이 되지 않아 시간이 오래 걸릴 수도 있습니다. (이는 몇 번 재실행하면 해결됩니다.)</p><h3>어떻게 해결할 수 있나요?</h3><p>내용이 큰 경우, 이 탭의 위 네비게이션 바의 <b>미리보기 설정</b> 버튼을 누르고 설정을 열어 파싱 대기 시간(Max Parsing Timeout)을 늘려보세요.</p></div>`
-                }
-
-                registerPersist(text, html, [])
-                return { error: true, errorCode, result, html, duration: null }
-            }
 
             const endTime = performance.now();
             const duration = (endTime - startTime).toFixed(2)
 
             html = `<div style="width: 100%; word-break: keep-all;"><h2>미리보기를 준비하는 중입니다.</h2><h3>작업 환경 리소스 불러오는 중.. (2/3)</h3><h3>파싱 중.. (완료! ${duration}ms)</h3></div>`
 
-            return { error: false, result, html, duration };
+            return { result, html, duration };
         }
 
         const loadWorkspaceResources = async (currentFolder: vscode.WorkspaceFolder, parsingDuration: string) => {
@@ -432,11 +421,8 @@ export class MarkPreview {
 
         (async () => {
             try {
-                const { error, errorCode, result: parsedResult, html, duration: parsingDuration } = await runParsing();
-                if (!errorCode || errorCode !== "aborted") {
-                    webview.postMessage({ type: "updateContent", newContent: html, newCategories: [] });
-                }
-                if (error) return;
+                const { result: parsedResult, html, duration: parsingDuration } = await runParsing();
+                webview.postMessage({ type: "updateContent", newContent: html, newCategories: [] });
 
                 const currentFolder = vscode.workspace.getWorkspaceFolder(this._panelUri)
                 const workspaceDocuments = await loadWorkspaceResources(currentFolder, parsingDuration);

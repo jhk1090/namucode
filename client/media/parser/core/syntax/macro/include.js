@@ -1,6 +1,6 @@
 const { getQuickJS } = require('quickjs-emscripten');
 const mainUtils = require('../../mainUtil');
-const parser = require('../../parserWorker');
+const parser = require('../../parser');
 
 module.exports = async (params, { toHtml, includeData, workspaceDocuments, Store }, obj) => {
     if(includeData) return '';
