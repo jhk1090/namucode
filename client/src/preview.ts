@@ -5,6 +5,7 @@ import { ExtensionContext } from "vscode";
 import imageSize from "image-size";
 import { performance } from 'perf_hooks';
 import { DocumentSymbolProvider } from './extension';
+import equal from "fast-deep-equal"
 const renderer = require("../media/parser/core/toHtmlWorker.js")
 
 export function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptions {
@@ -357,6 +358,8 @@ export class MarkPreview {
             const duration = (endTime - startTime).toFixed(2)
             console.log(`[Workspace Resource] ▶️ ${duration}ms 걸림`)
 
+            workspaceDocuments.sort((a, b) => a.namespace.localeCompare(b.namespace))
+            workspaceDocuments.sort((a, b) => a.title.localeCompare(b.title))
             return workspaceDocuments
         }
 
@@ -496,19 +499,6 @@ async function getImageInfo(imageUri: vscode.Uri) {
     };
 }
 
-function escapeHTML(str) {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-const RENDER_FAILED_HEAD = "문서 렌더링이 실패했습니다.";
-const RENDER_TIMEOUT_HEAD = "문서 렌더링이 중단되었습니다.";
-const RENDER_LENGTH_ERROR_HEAD = "문서 길이가 너무 깁니다.";
-
 interface IRendererParams {
     parsedResult: any;
     document: { namespace: string; title: string };
@@ -527,7 +517,7 @@ interface IRendererReturn {
 }
 
 export class RendererProvider {
-    static cache = new Map<string, { version: number; params: { config: { maxParsingDepth: number;  extensionPath: string; isEditorComment: boolean; maxLength: number; maxRenderingTimeout: number; }, includeData: Record<string, string>; }; promise: Promise<any> }>();
+    static cache = new Map<string, { version: number; params: IRendererParams; promise: Promise<any> }>();
 
     static async createRendererPromise(document: vscode.TextDocument, params: IRendererParams): Promise<IRendererReturn> {
         const key = document.uri.toString();
@@ -537,6 +527,7 @@ export class RendererProvider {
         if (
             cached &&
             cached.version === version &&
+            deepEqual(params.workspaceDocuments, cached.params.workspaceDocuments) &&
             params.config.extensionPath === cached.params.config.extensionPath &&
             JSON.stringify(params.includeData) === JSON.stringify(cached.params.includeData) &&
             params.config.maxParsingDepth === cached.params.config.maxParsingDepth &&
@@ -592,4 +583,31 @@ export class RendererProvider {
         const key = document.uri.toString();
         RendererProvider.cache.delete(key)
     }
+}
+
+type WorkspaceItem = {
+  title: string;
+  namespace: string;
+  content:
+    | string
+    | {
+        fileKey: string;
+        fileWidth: number;
+        fileHeight: number;
+        fileSize: number;
+      };
+};
+
+function deepEqual(x: WorkspaceItem[], y: WorkspaceItem[]) {
+  if (x.length !== y.length) return false
+  for (let i = 0; i < x.length; i++) {
+    let xv = x[i], yv = y[i]
+
+    if (xv.title !== yv.title) return false
+    if (xv.namespace !== yv.namespace) return false
+    if (typeof xv.content !== typeof yv.content) return false
+    if (typeof xv.content === "string" && xv.content !== yv.content) return false
+    if (typeof xv.content === "object" && JSON.stringify(xv.content) !== JSON.stringify(yv.content)) return false
+  }
+  return true
 }
