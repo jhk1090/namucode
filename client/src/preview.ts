@@ -35,33 +35,26 @@ export class MarkPreview {
     public static currentPanels: { [key: string]: MarkPreview | undefined } = {};
     public static currentActivePanelId: string | null = null;
 
-    private readonly _panel: vscode.WebviewPanel;
-    private readonly _panelId: string;
-    private _panelUri: vscode.Uri;
-    private _panelPersist: {
-        viewState: { visible: boolean; active: boolean; viewColumn: vscode.ViewColumn };
-        content?: string;
-        htmlResult?: string;
-        categoriesResult?: any[];
-    };
+    private readonly panel: vscode.WebviewPanel;
+    private readonly panelId: string;
+    private panelUri: vscode.Uri;
+    private panelViewState: { visible: boolean; active: boolean; viewColumn: vscode.ViewColumn };
 
-    private readonly _context: ExtensionContext;
-    private readonly _extensionUri: vscode.Uri;
-    private _disposables: vscode.Disposable[] = [];
-    private _isRenderRetry: boolean;
-    private _isEditorComment: boolean;
-    private _workerTerminator: AbortController;
+    private readonly context: ExtensionContext;
+    private readonly extensionUri: vscode.Uri;
+    private disposables: vscode.Disposable[] = [];
+    private isEditorComment: boolean;
+    private workerTerminator: AbortController;
 
     public static createOrShow({context, extensionUri, panelId, isRenderRetry, isEditorComment}: ICreateOrShowParams) {
         // If we already have a panel, show it.
         if (MarkPreview.currentPanels[panelId]) {
             if (isRenderRetry) {
-                MarkPreview.currentPanels[panelId]._isRenderRetry = true;
-                MarkPreview.currentPanels[panelId]._isEditorComment = isEditorComment
+                MarkPreview.currentPanels[panelId].isEditorComment = isEditorComment
                 MarkPreview.currentPanels[panelId]._update()
                 return;
             }
-            MarkPreview.currentPanels[panelId]._panel.reveal();
+            MarkPreview.currentPanels[panelId].panel.reveal();
             return;
         }
 
@@ -92,22 +85,19 @@ export class MarkPreview {
         extensionUri: vscode.Uri,
         panelId: string
     ) {
-        this._context = context;
-        this._extensionUri = extensionUri;
+        this.context = context;
+        this.extensionUri = extensionUri;
 
-        this._panel = panel;
-        this._panelId = panelId;
+        this.panel = panel;
+        this.panelId = panelId;
 
-        this._panelPersist = {
-            viewState: {
-                visible: panel.visible,
-                active: panel.active,
-                viewColumn: panel.viewColumn,
-            }
+        this.panelViewState = {
+            visible: panel.visible,
+            active: panel.active,
+            viewColumn: panel.viewColumn,
         };
-        this._isRenderRetry = false;
-        this._isEditorComment = false;
-        this._workerTerminator = new AbortController()
+        this.isEditorComment = false;
+        this.workerTerminator = new AbortController()
 
         console.log(path.basename(panelId), "just updated!");
         // Set the webview's initial html content
@@ -115,8 +105,8 @@ export class MarkPreview {
 
         // Listen for when the panel is disposed
         // This happens when the user closes the panel or when the panel is closed programmatically
-        this._panel.onDidDispose(() => this.dispose(panelId), null, this._disposables);
-        this._panel.onDidChangeViewState(
+        this.panel.onDidDispose(() => this.dispose(panelId), null, this.disposables);
+        this.panel.onDidChangeViewState(
 			e => {
 				const newState = {
                     visible: e.webviewPanel.visible,
@@ -124,10 +114,10 @@ export class MarkPreview {
                     viewColumn: e.webviewPanel.viewColumn
                 }
 
-                const wasVisible = this._panelPersist.viewState.visible
+                const wasVisible = this.panelViewState.visible
                 const isVisible = newState.visible
                 
-                const lastColumn = this._panelPersist.viewState.viewColumn
+                const lastColumn = this.panelViewState.viewColumn
                 const currentColumn = newState.viewColumn
 
                 if (newState.active) {
@@ -144,10 +134,10 @@ export class MarkPreview {
                     this._update()
                 }
 
-                this._panelPersist.viewState = newState
+                this.panelViewState = newState
 			},
 			null,
-			this._disposables
+			this.disposables
 		);
 
         const themeDisposable = vscode.workspace.onDidChangeConfiguration(
@@ -158,7 +148,7 @@ export class MarkPreview {
                 }
             },
             null,
-            this._disposables
+            this.disposables
         );
 
         const saveDisposable = vscode.workspace.onDidSaveTextDocument(
@@ -169,22 +159,22 @@ export class MarkPreview {
                 }
             },
             null,
-            this._disposables
+            this.disposables
         );
 
         const deleteDisposable = vscode.workspace.onDidDeleteFiles((event) => {
             for (const file of event.files) {
                 if (panelId.split("namucode-webview-").slice(1).join("namucode-webview-") === file.fsPath) {
-                    this._panel.dispose();
+                    this.panel.dispose();
                 }
             }
-        }, null, this._disposables)
+        }, null, this.disposables)
 
         context.subscriptions.push(themeDisposable, saveDisposable, deleteDisposable);
     }
 
     public dispose(panelId: string) {
-        this._workerTerminator.abort()
+        this.workerTerminator.abort()
         
         if (MarkPreview.currentActivePanelId === panelId) {
             MarkPreview.currentActivePanelId = null;
@@ -193,10 +183,10 @@ export class MarkPreview {
         MarkPreview.currentPanels[panelId] = undefined;
         console.log(path.basename(panelId), "just disposed!");
         // Clean up our resources
-        this._panel.dispose();
+        this.panel.dispose();
 
-        while (this._disposables.length) {
-            const x = this._disposables.pop();
+        while (this.disposables.length) {
+            const x = this.disposables.pop();
             if (x) {
                 x.dispose();
             }
@@ -204,47 +194,31 @@ export class MarkPreview {
     }
 
     private _update() {
-        this._workerTerminator.abort();
-        this._workerTerminator = new AbortController();
+        this.workerTerminator.abort();
+        this.workerTerminator = new AbortController();
 
-        if (!this._panelUri) {
-            this._panelUri = vscode.window.activeTextEditor.document.uri
+        if (!this.panelUri) {
+            this.panelUri = vscode.window.activeTextEditor.document.uri
         }
         
-        vscode.workspace.openTextDocument(this._panelUri).then(document => {
-            const webview = this._panel.webview;
-            this._panel.iconPath = vscode.Uri.joinPath(this._extensionUri, "images/Logo.svg");
-            this._panel.title = `${path.basename(document.fileName)} (미리보기)`;
+        vscode.workspace.openTextDocument(this.panelUri).then(document => {
+            const webview = this.panel.webview;
+            this.panel.iconPath = vscode.Uri.joinPath(this.extensionUri, "images/Logo.svg");
+            this.panel.title = `${path.basename(document.fileName)} (미리보기)`;
             this._getHtmlForWebview(webview, document);
         })
     }
 
     private _getHtmlForWebview(webview: vscode.Webview, document: vscode.TextDocument) {
-        const text = document.getText();
-        if (this._panelPersist.content && this._panelPersist.content === text && !this._isRenderRetry) {
-            switch (vscode.window.activeColorTheme.kind) {
-                case vscode.ColorThemeKind.Dark:
-                case vscode.ColorThemeKind.HighContrast:
-                    webview.postMessage({ type: "updateTheme", themeKind: "dark" })
-                    break;
-                default:
-                    webview.postMessage({ type: "updateTheme", themeKind: "light" })
-                    break;
-            }
-            webview.postMessage({ type: "updateContent", newContent: this._panelPersist.htmlResult, newCategories: this._panelPersist.categoriesResult });
-            return
-        }
-        this._isRenderRetry = false
-
         if (webview.html === "") {
-            const resetStyleUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "dist/media/reset.css"));
-            const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "dist/media/script.js"));
+            const resetStyleUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "dist/media/reset.css"));
+            const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "dist/media/script.js"));
 
-            const vueAppUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "dist/frontend/namucode-client-frontend.mjs"));
+            const vueAppUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "dist/frontend/namucode-client-frontend.mjs"));
 
             const styleUriList = [];
             for (const css of ["default.css", "github-dark-dimmed.min.css", "github.min.css", "ionicons.min.css", "katex.min.css", "wiki.css", "wikiContent.css", "wikiCategory.css", "button.css"]) {
-                styleUriList.push(webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "dist/frontend/assets/css/" + css)));
+                styleUriList.push(webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "dist/frontend/assets/css/" + css)));
             }
 
             const stylesheetFlatten = styleUriList
@@ -309,21 +283,15 @@ export class MarkPreview {
                 maxParsingTimeout,
                 maxParsingDepth,
                 internalLinkDomain,
-                extensionPath: this._extensionUri.fsPath,
-                isEditorComment: this._isEditorComment
+                extensionPath: this.extensionUri.fsPath,
+                isEditorComment: this.isEditorComment
             }
-        }
-
-        const registerPersist = (content: string, htmlResult: string, categoriesResult: any[]) => {
-            this._panelPersist.content = content;
-            this._panelPersist.htmlResult = htmlResult;
-            this._panelPersist.categoriesResult = categoriesResult;
         }
 
         const runParsing = async () => {
             const config = getConfig()
 
-            const provider = new DocumentSymbolProvider(this._context)
+            const provider = new DocumentSymbolProvider(this.context)
             const result = await provider.createParserPromise(document, { editorComment: config.isEditorComment, maxParsingDepth: config.maxParsingDepth })
 
             return result;
@@ -395,21 +363,21 @@ export class MarkPreview {
         const runRendering = async (currentFolder: vscode.WorkspaceFolder, parsedResult, workspaceDocuments) => {
             const config = getConfig()
             const { namespace, title } = await getNamespaceAndTitle(currentFolder ? currentFolder.uri.fsPath : path.dirname(document.uri.fsPath), document.uri.fsPath)
-            const includeData = this._context.workspaceState.get("includeParameterEditorInput") as { [key: string]: string } ?? null
+            const includeData = this.context.workspaceState.get("includeParameterEditorInput") as { [key: string]: string } ?? null
 
             const timeout = setTimeout(() => {
                 console.log("Termination")
-                this._workerTerminator.abort()
+                this.workerTerminator.abort()
             }, config.maxRenderingTimeout)
             
-            let { html, categories, error, errorCode, errorMessage } = await RendererProvider.createRendererPromise(document, { parsedResult: structuredClone(parsedResult),  document: { namespace, title }, workspaceDocuments, config, includeData, signal: this._workerTerminator.signal })
+            let { html, categories, error, errorCode, errorMessage } = await RendererProvider.createRendererPromise(document, { parsedResult: structuredClone(parsedResult),  document: { namespace, title }, workspaceDocuments, config, includeData, signal: this.workerTerminator.signal })
             clearTimeout(timeout)
 
             if (error) {
-                this.dispose(this._panelId);
+                this.dispose(this.panelId);
                 RendererProvider.removeRendererPromise(document)
                 const errorQuestion = await vscode.window.showErrorMessage(
-                    errorCode === "aborted" ? "렌더링에 실패했습니다: 렌더링이 중단되었습니다.\n이 문제가 발생하는 원인 중에는 시간 초과가 있을 수 있습니다. 미리보기 설정을 누른 후, 파싱 최대 대기 시간 / 렌더링 최대 대기 시간을 적절히 조정해 시간 초과 문제를 해결할 수 있습니다. 문제를 해결하지 못했다면 제보하기를 누른 후 이슈트래커로 제보해주세요." : errorCode === "render_too_long" ? "렌더링에 실패했습니다: 문서가 너무 깁니다. 미리보기 설정에서 최대 글자수를 늘려 이 문제를 해결할 수 있습니다. 문제를 해결하지 못했다면 제보하기를 누른 후 이슈트래커로 제보해주세요." : `렌더링에 실패했습니다: 예기치 않은 오류가 발생했습니다.\n${errorMessage}\n버그라고 생각되는 경우 제보하기를 누른 후 이슈트래커로 제보해주세요.`, "미리보기 설정", "제보하기")
+                    errorCode === "aborted" ? "렌더링에 실패했습니다: 렌더링이 중단되었습니다.\n이 문제가 발생하는 원인 중에는 시간 초과가 있을 수 있습니다. 미리보기 설정을 누른 후, 파싱 최대 대기 시간 / 렌더링 최대 대기 시간을 적절히 조정해 시간 초과 문제를 해결할 수 있습니다. 문제를 해결하지 못했다면 제보하기를 누른 후 이슈트래커로 제보해주세요." : errorCode === "render_too_long" ? "렌더링에 실패했습니다: 문서가 너무 깁니다. 미리보기 설정에서 최대 글자수를 늘려 이 문제를 해결할 수 있습니다. 문제를 해결하지 못했다면 제보하기를 누른 후 이슈트래커로 제보해주세요." : `렌더링에 실패했습니다: 예기치 않은 오류가 발생했습니다.\n${errorMessage}\n이 버그가 계속해서 재현된다면 제보하기를 누른 후 이슈트래커로 제보해주세요.`, "미리보기 설정", "제보하기")
                 if (errorQuestion === "미리보기 설정") {
                     vscode.commands.executeCommand('workbench.action.openSettings', "@ext:jhk1090.namucode");
                 }
@@ -419,18 +387,17 @@ export class MarkPreview {
             }
 
             webview.postMessage({ type: "updateContent", newContent: html, newCategories: categories });
-            registerPersist(text, html, categories)
         }
 
         (async () => {
             try {
                 const parsedResult = await runParsing();
-                const currentFolder = vscode.workspace.getWorkspaceFolder(this._panelUri)
+                const currentFolder = vscode.workspace.getWorkspaceFolder(this.panelUri)
                 const workspaceDocuments = await loadWorkspaceResources(currentFolder);
 
                 runRendering(currentFolder, parsedResult, workspaceDocuments)
             } catch (error) {
-                this.dispose(this._panelId);
+                this.dispose(this.panelId);
                 const errorMessage = await vscode.window.showErrorMessage(`미리보기 렌더링 중 오류 발생: ${error instanceof Error ? error.message : String(error)}`, "제보하기", "재시도");
                 if (errorMessage === "제보하기") {
                     vscode.env.openExternal(vscode.Uri.parse("https://github.com/jhk1090/namucode/issues"));
@@ -439,7 +406,7 @@ export class MarkPreview {
                     vscode.commands.executeCommand("namucode.preview")
                 }
             }
-            this._isEditorComment = false
+            this.isEditorComment = false
         })()
     }
 }
