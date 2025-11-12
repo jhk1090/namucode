@@ -402,18 +402,19 @@ export class MarkPreview {
                 this._workerTerminator.abort()
             }, config.maxRenderingTimeout)
             
-            let { html, categories, error, errorCode, errorMessage } = await RendererProvider.createRendererPromise(document, { parsedResult,  document: { namespace, title }, workspaceDocuments, config, includeData, signal: this._workerTerminator.signal })
+            let { html, categories, error, errorCode, errorMessage } = await RendererProvider.createRendererPromise(document, { parsedResult: structuredClone(parsedResult),  document: { namespace, title }, workspaceDocuments, config, includeData, signal: this._workerTerminator.signal })
             clearTimeout(timeout)
 
             if (error) {
+                this.dispose(this._panelId);
                 RendererProvider.removeRendererPromise(document)
                 const errorQuestion = await vscode.window.showErrorMessage(
-                    errorCode === "aborted" ? "렌더링에 실패했습니다: 렌더링이 중단되었습니다." : errorCode === "render_too_long" ? "렌더링에 실패했습니다: 문서가 너무 깁니다." : `렌더링에 실패했습니다: 예기치 않은 오류가 발생했습니다.\n${errorMessage}`, "제보하기", "재시도")
+                    errorCode === "aborted" ? "렌더링에 실패했습니다: 렌더링이 중단되었습니다.\n이 문제가 발생하는 원인 중에는 시간 초과가 있을 수 있습니다. 미리보기 설정을 누른 후, 파싱 최대 대기 시간 / 렌더링 최대 대기 시간을 적절히 조정해 시간 초과 문제를 해결할 수 있습니다. 문제를 해결하지 못했다면 제보하기를 누른 후 이슈트래커로 제보해주세요." : errorCode === "render_too_long" ? "렌더링에 실패했습니다: 문서가 너무 깁니다. 미리보기 설정에서 최대 글자수를 늘려 이 문제를 해결할 수 있습니다. 문제를 해결하지 못했다면 제보하기를 누른 후 이슈트래커로 제보해주세요." : `렌더링에 실패했습니다: 예기치 않은 오류가 발생했습니다.\n${errorMessage}\n버그라고 생각되는 경우 제보하기를 누른 후 이슈트래커로 제보해주세요.`, "미리보기 설정", "제보하기")
+                if (errorQuestion === "미리보기 설정") {
+                    vscode.commands.executeCommand('workbench.action.openSettings', "@ext:jhk1090.namucode");
+                }
                 if (errorQuestion === "제보하기") {
                     vscode.env.openExternal(vscode.Uri.parse("https://github.com/jhk1090/namucode/issues"));
-                }
-                if (errorQuestion === "재시도") {
-                    vscode.commands.executeCommand("namucode.retryPreview")
                 }
             }
 
@@ -545,7 +546,7 @@ interface IRendererParams {
     parsedResult: any;
     document: { namespace: string; title: string };
     workspaceDocuments: any[];
-    config: { maxParsingDepth: number; extensionPath: string; isEditorComment: boolean; };
+    config: { maxParsingDepth: number; extensionPath: string; isEditorComment: boolean; maxLength: number; maxRenderingTimeout: number; };
     includeData: { [key: string]: string };
     signal: AbortSignal;
 }
@@ -559,7 +560,7 @@ interface IRendererReturn {
 }
 
 export class RendererProvider {
-    static cache = new Map<string, { version: number; params: { config: { maxParsingDepth: number;  extensionPath: string; isEditorComment: boolean; }, includeData: Record<string, string>; }; promise: Promise<any> }>();
+    static cache = new Map<string, { version: number; params: { config: { maxParsingDepth: number;  extensionPath: string; isEditorComment: boolean; maxLength: number; maxRenderingTimeout: number; }, includeData: Record<string, string>; }; promise: Promise<any> }>();
 
     static async createRendererPromise(document: vscode.TextDocument, params: IRendererParams): Promise<IRendererReturn> {
         const key = document.uri.toString();
@@ -572,7 +573,9 @@ export class RendererProvider {
             params.config.extensionPath === cached.params.config.extensionPath &&
             JSON.stringify(params.includeData) === JSON.stringify(cached.params.includeData) &&
             params.config.maxParsingDepth === cached.params.config.maxParsingDepth &&
-            params.config.isEditorComment === cached.params.config.isEditorComment
+            params.config.isEditorComment === cached.params.config.isEditorComment &&
+            params.config.maxLength === cached.params.config.maxLength &&
+            params.config.maxRenderingTimeout === cached.params.config.maxRenderingTimeout
         ) {
             console.log("[Renderer] ♻️ Promise 재활용: ", decodeURIComponent(path.basename(key)));
             return cached.promise;
