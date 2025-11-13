@@ -84,5 +84,5 @@ export default {
 }
 </script>
 <style module>
-@import '@/assets/css/button.css';
+/* @import '@/assets/css/button.css'; */
 </style>

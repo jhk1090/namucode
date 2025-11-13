@@ -217,7 +217,7 @@ export class MarkPreview {
             const vueAppUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "dist/frontend/namucode-client-frontend.mjs"));
 
             const styleUriList = [];
-            for (const css of ["default.css", "github-dark-dimmed.min.css", "github.min.css", "ionicons.min.css", "katex.min.css", "wiki.css", "wikiContent.css", "wikiCategory.css", "button.css"]) {
+            for (const css of ["default.css", "github-dark-dimmed.min.css", "github.min.css", "ionicons.min.css", "katex.min.css", "wiki.css", "wikiContent.css", "wikiCategory.css", /* "button.css" */]) {
                 styleUriList.push(webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "dist/frontend/assets/css/" + css)));
             }
 
