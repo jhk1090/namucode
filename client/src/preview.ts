@@ -5,7 +5,6 @@ import { ExtensionContext } from "vscode";
 import imageSize from "image-size";
 import { performance } from 'perf_hooks';
 import { DocumentSymbolProvider } from './extension';
-import equal from "fast-deep-equal"
 const renderer = require("../media/parser/core/toHtmlWorker.js")
 
 export function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptions {
@@ -76,7 +75,7 @@ export class MarkPreview {
         extensionUri: vscode.Uri,
         panelId: string
     ) {
-        console.log(path.basename(panelId), "reviving..");
+        // console.log(path.basename(panelId), "reviving..");
         MarkPreview.currentPanels[panelId] = new MarkPreview(panel, context, extensionUri, panelId);
     }
 
@@ -100,7 +99,7 @@ export class MarkPreview {
         this.isEditorComment = false;
         this.workerTerminator = new AbortController()
 
-        console.log(path.basename(panelId), "just updated!");
+        // console.log(path.basename(panelId), "just updated!");
         // Set the webview's initial html content
         this._update();
 
@@ -126,12 +125,12 @@ export class MarkPreview {
                 }
 
                 if (wasVisible == false && isVisible == true) {
-                    console.log(path.basename(panelId), "just updated!", "due to visibility change");
+                    // console.log(path.basename(panelId), "just updated!", "due to visibility change");
                     this._update()
                 }
 
                 if (lastColumn && lastColumn !== currentColumn) {
-                    console.log(path.basename(panelId), "just updated!", "due to column change", lastColumn, currentColumn);
+                    // console.log(path.basename(panelId), "just updated!", "due to column change", lastColumn, currentColumn);
                     this._update()
                 }
 
@@ -144,7 +143,7 @@ export class MarkPreview {
         const themeDisposable = vscode.workspace.onDidChangeConfiguration(
             (event) => {
                 if (event.affectsConfiguration("workbench.colorTheme")) {
-                    console.log(path.basename(panelId), "just updated!", "in theme state");
+                    // console.log(path.basename(panelId), "just updated!", "in theme state");
                     this._update();
                 }
             },
@@ -155,7 +154,7 @@ export class MarkPreview {
         const saveDisposable = vscode.workspace.onDidSaveTextDocument(
             (document) => {
                 if (panelId.split("namucode-webview-").slice(1).join("namucode-webview-") === document.fileName) {
-                    console.log(path.basename(panelId), "just updated!", "in save state");
+                    // console.log(path.basename(panelId), "just updated!", "in save state");
                     this._update();
                 }
             },
@@ -182,7 +181,7 @@ export class MarkPreview {
         }
 
         MarkPreview.currentPanels[panelId] = undefined;
-        console.log(path.basename(panelId), "just disposed!");
+        // console.log(path.basename(panelId), "just disposed!");
         // Clean up our resources
         this.panel.dispose();
 
@@ -356,7 +355,7 @@ export class MarkPreview {
 
             const endTime = performance.now();
             const duration = (endTime - startTime).toFixed(2)
-            console.log(`[Workspace Resource] ▶️ ${duration}ms 걸림`)
+            // console.log(`[Workspace Resource] ▶️ ${duration}ms 걸림`)
 
             workspaceDocuments.sort((a, b) => a.namespace.localeCompare(b.namespace))
             workspaceDocuments.sort((a, b) => a.title.localeCompare(b.title))
@@ -369,7 +368,7 @@ export class MarkPreview {
             const includeData = this.context.workspaceState.get("includeParameterEditorInput") as { [key: string]: string } ?? null
 
             const timeout = setTimeout(() => {
-                console.log("Termination")
+                // console.log("Termination")
                 this.workerTerminator.abort()
             }, config.maxRenderingTimeout)
             
@@ -545,7 +544,7 @@ export class RendererProvider {
             params.config.internalLinkDomain === cached.params.config.internalLinkDomain &&
             params.config.maxRenderingTimeout === cached.params.config.maxRenderingTimeout
         ) {
-            console.log("[Renderer] ♻️ Promise 재활용: ", decodeURIComponent(path.basename(key)));
+            // console.log("[Renderer] ♻️ Promise 재활용: ", decodeURIComponent(path.basename(key)));
             return cached.promise;
         }
 
@@ -570,20 +569,20 @@ export class RendererProvider {
             }
             
             let parseEnd = performance.now();
-            console.log(
-                "[Renderer] 📌 렌더링 중...",
-                decodeURIComponent(path.basename(document.uri.toString())),
-                "v",
-                document.version,
-                "(time: ",
-                (parseEnd - parseStart).toFixed(2),
-                "ms)"
-            );
+            // console.log(
+            //     "[Renderer] 📌 렌더링 중...",
+            //     decodeURIComponent(path.basename(document.uri.toString())),
+            //     "v",
+            //     document.version,
+            //     "(time: ",
+            //     (parseEnd - parseStart).toFixed(2),
+            //     "ms)"
+            // );
 
             resolve(result);
         });
 
-        console.log("[Renderer] ⚙️ Promise 생성: ", decodeURIComponent(path.basename(key)), "v", version);
+        // console.log("[Renderer] ⚙️ Promise 생성: ", decodeURIComponent(path.basename(key)), "v", version);
 
         RendererProvider.cache.set(key, { ...cached, version, promise, params });
         return promise;
