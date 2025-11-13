@@ -3,7 +3,15 @@ const querystring = require('querystring');
 const utils = require('../../utils');
 const mainUtils = require('../../mainUtil');
 
-module.exports = async (obj, link, { Store, document: docDocument, dbDocument: docDbDocument, rev: docRev, includeData, disableImageLinkButton }) => {
+module.exports = async (obj, link, {
+    Store,
+    thread,
+    document: docDocument,
+    dbDocument: docDbDocument,
+    rev: docRev,
+    includeData,
+    isInternal
+}) => {
     const document = mainUtils.parseDocumentName(obj.link);
     let { namespace, title } = document;
 
@@ -17,6 +25,8 @@ module.exports = async (obj, link, { Store, document: docDocument, dbDocument: d
         link,
         text: link
     }
+    if (thread) return fallback;
+
     const result = Store.workspaceDocuments.find(a => a.namespace === namespace && a.title === title);
     if (!result) {
         return fallback;
@@ -41,7 +51,9 @@ module.exports = async (obj, link, { Store, document: docDocument, dbDocument: d
     // }
 
     const imgUrl = new URL(result.content.fileKey);
-    if(!includeData) Store.embed.image ??= imgUrl.toString();
+    if(!includeData && imgUrl) Store.embed.image ??= imgUrl.toString();
+
+    const videoUrl = result.content.videoFileKey && new URL(result.content.videoFileKey);
 
     options.borderRadius = options['border-radius'];
     delete options['border-radius'];
@@ -105,6 +117,14 @@ module.exports = async (obj, link, { Store, document: docDocument, dbDocument: d
         'crisp-edges'
     ].includes(options.rendering)) delete options.rendering;
 
+    if(![
+        'fill',
+        'contain',
+        'cover',
+        'none',
+        'scale-down'
+    ].includes(options['object-fit'])) delete options['object-fit'];
+
     const imgSpanClassList = [`wiki-image-align${options.align ? `-${options.align}` : ''}`];
     let imgSpanStyle = ``;
     let imgWrapperStyle = ``;
@@ -126,20 +146,29 @@ module.exports = async (obj, link, { Store, document: docDocument, dbDocument: d
 
     if(options.borderRadius) imgStyle += `border-radius:${options.borderRadius}${borderRadiusUnit};`;
     if(options.rendering) imgStyle += `image-rendering:${options.rendering};`;
+    if(options['object-fit']) {
+        imgWrapperStyle += `object-fit:${options['object-fit']};`;
+        imgStyle += `object-fit:${options['object-fit']};`;
+    }
 
     if(options.theme) imgSpanClassList.push(`wiki-theme-${options.theme}`);
 
     const fullTitle = utils.escapeHtml(mainUtils.doc_fulltitle(document));
 
-    // TODO: over 1MB remove option, loading lazy config
+    const b64Image = `data:image/svg+xml;base64,${Buffer.from(`<svg width="${result.content.fileWidth}" height="${result.content.fileHeight}" xmlns="http://www.w3.org/2000/svg"></svg>`).toString('base64')}`;
+
     return `
 <span class="${imgSpanClassList.join(' ')}" style="${imgSpanStyle}">
 <span class="wiki-image-wrapper" style="${imgWrapperStyle}">
-<img${imgAttrib} style="${imgStyle}" src="data:image/svg+xml;base64,${Buffer.from(`<svg width="${result.content.fileWidth}" height="${result.content.fileHeight}" xmlns="http://www.w3.org/2000/svg"></svg>`).toString('base64')}">
-<img class="wiki-image"${imgAttrib} style="${imgStyle}" src="${imgUrl}" alt="${fullTitle}" data-filesize="${result.content.fileSize}" data-src="${imgUrl}" data-doc="${fullTitle}" loading="lazy">
-${disableImageLinkButton || (docDocument.namespace === namespace && docDocument.title === title) 
+<img${imgAttrib} style="${imgStyle}" src="${b64Image}">
+<img class="wiki-image wiki-image-loading"${imgAttrib} style="${imgStyle}" src="${b64Image}" alt="${fullTitle}"${imgUrl ? ` data-src="${imgUrl}" data-filesize="${result.content.fileSize}"` : ''}${videoUrl ? ` data-video-src="${videoUrl}" data-video-filesize="${result.content.videoFileSize}"` : ''}${(docDocument.namespace === namespace && docDocument.title === title) ? '' : ` data-doc="${utils.escapeHtml(mainUtils.doc_action_link(document, 'w'))}`}">
+${isInternal
     ? '' 
-    : `<a class="wiki-image-info" href="${utils.escapeHtml(mainUtils.doc_action_link(document, 'w'))}" rel="nofollow noopener"></a>`
+    : (
+        imgUrl
+            ? `<noscript><img class="wiki-image"${imgAttrib} style="${imgStyle}" src="${imgUrl}" alt="${fullTitle}"></noscript>`
+            : `<noscript><video class="wiki-image"${imgAttrib} style="${imgStyle}" src="${videoUrl}" alt="${fullTitle}" controls playsinline></video></noscript>`
+        )
 }
 </span>
 </span>`.replaceAll('\n', '');
