@@ -272,15 +272,17 @@ export class MarkPreview {
         }
 
         const getConfig = () => {
-            const workspaceConfig = vscode.workspace.getConfiguration("namucode.preview.parser");
-            const maxLength = workspaceConfig.get<number>("maxLength", 5000000);
-            const maxRenderingTimeout = workspaceConfig.get<number>("maxRenderingTimeout", 10) * 1000;
-            const maxParsingDepth = workspaceConfig.get<number>("maxParsingDepth", 30);
-            const internalLinkDomain = workspaceConfig.get<string>("internalLinkDomain", "https://namu.wiki")
+            const rootConfig = vscode.workspace.getConfiguration("namucode");
+            const maxLength = rootConfig.get<number>("preview.maxLength", 5000000);
+            const maxRenderingTimeout = rootConfig.get<number>("preview.maxRenderingTimeout", 10) * 1000;
+            const maxParsingDepth = rootConfig.get<number>("parser.maxParsingDepth", 30);
+            const maxParsingCharacter = rootConfig.get<number>("parser.maxParsingCharacter", 1500000);
+            const internalLinkDomain = rootConfig.get<string>("preview.internalLinkDomain", "https://namu.wiki")
             return {
                 maxLength,
                 maxRenderingTimeout,
                 maxParsingDepth,
+                maxParsingCharacter,
                 internalLinkDomain,
                 extensionPath: this.extensionUri.fsPath,
                 isEditorComment: this.isEditorComment
@@ -291,14 +293,14 @@ export class MarkPreview {
             const config = getConfig()
 
             const provider = new DocumentSymbolProvider(this.context)
-            const result = await provider.createParserPromise(document, { editorComment: config.isEditorComment, maxParsingDepth: config.maxParsingDepth })
+            const result = await provider.createParserPromise(document, { editorComment: config.isEditorComment, maxParsingDepth: config.maxParsingDepth, maxCharacter: config.maxParsingCharacter })
 
             return result;
         }
 
         const loadWorkspaceResources = async (currentFolder: vscode.WorkspaceFolder) => {
-            const workspaceConfig = vscode.workspace.getConfiguration("namucode.preview.parser");
-            const workspaceReference = workspaceConfig.get<boolean>("workspaceReference", true);
+            const rootConfig = vscode.workspace.getConfiguration("namucode");
+            const workspaceReference = rootConfig.get<boolean>("preview.workspaceReference", true);
 
             const startTime = performance.now();
 
@@ -378,8 +380,8 @@ export class MarkPreview {
                 this.dispose(this.panelId);
                 RendererProvider.removeRendererPromise(document)
                 const errorQuestion = await vscode.window.showErrorMessage(
-                    errorCode === "aborted" ? "렌더링에 실패했습니다: 렌더링이 중단되었습니다.\n이 문제가 발생하는 원인 중에는 시간 초과가 있을 수 있습니다. 미리보기 설정을 누른 후, 파싱 최대 대기 시간 / 렌더링 최대 대기 시간을 적절히 조정해 시간 초과 문제를 해결할 수 있습니다. 문제를 해결하지 못했다면 제보하기를 누른 후 이슈트래커로 제보해주세요." : errorCode === "render_too_long" ? "렌더링에 실패했습니다: 문서가 너무 깁니다. 미리보기 설정에서 최대 글자수를 늘려 이 문제를 해결할 수 있습니다. 문제를 해결하지 못했다면 제보하기를 누른 후 이슈트래커로 제보해주세요." : `렌더링에 실패했습니다: 예기치 않은 오류가 발생했습니다.\n${errorMessage}\n이 버그가 계속해서 재현된다면 제보하기를 누른 후 이슈트래커로 제보해주세요.`, "미리보기 설정", "제보하기")
-                if (errorQuestion === "미리보기 설정") {
+                    errorCode === "aborted" ? "렌더링에 실패했습니다: 렌더링이 중단되었습니다.\n이 문제가 발생하는 원인 중에는 시간 초과가 있을 수 있습니다. 설정을 누른 후, 파싱 최대 대기 시간 / 렌더링 최대 대기 시간을 적절히 조정해 시간 초과 문제를 해결할 수 있습니다. 문제를 해결하지 못했다면 제보하기를 누른 후 이슈트래커로 제보해주세요." : errorCode === "render_too_long" ? "렌더링에 실패했습니다: 문서가 너무 깁니다. 설정에서 최대 글자수를 늘려 이 문제를 해결할 수 있습니다. 문제를 해결하지 못했다면 제보하기를 누른 후 이슈트래커로 제보해주세요." : `렌더링에 실패했습니다: 예기치 않은 오류가 발생했습니다.\n${errorMessage}\n이 버그가 계속해서 재현된다면 제보하기를 누른 후 이슈트래커로 제보해주세요.`, "설정", "제보하기")
+                if (errorQuestion === "설정") {
                     vscode.commands.executeCommand('workbench.action.openSettings', "@ext:jhk1090.namucode");
                 }
                 if (errorQuestion === "제보하기") {
@@ -393,6 +395,15 @@ export class MarkPreview {
         (async () => {
             try {
                 const parsedResult = await runParsing();
+                if (parsedResult.errorCode) {
+                    this.dispose(this.panelId);
+                    const msg = await vscode.window.showErrorMessage(`파싱 허용 문서 최대 글자 수인 ${getConfig().maxParsingCharacter}자가 넘어가 미리보기 기능을 사용할 수 없습니다. 글자 수를 줄이거나 설정에서 "파싱 허용 문서 최대 글자 수"를 늘릴 수 있습니다.`, "설정")
+                    if (msg === "설정") {
+                        vscode.commands.executeCommand('workbench.action.openSettings', "@ext:jhk1090.namucode");
+                    }
+                    return
+                }
+
                 const currentFolder = vscode.workspace.getWorkspaceFolder(this.panelUri)
                 const workspaceDocuments = await loadWorkspaceResources(currentFolder);
 
