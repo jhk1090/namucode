@@ -18,11 +18,6 @@ export default {
   components: {
     WikiCategory
   },
-  computed: {
-    footnotes() {
-      return this.$refs.div.getElementsByClassName('wiki-fn-content')
-    }
-  },
   data() {
     return {
       popover: {
@@ -56,10 +51,11 @@ export default {
     }
   },
   methods: {
-    setupWikiContent() {
-      const div = this.$refs.div;
-
-      const headings = div.getElementsByClassName('wiki-heading');
+    getFootnotes(element) {
+      return [...element.getElementsByClassName('wiki-fn-content')]
+    },
+    setupWikiContent(element = this.$refs.div) {
+      const headings = element.getElementsByClassName('wiki-heading');
       for(let heading of headings) {
         heading.addEventListener('click', e => {
           if(e.target.tagName === 'A') return;
@@ -83,7 +79,7 @@ export default {
         // }
       }
 
-      const foldings = div.getElementsByClassName('wiki-folding');
+      const foldings = element.getElementsByClassName('wiki-folding');
       for(let folding of foldings) {
         const foldingText = folding.firstElementChild;
         const foldingContent = foldingText.nextElementSibling;
@@ -159,7 +155,7 @@ export default {
       // let footnoteType = this.$store.state.localConfig['wiki.footnote_type'];
       let footnoteType = "popover"
 
-      if(footnoteType === 'popover') this.setupFootnoteTooltip();
+      if(footnoteType === 'popover') this.setupFootnoteTooltip(element);
 
       const oldDarkStyle = document.getElementById('darkStyle');
       if(oldDarkStyle) oldDarkStyle.remove();
@@ -192,7 +188,7 @@ export default {
         document.body.appendChild(newDarkStyle);
       }
 
-      const times = div.querySelectorAll('time[data-type=timezone]')
+      const times = element.querySelectorAll('time[data-type=timezone]')
       for(let time of times) {
         const type = time.dataset.type;
         const date = new Date(time.dateTime);
@@ -226,7 +222,7 @@ export default {
       //   anchorElem?.scrollIntoView();
       // }
     },
-    setupFootnoteTooltip() {
+    setupFootnoteTooltip(element) {
       let hovering = 0;
       const mouseLeaveHandler = _ => {
         requestAnimationFrame(() => requestAnimationFrame( () =>{
@@ -243,7 +239,7 @@ export default {
       });
       popover.addEventListener('mouseleave', mouseLeaveHandler);
 
-      for(let footnote of this.footnotes) {
+      for(let footnote of this.getFootnotes(element)) {
         const targetId = footnote.getAttribute('href').slice(1);
         const contentElement = document.getElementById(targetId).parentElement;
 
@@ -262,6 +258,7 @@ export default {
             left: `${x}px`,
             top: `${y}px`,
           });
+          
           this.$refs.popoverArrow.style.left = `calc(50% - 10px - ${middlewareData.shift.x}px)`;
         });
 
