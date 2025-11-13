@@ -145,7 +145,7 @@ export async function activate(context: ExtensionContext) {
     paragraphLeveling(Level.UP);
   });
 
-  vscode.commands.registerCommand("namucode.openPreviewSettings", () => {
+  vscode.commands.registerCommand("namucode.openSettings", () => {
     vscode.commands.executeCommand('workbench.action.openSettings', "@ext:jhk1090.namucode");
   });
 

@@ -275,13 +275,11 @@ export class MarkPreview {
             const workspaceConfig = vscode.workspace.getConfiguration("namucode.preview.parser");
             const maxLength = workspaceConfig.get<number>("maxLength", 5000000);
             const maxRenderingTimeout = workspaceConfig.get<number>("maxRenderingTimeout", 10) * 1000;
-            const maxParsingTimeout = workspaceConfig.get<number>("maxParsingTimeout", 7) * 1000;
             const maxParsingDepth = workspaceConfig.get<number>("maxParsingDepth", 30);
             const internalLinkDomain = workspaceConfig.get<string>("internalLinkDomain", "https://namu.wiki")
             return {
                 maxLength,
                 maxRenderingTimeout,
-                maxParsingTimeout,
                 maxParsingDepth,
                 internalLinkDomain,
                 extensionPath: this.extensionUri.fsPath,
@@ -503,7 +501,7 @@ interface IRendererParams {
     parsedResult: any;
     document: { namespace: string; title: string };
     workspaceDocuments: any[];
-    config: { maxParsingDepth: number; extensionPath: string; isEditorComment: boolean; maxLength: number; maxRenderingTimeout: number; };
+    config: { maxParsingDepth: number; extensionPath: string; isEditorComment: boolean; maxLength: number; maxRenderingTimeout: number; internalLinkDomain: string; };
     includeData: { [key: string]: string };
     signal: AbortSignal;
 }
@@ -533,6 +531,7 @@ export class RendererProvider {
             params.config.maxParsingDepth === cached.params.config.maxParsingDepth &&
             params.config.isEditorComment === cached.params.config.isEditorComment &&
             params.config.maxLength === cached.params.config.maxLength &&
+            params.config.internalLinkDomain === cached.params.config.internalLinkDomain &&
             params.config.maxRenderingTimeout === cached.params.config.maxRenderingTimeout
         ) {
             console.log("[Renderer] ♻️ Promise 재활용: ", decodeURIComponent(path.basename(key)));

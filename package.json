@@ -103,8 +103,8 @@
                 "icon": "$(sync)"
             },
             {
-                "command": "namucode.openPreviewSettings",
-                "title": "미리보기 설정 열기",
+                "command": "namucode.openSettings",
+                "title": "설정 열기",
                 "category": "나무코드",
                 "icon": "$(gear)"
             },
@@ -151,7 +151,7 @@
                     "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
                 },
                 {
-                    "command": "namucode.openPreviewSettings",
+                    "command": "namucode.openSettings",
                     "when": "activeWebviewPanelId =~ /namucode-webview-/",
                     "group": "navigation"
                 },
@@ -493,7 +493,7 @@
                     "namucode.preview.parser.internalLinkDomain": {
                         "type": "string",
                         "default": "https://namu.wiki",
-                        "description": "미리보기에서 내부 링크가 걸릴 때 도메인 주소를 설정합니다. `[[나무코드]]`가 미리보기에서 표시된다면 `<도메인 주소>/w/나무코드`로 링크가 걸립니다."
+                        "markdownDescription": "미리보기에서 내부 링크가 걸릴 때 도메인 주소를 설정합니다. `[[나무코드]]`가 미리보기에서 표시된다면 `<도메인 주소>/w/나무코드`로 링크가 걸립니다."
                     },
                     "namucode.parser.maxCharacter": {
                         "type": "number",
@@ -517,12 +517,6 @@
                         "default": 10,
                         "title": "문서 렌더링 최대 대기 시간",
                         "description": "미리보기 파서에서 문서 렌더링을 기다리는 최대 시간(초)입니다. (파싱 다음에 렌더링이 진행됩니다.)"
-                    },
-                    "namucode.preview.parser.maxParsingTimeout": {
-                        "type": "number",
-                        "default": 7,
-                        "title": "문서 파싱 최대 대기 시간",
-                        "description": "미리보기 파서에서 문서 파싱을 기다리는 최대 시간(초)입니다. (파싱 다음에 렌더링이 진행됩니다.)"
                     },
                     "namucode.preview.parser.maxParsingDepth": {
                         "type": "number",
