@@ -10,7 +10,8 @@ module.exports = async (obj, link, {
     dbDocument: docDbDocument,
     rev: docRev,
     includeData,
-    isInternal
+    isInternal,
+    config
 }) => {
     const document = mainUtils.parseDocumentName(obj.link);
     let { namespace, title } = document;
@@ -161,7 +162,7 @@ module.exports = async (obj, link, {
 <span class="${imgSpanClassList.join(' ')}" style="${imgSpanStyle}">
 <span class="wiki-image-wrapper" style="${imgWrapperStyle}">
 <img${imgAttrib} style="${imgStyle}" src="${b64Image}">
-<img class="wiki-image wiki-image-loading"${imgAttrib} style="${imgStyle}" src="${b64Image}" alt="${fullTitle}"${imgUrl ? ` data-src="${imgUrl}" data-filesize="${result.content.fileSize}"` : ''}${videoUrl ? ` data-video-src="${videoUrl}" data-video-filesize="${result.content.videoFileSize}"` : ''}${(docDocument.namespace === namespace && docDocument.title === title) ? '' : ` data-doc="${utils.escapeHtml(mainUtils.doc_action_link(document, 'w'))}`}">
+<img class="wiki-image wiki-image-loading"${imgAttrib} style="${imgStyle}" src="${b64Image}" alt="${fullTitle}"${imgUrl ? ` data-src="${imgUrl}" data-filesize="${result.content.fileSize}"` : ''}${videoUrl ? ` data-video-src="${videoUrl}" data-video-filesize="${result.content.videoFileSize}"` : ''}${(docDocument.namespace === namespace && docDocument.title === title) ? '' : ` data-doc="${utils.escapeHtml(mainUtils.doc_action_link(document, 'w', { internalLinkDomain: config.internalLinkDomain }))}`}">
 ${isInternal
     ? '' 
     : (

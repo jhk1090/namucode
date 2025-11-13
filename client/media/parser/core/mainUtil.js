@@ -59,6 +59,10 @@ module.exports = {
         .map((k) => `${k}=${encodeURIComponent(query[k])}`)
         .join("&");
     }
+
+    if (query.internalLinkDomain) {
+      return query.internalLinkDomain + str
+    }
     return str;
   },
   encodeSpecialChars(str, exclude = []) {
