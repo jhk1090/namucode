@@ -1,4 +1,8 @@
-const { createToken, Lexer, EmbeddedActionsParser } = require("chevrotain");
+const {
+    createToken,
+    Lexer,
+    EmbeddedActionsParser
+} = require('chevrotain');
 const {
     validateHTMLColorHex
 } = require('validate-color');
@@ -6,7 +10,7 @@ const {
 const utils = require('./utils');
 const { AllowedLanguages } = require('./utils');
 
-let MAXIMUM_DEPTH = 30;
+let MAXIMUM_DEPTH = 15;
 
 let noCheckStartAtFirst = false;
 const fullLineRegex = (regex, { laterRegex } = {}) => {
@@ -83,7 +87,7 @@ const nestedRegex = (openRegex, closeRegex, {
                     const content = str.slice(0, closeIndex + closeMatch[0].length);
                     if(!allowNewline && content.replace(LiteralRegex, '').includes('\n'))
                         return null;
-                    
+
                     const result = [content];
                     const payload = result.payload = {};
                     if(postCheck && !postCheck(content, { payload, startOffset }))
@@ -230,7 +234,7 @@ const Indent = createToken({
 });
 const Text = createToken({
     name: 'Text',
-    pattern: /[^\\'\r\n_\[\]~\-^,|{#]+|['\r\n_\[\]~\-^,|{#]/
+    pattern: /[^\\'\r\n_\[\]~\-^,|{#@]+|['\r\n_\[\]~\-^,|{#@]/
 });
 
 const HeadingRegex = /^(={1,6})(#)? +(.+?) +\2\1$/m;
@@ -447,12 +451,24 @@ const CommentNumberRegex = /(?<!\S)#\d+/y;
 const CommentNumber = createToken({
     name: 'CommentNumber',
     pattern: (text, startOffset) => {
-        if(!Store.thread) return null;
+        if(!Store.thread || Store.parentTypes.includes('link')) return null;
 
         CommentNumberRegex.lastIndex = startOffset;
         return CommentNumberRegex.exec(text);
     },
     start_chars_hint: ['#'],
+    line_breaks: false
+});
+const CommentMentionRegex = /(?<!\S)@\S+/y;
+const CommentMention = createToken({
+    name: 'CommentMention',
+    pattern: (text, startOffset) => {
+        if(!Store.thread || Store.parentTypes.includes('link')) return null;
+
+        CommentMentionRegex.lastIndex = startOffset;
+        return CommentMentionRegex.exec(text);
+    },
+    start_chars_hint: ['@'],
     line_breaks: false
 });
 const Folding = createToken({
@@ -637,6 +653,7 @@ const inlineTokens = [
     SyntaxSyntax,
     HtmlSyntax,
     CommentNumber,
+    CommentMention,
     Folding,
     IfSyntax,
     ColorText,
@@ -700,6 +717,7 @@ let currDepth = 0;
 
 let Store = {
     links: [],
+    commentNumbers: [],
     categories: [],
     includes: [],
     includeParams: {},
@@ -715,7 +733,8 @@ let Store = {
     //     list: []
     // },
     commentLines: [],
-    noLiteralPos: []
+    noLiteralPos: [],
+    parentTypes: []
 }
 const originalStore = { ...Store };
 
@@ -739,7 +758,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             //         footnoteValues: [...Store.footnote.values],
             //         footnoteList: [...Store.footnote.list]
             //     });
-            result.push({ type: "macro", name: "footnote" })
+            result.push({ type: 'macro', name: 'footnote' });
 
             return result;
         });
@@ -850,7 +869,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             let pureText;
             let sectionNum;
             $.ACTION(() => {
-                text = parseInline(text);
+                text = parseInline(text, 'heading');
                 linkText = filterInline(text, true);
                 pureText = filterInline(text, false);
                 if(level < Store.heading.lowestLevel)
@@ -930,7 +949,7 @@ class NamumarkParser extends EmbeddedActionsParser {
 
                             items.push({
                                 align,
-                                value: parseBlock(str, false, true)
+                                value: parseBlock(str, 'table', false, true)
                             });
                             lastIdx = t.endOffset + 1;
                         }
@@ -946,7 +965,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                 }
             });
             $.ACTION(() => {
-                caption = parseInline(caption);
+                caption = parseInline(caption, 'table');
             });
             return {
                 type: 'table',
@@ -973,7 +992,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             });
             let content;
             $.ACTION(() => {
-                content = parseBlock(lines.join('\n'));
+                content = parseBlock(lines.join('\n'), 'blockquote');
             });
             return {
                 type: 'blockquote',
@@ -1012,7 +1031,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                     if(content.startsWith(' ')) content = content.slice(1);
 
                     $.ACTION(() => {
-                        content = parseBlock(content);
+                        content = parseBlock(content, 'list');
                     });
                     items.push(content);
                     $.OPTION({
@@ -1041,7 +1060,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             });
             let content;
             $.ACTION(() => {
-                content = parseBlock(lines.join('\n'));
+                content = parseBlock(lines.join('\n'), 'indent');
             });
             return {
                 type: 'indent',
@@ -1104,6 +1123,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                         { ALT: () => $.SUBRULE($.syntaxSyntax) },
                         { ALT: () => $.SUBRULE($.htmlSyntax) },
                         { ALT: () => $.SUBRULE($.commentNumber) },
+                        { ALT: () => $.SUBRULE($.commentMention) },
                         { ALT: () => $.SUBRULE($.folding) },
                         { ALT: () => $.SUBRULE($.ifSyntax) },
                         { ALT: () => $.SUBRULE($.colorText) },
@@ -1152,7 +1172,7 @@ class NamumarkParser extends EmbeddedActionsParser {
 
             let content = tok.image.slice(6, -3);
             $.ACTION(() => {
-                content = parseBlock(content, true);
+                content = parseBlock(content, 'scaleText', true);
             });
 
             return {
@@ -1172,7 +1192,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             let content = lines.slice(1).join('\n');
 
             $.ACTION(() => {
-                content = parseBlock(content, true);
+                content = parseBlock(content, 'wikiSyntax', true);
             });
 
             return {
@@ -1212,9 +1232,28 @@ class NamumarkParser extends EmbeddedActionsParser {
         $.RULE('commentNumber', () => {
             const tok = $.CONSUME(CommentNumber);
             const num = parseInt(tok.image.slice(1));
+
+            if(!Store.commentNumbers.includes(num))
+                Store.commentNumbers.push(num);
+
             return {
                 type: 'commentNumber',
                 num
+            }
+        });
+
+        $.RULE('commentMention', () => {
+            const tok = $.CONSUME(CommentMention);
+            const name = tok.image.slice(1);
+            const link = `사용자:${name}`;
+
+            if(!Store.links.includes(link))
+                Store.links.push(link);
+
+            return {
+                type: 'commentMention',
+                name,
+                link
             }
         });
 
@@ -1227,7 +1266,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             let content = lines.slice(1).join('\n');
 
             $.ACTION(() => {
-                content = parseBlock(content, true);
+                content = parseBlock(content, 'syntaxSyntax', true);
             });
 
             return {
@@ -1246,7 +1285,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             let content = lines.slice(1).join('\n');
 
             $.ACTION(() => {
-                content = parseBlock(content, true);
+                content = parseBlock(content, 'ifSyntax', true);
             });
 
             return {
@@ -1260,7 +1299,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             const tok = $.CONSUME(ColorText);
             let { content, color, darkColor } = tok.payload || {};
             $.ACTION(() => {
-                content = parseBlock(content, true);
+                content = parseBlock(content, 'colorText', true);
             });
 
             return {
@@ -1281,12 +1320,12 @@ class NamumarkParser extends EmbeddedActionsParser {
             }
         });
 
-        const checkInline = (token, sliceStart, sliceEnd) => {
+        const checkInline = (name, token, sliceStart, sliceEnd) => {
             const tok = $.CONSUME(token);
             const content = tok.image.slice(sliceStart, sliceEnd);
             let parsedContent;
             $.ACTION(() => {
-                parsedContent = parseInline(content);
+                parsedContent = parseInline(content, name);
             });
             return {
                 success: true,
@@ -1330,8 +1369,20 @@ class NamumarkParser extends EmbeddedActionsParser {
             link = link.replaceAll('\\#', '#');
 
             const text = parsedText || newLink || link;
+            let isFile = false;
             $.ACTION(() => {
-                parsedText &&= parseInline(parsedText);
+                if(!parsedUrl && link) {
+                    const maybeNamespace = link.split(':')[0];
+                    if(maybeNamespace === '파일'
+                        || (maybeNamespace.includes('파일') && global.config?.namespaces?.length && global.config.namespaces.includes(maybeNamespace))) {
+                        isFile = true;
+                        parsedText = [{
+                            type: 'text',
+                            text: link
+                        }];
+                    }
+                }
+                if(!isFile) parsedText &&= parseInline(parsedText, 'link');
             });
 
             if(origParsedText && origParsedText.replace(LiteralRegex, '').includes('\n')) {
@@ -1405,14 +1456,18 @@ class NamumarkParser extends EmbeddedActionsParser {
             const splitted = content.split(' ');
 
             const valueInput = splitted.slice(1).join(' ');
-            let value = valueInput
+            let value = valueInput;
 
             $.ACTION(() => {
-                value = parseInline(value);
+                value = parseInline(value, 'footnote');
             });
+
+            // $.ACTION(() => {
+            //     Store.footnote.index++;
+            // });
             // const index = Store.footnote.index;
             // const name = splitted[0] || index.toString();
-
+            //
             // const prevFootnote = Store.footnote.values.find(a => a.name === name);
             // let value = prevFootnote?.content;
             // if(prevFootnote == null) {
@@ -1425,7 +1480,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             //         });
             //     });
             // }
-
+            //
             // $.ACTION(() => {
             //     Store.footnote.list.push({
             //         name,
@@ -1472,9 +1527,9 @@ class NamumarkParser extends EmbeddedActionsParser {
                 //     Store.footnote.values.length = 0;
                 //     Store.footnote.list.length = 0;
                 // }
-                // else if(name === 'vote') {
-                //     data.parsedSplittedParams = splittedParams.map(a => parseInline(a));
-                // }
+                else if(name === 'vote') {
+                    data.parsedSplittedParams = splittedParams.map(a => parseInline(a, 'macro'));
+                }
             });
 
             return {
@@ -1507,7 +1562,7 @@ class NamumarkParser extends EmbeddedActionsParser {
         });
 
         const inlineHandler = (name, token, sliceStart, sliceEnd) => {
-            const { success, content } = checkInline(token, sliceStart, sliceEnd);
+            const { success, content } = checkInline(name, token, sliceStart, sliceEnd);
             if(!success) return content;
             return {
                 type: name,
@@ -1539,7 +1594,8 @@ for(let i = 0; i < MAXIMUM_DEPTH; i++)
 
 const getParser = () => (currDepth >= MAXIMUM_DEPTH - 1) ? null : instances[currDepth++];
 
-const parseInline = text => {
+const parseInline = (text, name) => {
+    if(name) Store.parentTypes.push(name);
     const lexed = inlineLexer.tokenize(text);
     const inlineParser = getParser();
     if(!inlineParser) return text.split('\n').map(text => [{
@@ -1549,6 +1605,7 @@ const parseInline = text => {
     inlineParser.noTopParagraph = false;
     inlineParser.input = lexed.tokens;
     const result = inlineParser.inline();
+    if(name) Store.parentTypes.pop();
     currDepth--;
     // console.log(`"${text}"`);
     // console.log(lexed.tokens);
@@ -1556,7 +1613,8 @@ const parseInline = text => {
     return result;
 }
 
-const parseBlock = (text, noTopParagraph = false, noLineStart = false) => {
+const parseBlock = (text, name, noTopParagraph = false, noLineStart = false) => {
+    if(name) Store.parentTypes.push(name);
     noCheckStartAtFirst = noLineStart;
     const lexed = blockLexer.tokenize(text);
     noCheckStartAtFirst = false;
@@ -1575,6 +1633,7 @@ const parseBlock = (text, noTopParagraph = false, noLineStart = false) => {
     blockParser.noTopParagraph = noTopParagraph;
     blockParser.input = lexed.tokens;
     const result = blockParser.blockDocument();
+    if(name) Store.parentTypes.pop();
     currDepth--;
     // console.log(`"${text}"`);
     // console.log(lexed.tokens);
