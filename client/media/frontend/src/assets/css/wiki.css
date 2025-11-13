@@ -190,7 +190,29 @@
         top: 0;
     }
 
-    .wiki-image-info {
+    .wiki-image-show-button {
+        background-color: transparent;
+        border: .0625rem solid #5bc0de;
+        color: #5bc0de;
+        cursor: pointer;
+        display: inline-block;
+        font-weight: 400;
+        padding: .2rem .45rem;
+        text-align: center;
+        touch-action: manipulation;
+        user-select: none;
+        vertical-align: middle;
+        white-space: nowrap;
+        width: 100%;
+    }
+
+    .wiki-image-show-button:active, .wiki-image-show-button:hover {
+        background-color: #5bc0de;
+        border-color: #5bc0de;
+        color: #fff;
+    }
+
+    .wiki-image-info-btn {
         background: none;
         border: none;
         color: #ec9f19;
@@ -202,17 +224,17 @@
         top: 0;
     }
 
-    .wiki-image-info:before {
+    .wiki-image-info-btn:before {
         content: "";
         display: inline-block;
         font-family: "Ionicons" !important;
     }
 
-    .wiki-image-info:hover:before {
+    .wiki-image-info-btn:hover:before {
         content: "";
     }
 
-    .wiki-image-wrapper:hover .wiki-image-info {
+    .wiki-image-wrapper:hover .wiki-image-info-btn {
         display: block;
     }
 
@@ -520,6 +542,20 @@
     .wiki-macro-vote legend {
         all: revert;
     }
+
+    .wiki-fn-unfolded, .wiki-link-unfolded {
+        background-color: #efefef;
+        border: 1px solid #cecece;
+        color: #555;
+        font-size: .88888em;
+        margin-left: .1rem;
+        margin-right: .2rem;
+    }
+
+    .wiki-fn-unfolded {
+        font-size: 1em;
+        vertical-align: baseline;
+    }
 }
 
 .theseed-dark-mode .wiki-content {
@@ -570,5 +606,10 @@
 
     .wiki-macro-toc {
         border-color: #383b40;
+    }
+
+    .wiki-footnote-unfolded, .wiki-link-unfolded {
+        background-color: #2d2f34;
+        color: #ddd;
     }
 }

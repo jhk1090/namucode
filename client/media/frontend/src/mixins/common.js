@@ -1,5 +1,4 @@
 import { decode } from '@msgpack/msgpack';
-import fs from 'fs'
 
 export default {
     methods: {
@@ -30,7 +29,7 @@ export default {
         encodeSpecialChars(str, exclude = []) {
             if(!str) return str;
 
-            const specialChars = '?&=+$#%'.split('');
+            const specialChars = '?&=+$#%\\'.split('');
             return str.split('').map(a => specialChars.includes(a) && !exclude.includes(a) ? encodeURIComponent(a) : a).join('');
         },
         doc_action_link(document, route, query = {}) {
@@ -40,16 +39,11 @@ export default {
                 '\\'
             ];
 
-            // 이 함수는 분류에서만 사용
-            document = {
-                title: document,
-                namespace: "분류"
-            }
             const title = typeof document === 'string' ? document : this.doc_fulltitle(document);
             let str;
             if(specialUrls.includes(title) || route.startsWith('a/')) {
                 query.doc = encodeURIComponent(title);
-                str = `/${route}/`;
+                str = `/${route}`;
             }
             else str = `/${route}/${this.encodeSpecialChars(title)}`;
             if(Object.keys(query).length > 0) {
@@ -85,7 +79,7 @@ export default {
             return text ? ` (${text})` + (additionalText ? ` - ${additionalText}` : '') : '';
         },
         removeHtmlTags(text) {
-            return text.replaceAll(/<[^>]+>/g, '');
+            return unescapeHtml(text.replaceAll(/<[^>]+>/g, ''));
         },
         durationToExactString(duration) {
             const strs = [];
@@ -216,6 +210,10 @@ export default {
 
             const strCode = json.code?.toString() || ''
             if(strCode.startsWith('3')) {
+                if(!json.url.startsWith('/')) {
+                    location.href = json.url
+                    return
+                }
                 this.$store.state.components.mainView.nextUrl = json.url
                 return
             }
@@ -238,26 +236,31 @@ export default {
             if(json.data) {
                 this.$store.state.clearFormErrors()
 
-                if(typeof json.data === 'string') {
-                    this.$store.state.viewData.errorAlert = json.data
+                const strCode = json.code?.toString() || ''
+                if(strCode[0] === '4' || strCode[0] === '5') {
+                    if(typeof json.data === 'string') {
+                        this.$store.state.viewData.errorAlert = json.data
 
-                    const firstInput = form?.querySelector('input, select, textarea')
-                    if(firstInput) this.$nextTick().then(() => firstInput.focus())
+                        if(json.code?.toString().startsWith('4')) {
+                            const firstInput = form?.querySelector('input, select, textarea')
+                            if(firstInput) this.$nextTick().then(() => firstInput.focus())
+                        }
 
-                    this.$store.state.viewData.errorAlertExists = false
-                    await this.$nextTick()
-                    const alertExists = this.$store.state.viewData.errorAlertExists
-                    if(!alertExists)
-                        alert(json.data)
-                }
-                else {
-                    const fieldErrors = json.data.fieldErrors
-                    this.$store.state.viewData.fieldErrors = fieldErrors
-                    if(fieldErrors) {
-                        const firstInputName = Object.keys(json.data.fieldErrors)[0]
-                        const firstInput = form?.querySelector(`[name="${firstInputName}"]`)
+                        this.$store.state.viewData.errorAlertExists = false
                         await this.$nextTick()
-                        firstInput?.focus()
+                        const alertExists = this.$store.state.viewData.errorAlertExists
+                        if(!alertExists)
+                            alert(json.data)
+                    }
+                    else {
+                        const fieldErrors = json.data.fieldErrors
+                        this.$store.state.viewData.fieldErrors = fieldErrors
+                        if(fieldErrors) {
+                            const firstInputName = Object.keys(json.data.fieldErrors)[0]
+                            const firstInput = form?.querySelector(`[name="${firstInputName}"]`)
+                            await this.$nextTick()
+                            firstInput?.focus()
+                        }
                     }
                 }
             }

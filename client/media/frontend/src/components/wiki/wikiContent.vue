@@ -84,8 +84,8 @@ export default {
     },
     setupWikiContent(element = this.$refs.div) {
       {
-        const imageHide = this.$store.state.localConfig['wiki.image_hide']
-        const disableImageLazy = this.$store.state.localConfig['wiki.disable_image_lazy']
+        // const imageHide = this.$store.state.localConfig['wiki.image_hide']
+        // const disableImageLazy = this.$store.state.localConfig['wiki.disable_image_lazy']
 
         for(let img of [...element.getElementsByClassName('wiki-image-loading')]) {
           if(img.tagName !== 'IMG') continue
@@ -110,8 +110,8 @@ export default {
 
           const loadImg = () => {
             if(!isVideo) {
-              if(!disableImageLazy)
-                img.setAttribute('loading', 'lazy')
+              // if(!disableImageLazy)
+              //   img.setAttribute('loading', 'lazy')
               img.setAttribute('src', img.dataset.src)
               addInfoBtn()
               return
@@ -123,6 +123,8 @@ export default {
               video.loop = true
 
               const baseUrl = import.meta.env.BASE_URL
+
+              // loading.gif는 필요 없을 것 같아 삭제
               video.setAttribute('poster', baseUrl + (baseUrl.endsWith('/') ? '' : '/') + 'img/loading.gif')
             }
             else {
@@ -137,8 +139,8 @@ export default {
             if(img.getAttribute('height'))
               video.setAttribute('height', img.getAttribute('height'))
 
-            if(!disableImageLazy)
-              video.setAttribute('loading', 'lazy')
+            // if(!disableImageLazy)
+            //   video.setAttribute('loading', 'lazy')
 
             parent.insertBefore(video, img)
             addInfoBtn()
@@ -152,45 +154,46 @@ export default {
             }
           }
 
-          if(imageHide === 'hide' || (imageHide === 'hide_1mb' && !isNaN(size) && size >= (1024 * 1024))) {
-            const btn = document.createElement('button')
-            btn.setAttribute('type', 'button')
-            btn.classList.add('wiki-image', 'wiki-image-show-button')
+          // if(imageHide === 'hide' || (imageHide === 'hide_1mb' && !isNaN(size) && size >= (1024 * 1024))) {
+          //   const btn = document.createElement('button')
+          //   btn.setAttribute('type', 'button')
+          //   btn.classList.add('wiki-image', 'wiki-image-show-button')
 
-            let sizeText = ''
-            if(size) {
-              if(size > 1024 * 1024)
-                sizeText = (size / 1024 / 1024).toFixed(2) + 'MB'
-              else if(size > 1024)
-                sizeText = (size / 1024).toFixed(2) + 'KB'
-              else
-                sizeText = size + 'bytes'
-            }
-            sizeText &&= ` (${sizeText})`
+          //   let sizeText = ''
+          //   if(size) {
+          //     if(size > 1024 * 1024)
+          //       sizeText = (size / 1024 / 1024).toFixed(2) + 'MB'
+          //     else if(size > 1024)
+          //       sizeText = (size / 1024).toFixed(2) + 'KB'
+          //     else
+          //       sizeText = size + 'bytes'
+          //   }
+          //   sizeText &&= ` (${sizeText})`
 
-            btn.innerText = (img.dataset.src ? '이미지' : '동영상') + sizeText
+          //   btn.innerText = (img.dataset.src ? '이미지' : '동영상') + sizeText
 
-            const removeBtnListener = () => {
-              btn.removeEventListener('click', onBtnClick)
-            }
-            this.cleanupFunctions.push(removeBtnListener)
+          //   const removeBtnListener = () => {
+          //     btn.removeEventListener('click', onBtnClick)
+          //   }
+          //   this.cleanupFunctions.push(removeBtnListener)
 
-            let onBtnClick = e => {
-              if(!onBtnClick) return
+          //   let onBtnClick = e => {
+          //     if(!onBtnClick) return
 
-              e?.preventDefault()
-              removeBtnListener()
-              onBtnClick = null
-              parent.insertBefore(img, btn)
-              parent.removeChild(btn)
-              loadImg()
-            }
+          //     e?.preventDefault()
+          //     removeBtnListener()
+          //     onBtnClick = null
+          //     parent.insertBefore(img, btn)
+          //     parent.removeChild(btn)
+          //     loadImg()
+          //   }
 
-            btn.addEventListener('click', onBtnClick)
-            parent.insertBefore(btn, img)
-            parent.removeChild(img)
-          }
-          else loadImg()
+          //   btn.addEventListener('click', onBtnClick)
+          //   parent.insertBefore(btn, img)
+          //   parent.removeChild(img)
+          // }
+          // else loadImg()
+          loadImg()
         }
       }
 
