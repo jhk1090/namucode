@@ -59,10 +59,6 @@
             "name": "comment.line.double-quote.namu",
             "match": "#{2,}.*"
         },
-        "titles": {
-            "name": "keyword.control.namu",
-            "match": "^(={1,6})(#?) (.*) (\\2)(\\1)$"
-        },
         "links": {
             "match": "\\[{2}([^|\\]\\[]*)((\\|)([^|\\]\\[]*))?\\]{2}",
             "captures": {
@@ -512,17 +508,6 @@
             "captures": {
                 "1": {
                     "name": "keyword.operator.namu"
-                }
-            }
-        },
-        "redirect": {
-            "match": "^(#redirect) (.*)",
-            "captures": {
-                "1": {
-                    "name": "keyword.control.namu"
-                },
-                "2": {
-                    "name": "string.quoted.double.namu"
                 }
             }
         },

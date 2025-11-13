@@ -4,7 +4,7 @@ import { promises as fs } from "fs";
 import { ExtensionContext } from "vscode";
 import imageSize from "image-size";
 import { performance } from 'perf_hooks';
-import { DocumentSymbolProvider } from './extension';
+import { DocumentSymbolProvider } from './providers/DocumentSymbolProvider';
 const renderer = require("../media/parser/core/toHtmlWorker.js")
 
 export function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptions {
@@ -291,8 +291,7 @@ export class MarkPreview {
         const runParsing = async () => {
             const config = getConfig()
 
-            const provider = new DocumentSymbolProvider(this.context)
-            const result = await provider.createParserPromise(document, { editorComment: config.isEditorComment, maxParsingDepth: config.maxParsingDepth, maxCharacter: config.maxParsingCharacter })
+            const result = await DocumentSymbolProvider.createParserPromise(document, { editorComment: config.isEditorComment, maxParsingDepth: config.maxParsingDepth, maxCharacter: config.maxParsingCharacter })
 
             return result;
         }
