@@ -23,7 +23,7 @@ export class FoldingRangeProvider implements vscode.FoldingRangeProvider {
 
     const allTypes = [...targetDepthTypes, ...targetFlatTypes, ...specialTypes]
 
-    // FIXME: 주석이 있으면 라인이 밀리는 오류 + maxParsingDepth로 인한 text literal화 오류
+    // FIXME: maxParsingDepth로 인한 text literal화 오류
 		const findTargetTypes = (array, startLine) => {
       if (array.length === undefined) {
         findTargetTypes([array], startLine);

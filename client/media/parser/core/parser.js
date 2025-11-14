@@ -947,12 +947,15 @@ class NamumarkParser extends EmbeddedActionsParser {
                                 // str = str.slice(0, -1);
                             }
 
-                            const startLine = tok.startLine + (lastTableSplit ? lastTableSplit.startLine : 1) - 1
+                            let startLine = tok.startLine + (lastTableSplit ? lastTableSplit.startLine : 1) - 1
+                            startLine = getOriginalLine(Store.commentLines, startLine - 1) + 1
+                            let endLine = tok.startLine + t.endLine - 1
+                            endLine = getOriginalLine(Store.commentLines, endLine - 1) + 1 
                             items.push({
                                 align,
                                 value: parseBlock(str, 'table', false, true),
                                 startLine,
-                                endLine: tok.startLine + t.endLine - 1
+                                endLine
                             });
                             lastIdx = t.endOffset + 1;
                             lastTableSplit = t
@@ -1184,8 +1187,8 @@ class NamumarkParser extends EmbeddedActionsParser {
                 isSizeUp,
                 size,
                 content,
-                startLine: tok.startLine,
-                endLine: tok.endLine
+                startLine: getOriginalLine(Store.commentLines, tok.startLine - 1) + 1,
+                endLine: getOriginalLine(Store.commentLines, tok.endLine - 1) + 1
             }
         });
 
@@ -1207,8 +1210,8 @@ class NamumarkParser extends EmbeddedActionsParser {
                 // darkStyle,
                 wikiParamsStr,
                 content,
-                startLine: tok.startLine,
-                endLine: tok.endLine
+                startLine: getOriginalLine(Store.commentLines, tok.startLine - 1) + 1,
+                endLine: getOriginalLine(Store.commentLines, tok.endLine - 1) + 1
             }
         });
 
@@ -1223,8 +1226,8 @@ class NamumarkParser extends EmbeddedActionsParser {
                 type: 'syntaxSyntax',
                 lang,
                 content,
-                startLine: tok.startLine,
-                endLine: tok.endLine
+                startLine: getOriginalLine(Store.commentLines, tok.startLine - 1) + 1,
+                endLine: getOriginalLine(Store.commentLines, tok.endLine - 1) + 1
             }
         });
 
@@ -1235,8 +1238,8 @@ class NamumarkParser extends EmbeddedActionsParser {
             return {
                 type: 'htmlSyntax',
                 text,
-                startLine: tok.startLine,
-                endLine: tok.endLine
+                startLine: getOriginalLine(Store.commentLines, tok.startLine - 1) + 1,
+                endLine: getOriginalLine(Store.commentLines, tok.endLine - 1) + 1
                 // safeHtml
             }
         });
@@ -1285,8 +1288,8 @@ class NamumarkParser extends EmbeddedActionsParser {
                 type: 'folding',
                 text: text || 'More',
                 content,
-                startLine: tok.startLine,
-                endLine: tok.endLine
+                startLine: getOriginalLine(Store.commentLines, tok.startLine - 1) + 1,
+                endLine: getOriginalLine(Store.commentLines, tok.endLine - 1) + 1
             }
         });
 
@@ -1306,8 +1309,8 @@ class NamumarkParser extends EmbeddedActionsParser {
                 type: 'ifSyntax',
                 expression,
                 content,
-                startLine: tok.startLine,
-                endLine: tok.endLine
+                startLine: getOriginalLine(Store.commentLines, tok.startLine - 1) + 1,
+                endLine: getOriginalLine(Store.commentLines, tok.endLine - 1) + 1
             }
         });
 
@@ -1323,8 +1326,8 @@ class NamumarkParser extends EmbeddedActionsParser {
                 color,
                 darkColor,
                 content,
-                startLine: tok.startLine,
-                endLine: tok.endLine
+                startLine: getOriginalLine(Store.commentLines, tok.startLine - 1) + 1,
+                endLine: getOriginalLine(Store.commentLines, tok.endLine - 1) + 1
             }
         });
 
@@ -1335,8 +1338,8 @@ class NamumarkParser extends EmbeddedActionsParser {
             return {
                 type: 'literal',
                 text,
-                startLine: tok.startLine,
-                endLine: tok.endLine
+                startLine: getOriginalLine(Store.commentLines, tok.startLine - 1) + 1,
+                endLine: getOriginalLine(Store.commentLines, tok.endLine - 1) + 1
             }
         });
 
@@ -1464,8 +1467,8 @@ class NamumarkParser extends EmbeddedActionsParser {
                 hash,
                 textExists: !!origParsedText,
                 parsedText,
-                startLine: tok.startLine,
-                endLine: tok.endLine
+                startLine: getOriginalLine(Store.commentLines, tok.startLine - 1) + 1,
+                endLine: getOriginalLine(Store.commentLines, tok.endLine - 1) + 1
             }
         }
 
