@@ -75,20 +75,20 @@ export class DocumentSymbolProvider implements vscode.DocumentSymbolProvider {
     }
 
     if (cached && cached.version === version && cached.config.editorComment === editorComment && cached.config.maxParsingDepth === maxParsingDepth) {
-      // console.log("[Parser] ♻️ Promise 재활용: ", decodeURIComponent(path.basename(key)));
+      // console.log("[Parser] ♻️ Promise 재활용: ");
       return cached.promise;
     }
 
     const promise = new Promise(async (resolve, reject) => {
       const text = document.getText();
-      let parseStart = performance.now();
+      // let parseStart = performance.now();
       const result = parser(text, { editorComment, maxParsingDepth });
-      let parseEnd = performance.now();
-      // console.log("[Parser] 📌 파싱 중...", decodeURIComponent(path.basename(document.uri.toString())), "v", document.version, "(time: ", (parseEnd - parseStart).toFixed(2), "ms)")
+      // let parseEnd = performance.now();
+      // console.log("[Parser] 📌 파싱 중...", "v", document.version, "(time: ", (parseEnd - parseStart).toFixed(2), "ms)")
       resolve(result);
     });
 
-    // console.log("[Parser] ⚙️ Promise 생성: ", decodeURIComponent(path.basename(key)), "v", version);
+    // console.log("[Parser] ⚙️ Promise 생성: ", "v", version);
     DocumentSymbolProvider.cache.set(key, { ...cached, version, promise, config: { editorComment, maxParsingDepth } });
     return promise;
   }

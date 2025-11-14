@@ -926,9 +926,9 @@ class NamumarkParser extends EmbeddedActionsParser {
                     const items = [];
                     $.ACTION(() => {
                         let lastIdx = 0;
+                        let lastTableSplit = null;
                         for(let t of tokens) {
                             if(t.tokenType !== TableSplit) continue;
-
                             const str = sliced.slice(lastIdx, t.startOffset);
                             const testStr = str.replace(/^(<(.*?)>)*/, '');
                             let align;
@@ -947,11 +947,15 @@ class NamumarkParser extends EmbeddedActionsParser {
                                 // str = str.slice(0, -1);
                             }
 
+                            const startLine = tok.startLine + (lastTableSplit ? lastTableSplit.startLine : 1) - 1
                             items.push({
                                 align,
-                                value: parseBlock(str, 'table', false, true)
+                                value: parseBlock(str, 'table', false, true),
+                                startLine,
+                                endLine: tok.startLine + t.endLine - 1
                             });
                             lastIdx = t.endOffset + 1;
+                            lastTableSplit = t
                         }
                     });
                     rows.push(items);
@@ -1179,7 +1183,9 @@ class NamumarkParser extends EmbeddedActionsParser {
                 type: 'scaleText',
                 isSizeUp,
                 size,
-                content
+                content,
+                startLine: tok.startLine,
+                endLine: tok.endLine
             }
         });
 
@@ -1200,7 +1206,9 @@ class NamumarkParser extends EmbeddedActionsParser {
                 // style,
                 // darkStyle,
                 wikiParamsStr,
-                content
+                content,
+                startLine: tok.startLine,
+                endLine: tok.endLine
             }
         });
 
@@ -1214,7 +1222,9 @@ class NamumarkParser extends EmbeddedActionsParser {
             return {
                 type: 'syntaxSyntax',
                 lang,
-                content
+                content,
+                startLine: tok.startLine,
+                endLine: tok.endLine
             }
         });
 
@@ -1225,6 +1235,8 @@ class NamumarkParser extends EmbeddedActionsParser {
             return {
                 type: 'htmlSyntax',
                 text,
+                startLine: tok.startLine,
+                endLine: tok.endLine
                 // safeHtml
             }
         });
@@ -1272,7 +1284,9 @@ class NamumarkParser extends EmbeddedActionsParser {
             return {
                 type: 'folding',
                 text: text || 'More',
-                content
+                content,
+                startLine: tok.startLine,
+                endLine: tok.endLine
             }
         });
 
@@ -1291,7 +1305,9 @@ class NamumarkParser extends EmbeddedActionsParser {
             return {
                 type: 'ifSyntax',
                 expression,
-                content
+                content,
+                startLine: tok.startLine,
+                endLine: tok.endLine
             }
         });
 
@@ -1306,7 +1322,9 @@ class NamumarkParser extends EmbeddedActionsParser {
                 type: 'colorText',
                 color,
                 darkColor,
-                content
+                content,
+                startLine: tok.startLine,
+                endLine: tok.endLine
             }
         });
 
@@ -1316,7 +1334,9 @@ class NamumarkParser extends EmbeddedActionsParser {
 
             return {
                 type: 'literal',
-                text
+                text,
+                startLine: tok.startLine,
+                endLine: tok.endLine
             }
         });
 
@@ -1443,7 +1463,9 @@ class NamumarkParser extends EmbeddedActionsParser {
                 text,
                 hash,
                 textExists: !!origParsedText,
-                parsedText
+                parsedText,
+                startLine: tok.startLine,
+                endLine: tok.endLine
             }
         }
 
