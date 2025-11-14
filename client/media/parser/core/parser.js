@@ -712,7 +712,7 @@ const tableRowLexer = new Lexer([
     ...inlineTokens
 ]);
 
-const instances = [];
+let instances = [];
 let currDepth = 0;
 
 let Store = {
@@ -1614,9 +1614,6 @@ class NamumarkParser extends EmbeddedActionsParser {
     }
 }
 
-for(let i = 0; i < MAXIMUM_DEPTH; i++)
-    instances.push(new NamumarkParser());
-
 const getParser = () => (currDepth >= MAXIMUM_DEPTH - 1) ? null : instances[currDepth++];
 
 const parseInline = (text, name) => {
@@ -1671,6 +1668,9 @@ const parser = new NamumarkParser();
 module.exports = (text, { tokens = null, editorComment = false, thread = false, noTopParagraph = false, maxParsingDepth = null } = {}) => {
     if (maxParsingDepth) {
         MAXIMUM_DEPTH = maxParsingDepth
+        instances = []
+        for(let i = 0; i < MAXIMUM_DEPTH; i++)
+            instances.push(new NamumarkParser());
     }
 
     text = text?.replaceAll('\r', '');

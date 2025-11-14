@@ -23,7 +23,6 @@ export class FoldingRangeProvider implements vscode.FoldingRangeProvider {
 
     const allTypes = [...targetDepthTypes, ...targetFlatTypes, ...specialTypes]
 
-    // FIXME: maxParsingDepth로 인한 text literal화 오류
 		const findTargetTypes = (array, startLine) => {
       if (array.length === undefined) {
         findTargetTypes([array], startLine);
@@ -65,12 +64,12 @@ export class FoldingRangeProvider implements vscode.FoldingRangeProvider {
         if (element.type === "table") {
           for (const row of element.rows) {
             for (const column of row) {
-              findTargetTypes(column.value ?? [], column.startLine - 1);
+              findTargetTypes(column.value ?? [], startLine + column.startLine - 1);
             }
           }
         }
         if (element.type === "link") {
-          findTargetTypes(element.parsedText ?? [], element.startLine - 1);
+          findTargetTypes(element.parsedText ?? [], startLine + element.startLine - 1);
         }
       }
     };
