@@ -28,25 +28,6 @@ export class SemanticTokenProvider implements vscode.DocumentSemanticTokensProvi
         );
 		}
 
-    const text = document.getText();
-    const lines = text.split(/\r?\n/);
-
-    for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
-      const line = lines[lineIndex];
-
-      // 간단히 'func' 단어가 나오면 function으로 처리
-      const match = /func\s+(\w+)/.exec(line);
-      if (match) {
-        const startChar = match.index;
-        const length = match[0].length;
-        tokensBuilder.push(
-          new vscode.Range(lineIndex, startChar, lineIndex, startChar + length),
-          'function',
-          ['declaration']
-        );
-      }
-    }
-
     return tokensBuilder.build();
   }
 }
