@@ -18,7 +18,7 @@ export class FoldingRangeProvider implements vscode.FoldingRangeProvider {
 
 		const targetDepthTypes = ["scaleText", "colorText", "wikiSyntax", "folding", "ifSyntax"]
 		const targetFlatTypes = ["syntaxSyntax", "htmlSyntax", "literal"]
-    const specialTypes = ["paragraph", "heading", "table", "link"]
+    const specialTypes = ["paragraph", "heading", "table", "link", "footnote"]
 
     const allTypes = [...targetDepthTypes, ...targetFlatTypes, ...specialTypes]
 
@@ -71,6 +71,9 @@ export class FoldingRangeProvider implements vscode.FoldingRangeProvider {
         }
         if (element.type === "link") {
           findTargetTypes(element.parsedText ?? []);
+        }
+        if (element.type === "footnote") {
+          findTargetTypes(element.value ?? []);
         }
       }
     };

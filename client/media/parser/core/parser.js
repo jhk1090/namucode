@@ -1516,9 +1516,11 @@ class NamumarkParser extends EmbeddedActionsParser {
 
             const valueInput = splitted.slice(1).join(' ');
             let value = valueInput;
+            let [startLine, startLeft] = getOriginalLine(Store.commentLines, this.rootStartLine + tok.startLine - 1, true)
+            startLine += 1
 
             $.ACTION(() => {
-                value = parseInline(value, 'footnote');
+                value = parseInline(value, 'footnote', startLine - 1 - startLeft);
             });
 
             // $.ACTION(() => {
