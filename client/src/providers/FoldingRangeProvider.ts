@@ -68,12 +68,15 @@ export class FoldingRangeProvider implements vscode.FoldingRangeProvider {
               findTargetTypes(column.value ?? []);
             }
           }
+          continue;
         }
         if (element.type === "link") {
           findTargetTypes(element.parsedText ?? []);
+          continue;
         }
         if (element.type === "footnote") {
           findTargetTypes(element.value ?? []);
+          continue;
         }
       }
     };
