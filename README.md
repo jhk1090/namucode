@@ -25,8 +25,15 @@
 ![namucode_oneditor](./images/namucode_oneditor.png)
 
 ## 설치
+| ![namucode_installation](./images/namucode_installation.png) |
+| :----: |
+| Visual Studio Code에서 설치하기 |
 
-나무코드는 Visual Studio Code 확장 프로그램으로, [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=jhk1090.namucode)에서 다운로드 가능합니다.
+나무코드는 Visual Studio Code 확장 프로그램입니다. 아래 방법 중 하나를 선택해 설치 가능합니다.
+- Visual Studio Code에서 **나무코드 Namucode**를 검색한 후 설치할 수 있습니다.
+- [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=jhk1090.namucode)에서 다운로드 가능합니다.
+- [나무코드 Github의 Release 탭](https://github.com/jhk1090/namucode/releases)에서 최신 릴리즈에서 VSIX 확장자인 확장 프로그램 파일(namucode-vX.X.X.vsix)을 다운로드 받아 직접 설치합니다.
+
 
 ## 사용법
 | ![namucode_onlanguageselect](./images/namucode_onlanguageselect.png) |
