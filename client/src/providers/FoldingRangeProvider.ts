@@ -16,16 +16,15 @@ export class FoldingRangeProvider implements vscode.FoldingRangeProvider {
 
     const result = await DocumentSymbolProvider.createParserPromise(document, { editorComment: false, maxParsingDepth, maxCharacter })
 
-    const singleDepthTypes = ["scaleText", "colorText"]
-		const targetDepthTypes = [...singleDepthTypes, "wikiSyntax", "folding", "ifSyntax"]
+		const targetDepthTypes = ["scaleText", "colorText", "wikiSyntax", "folding", "ifSyntax"]
 		const targetFlatTypes = ["syntaxSyntax", "htmlSyntax", "literal"]
     const specialTypes = ["paragraph", "heading", "table", "link"]
 
     const allTypes = [...targetDepthTypes, ...targetFlatTypes, ...specialTypes]
 
-		const findTargetTypes = (array, startLine) => {
+		const findTargetTypes = (array) => {
       if (array.length === undefined) {
-        findTargetTypes([array], startLine);
+        findTargetTypes([array]);
         return;
       }
 
@@ -33,53 +32,51 @@ export class FoldingRangeProvider implements vscode.FoldingRangeProvider {
         if (!allTypes.includes(element.type)) continue
 
         if (targetDepthTypes.includes(element.type)) {
-          const tokStartLine = startLine + element.startLine - 1;
-          const tokEndLine = startLine + element.endLine - 2;
+          const tokStartLine = element.startLine - 1;
+          const tokEndLine = element.endLine - 2;
           element.content = element.content ?? [];
           if (tokStartLine < tokEndLine) {
             ranges.push(new vscode.FoldingRange(tokStartLine, tokEndLine));
             for (const content of element.content) {
-              findTargetTypes(content, singleDepthTypes.includes(element.type) ? tokStartLine : tokStartLine + 1);
+              findTargetTypes(content);
             }
           }
           continue;
         }
         if (targetFlatTypes.includes(element.type)) {
-          const tokStartLine = startLine + element.startLine - 1;
-          const tokEndLine = startLine + element.endLine - 2;
-          ranges.push(new vscode.FoldingRange(tokStartLine, tokEndLine));
+          const tokStartLine = element.startLine - 1;
+          const tokEndLine = element.endLine - 2;
+          if (tokStartLine < tokEndLine) {
+            ranges.push(new vscode.FoldingRange(tokStartLine, tokEndLine));
+          }
           continue;
         }
         if (element.type === "paragraph") {
           for (const line of element.lines ?? []) {
-            findTargetTypes(line, startLine);
+            findTargetTypes(line);
           }
           continue;
         }
         if (element.type === "heading") {
           // heading은 상위에서만 적용됨: startLine == 0
-          findTargetTypes(element.content, startLine);
+          findTargetTypes(element.content);
           continue;
         }
         if (element.type === "table") {
           for (const row of element.rows) {
             for (const column of row) {
-              findTargetTypes(column.value ?? [], startLine + column.startLine - 1);
+              findTargetTypes(column.value ?? []);
             }
           }
         }
         if (element.type === "link") {
-          findTargetTypes(element.parsedText ?? [], startLine + element.startLine - 1);
+          findTargetTypes(element.parsedText ?? []);
         }
       }
     };
     
     // let parseStart = performance.now();
-    try {
-      findTargetTypes(result.result, 0)
-    } catch (e) {
-      console.error(e)
-    }
+    findTargetTypes(result.result)
     // let parseEnd = performance.now();
     // console.log("[Folding] ", "(time: ", (parseEnd - parseStart).toFixed(2), "ms)")
 
