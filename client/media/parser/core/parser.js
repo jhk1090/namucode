@@ -949,12 +949,14 @@ class NamumarkParser extends EmbeddedActionsParser {
                             }
 
                             let startLine = tok.startLine + (lastTableSplit ? lastTableSplit.startLine : 1) - 1
-                            startLine = getOriginalLine(Store.commentLines, this.rootStartLine + startLine - 1) + 1
+                            const [line, left] = getOriginalLine(Store.commentLines, this.rootStartLine + startLine - 1, true)
+                            startLine = line + 1
+
                             let endLine = tok.startLine + t.endLine - 1
-                            endLine = getOriginalLine(Store.commentLines, this.rootStartLine + endLine - 1) + 1 
+                            endLine = getOriginalLine(Store.commentLines, this.rootStartLine + endLine - 1) + 1
                             items.push({
                                 align,
-                                value: parseBlock(str, 'table', false, true, startLine - 1),
+                                value: parseBlock(str, 'table', false, true, startLine - 1 - left),
                                 startLine,
                                 endLine
                             });
@@ -1425,7 +1427,8 @@ class NamumarkParser extends EmbeddedActionsParser {
 
             const text = parsedText || newLink || link;
             let isFile = false;
-            const startLine = getOriginalLine(Store.commentLines, this.rootStartLine + tok.startLine - 1) + 1
+            let [startLine, startLeft] = getOriginalLine(Store.commentLines, this.rootStartLine + tok.startLine - 1, true)
+            startLine += 1
             $.ACTION(() => {
                 if(!parsedUrl && link) {
                     const maybeNamespace = link.split(':')[0];
@@ -1438,7 +1441,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                         }];
                     }
                 }
-                if(!isFile) parsedText &&= parseInline(parsedText, 'link', startLine - 1);
+                if(!isFile) parsedText &&= parseInline(parsedText, 'link', startLine - 1 - startLeft);
             });
 
             if(origParsedText && origParsedText.replace(LiteralRegex, '').includes('\n')) {
