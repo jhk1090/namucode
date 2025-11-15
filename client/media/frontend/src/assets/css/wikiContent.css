@@ -117,3 +117,23 @@
   background-color: #383b40;
   border-top: 1px solid #111;
 }
+
+.user-box {
+   border-width: 5px 1px 1px;
+   border-style: solid;
+   border-image: initial;
+   padding: 10px;
+   margin-bottom: 10px;
+ }
+
+.admin-box {
+  border-color: orange gray gray;
+}
+
+.admin-box:hover {
+  border-color: red gray gray;
+}
+
+.banned-box {
+  border-color: red gray gray;
+}

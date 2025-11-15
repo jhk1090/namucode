@@ -34,6 +34,9 @@ export default {
           this.$refs.wikiContentContainer.classList.remove("theseed-dark-mode")
         }
       }
+      if (e.data.type === "updateUserbox") {
+        this.$refs.wikiContent.updateUserbox(e.data.value)
+      }
     }
   }
 }

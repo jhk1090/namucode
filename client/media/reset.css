@@ -73,3 +73,7 @@ body.vscode-light blockquote {
 	background: unset;
 	border-color: unset;
 }
+
+code {
+	font-family: var(--vscode-editor-font-family)
+}

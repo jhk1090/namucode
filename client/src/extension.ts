@@ -266,6 +266,7 @@ export async function activate(context: ExtensionContext) {
                 const error = document.getElementById("error");
 
                 const isValid = (content) => {
+                  if (content === "") return true;
                   const fullRe = /^(?:(?:\\\\.|[^=,\\\\])+=(?:\\\\.|[^,\\\\])*)(?:,(?:\\\\.|[^=,\\\\])+=(?:\\\\.|[^,\\\\])*)*$/;
                   return fullRe.test(content)
                 }
@@ -281,15 +282,14 @@ export async function activate(context: ExtensionContext) {
                     }
 
                     const pairRe = /((?:\\\\.|[^=,\\\\])+)=((?:\\\\.|[^,\\\\])*)/g;
-                    const unescape = s => s.replace(/\\\\(.)/g, "$1");
 
                     const result = {};
                     let m;
                     while ((m = pairRe.exec(content)) !== null) {
                         const rawKey = m[1];
                         const rawVal = m[2];
-                        const key = unescape(rawKey).trim();
-                        const val = unescape(rawVal).trim();
+                        const key = rawKey.trim();
+                        const val = rawVal.trim();
                         result[key] = val;
                     }
                     return result;

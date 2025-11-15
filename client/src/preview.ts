@@ -364,7 +364,11 @@ export class MarkPreview {
         const runRendering = async (currentFolder: vscode.WorkspaceFolder, parsedResult, workspaceDocuments) => {
             const config = getConfig()
             const { namespace, title } = await getNamespaceAndTitle(currentFolder ? currentFolder.uri.fsPath : path.dirname(document.uri.fsPath), document.uri.fsPath)
-            const includeData = this.context.workspaceState.get("includeParameterEditorInput") as { [key: string]: string } ?? null
+            let includeData = {...this.context.workspaceState.get("includeParameterEditorInput") as { [key: string]: string } ?? {}}
+            const unescape = s => s.replace(/\\(.)/g, "$1");
+            for (const [key, value] of Object.entries(includeData)) {
+                includeData[key] = unescape(value)
+            }
 
             const timeout = setTimeout(() => {
                 // console.log("Termination")
@@ -387,6 +391,7 @@ export class MarkPreview {
                 }
             }
 
+            webview.postMessage({ type: "updateUserbox", value: { parameterAlert: includeData } })
             webview.postMessage({ type: "updateContent", newContent: html, newCategories: categories });
         }
 
