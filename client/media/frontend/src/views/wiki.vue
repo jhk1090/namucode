@@ -21,8 +21,9 @@ export default {
   methods: {
     handleMessage(e) {
       if (e.data.type === 'updateContent') {
-        this.$refs.wikiContent.updateContent(e.data.newContent)
-        this.$refs.wikiContent.updateCategories(e.data.newCategories)
+        if (e.data.newContent) this.$refs.wikiContent.updateContent(e.data.newContent)
+        if (e.data.newCategories) this.$refs.wikiContent.updateCategories(e.data.newCategories)
+        if (e.data.newUserbox) this.$refs.wikiContent.updateUserbox(e.data.newUserbox)
       }
       if (e.data.type === 'updateTheme') {
         if (e.data.themeKind === "dark") {
@@ -33,9 +34,6 @@ export default {
           this.$refs.wikiContentContainer.classList.add("theseed-light-mode")
           this.$refs.wikiContentContainer.classList.remove("theseed-dark-mode")
         }
-      }
-      if (e.data.type === "updateUserbox") {
-        this.$refs.wikiContent.updateUserbox(e.data.value)
       }
     }
   }

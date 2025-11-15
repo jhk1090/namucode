@@ -130,10 +130,6 @@
   border-color: orange gray gray;
 }
 
-.admin-box:hover {
-  border-color: red gray gray;
-}
-
 .banned-box {
   border-color: red gray gray;
 }

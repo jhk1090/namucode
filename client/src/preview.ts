@@ -257,7 +257,7 @@ export class MarkPreview {
             </body>
             </html>
         `;
-            webview.postMessage({ type: "updateContent", newContent: "<h2>미리보기를 준비중입니다. 잠시만 기다려주세요...</h2>", newCategories: [] });
+            webview.postMessage({ type: "updateContent", newContent: "<h2>미리보기를 준비중입니다. 잠시만 기다려주세요...</h2>" });
         }
 
         switch (vscode.window.activeColorTheme.kind) {
@@ -391,8 +391,7 @@ export class MarkPreview {
                 }
             }
 
-            webview.postMessage({ type: "updateUserbox", value: { parameterAlert: includeData } })
-            webview.postMessage({ type: "updateContent", newContent: html, newCategories: categories });
+            webview.postMessage({ type: "updateContent", newContent: html, newCategories: categories, newUserbox: { parameterAlert: includeData } });
         }
 
         (async () => {

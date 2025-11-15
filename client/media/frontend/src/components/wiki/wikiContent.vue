@@ -1,6 +1,6 @@
 <template>
   <WikiCategory v-if="categories && categories.length" :categories="categories" />
-  <div ref="userbox" v-if="userbox.parameterAlert && Object.keys(userbox.parameterAlert).length > 0" class="user-box banned-box">
+  <div ref="userbox" v-if="userbox.parameterAlert && Object.keys(userbox.parameterAlert).length > 0" class="user-box admin-box">
     현재 {{ Object.keys(userbox.parameterAlert).length }}개의 매개변수가 미리보기에 적용되어 있습니다. 매개변수가 적용되면 include 문법을 사용할 수 없습니다.
     <div class="wiki-content" v-html="userboxHtml"></div>
   </div>
@@ -77,7 +77,7 @@ export default {
     },
     async userboxHtml() {
       await this.$nextTick()
-      this.setupFolding(this.$refs.userbox)
+      this.setupWikiContent(this.$refs.userbox)
     },
     'popover.show'(newValue) {
       if(!newValue)
@@ -230,7 +230,77 @@ export default {
         // }
       }
 
-      this.setupFolding(element)
+      const foldings = element.getElementsByClassName('wiki-folding')
+      for(let folding of foldings) {
+        const foldingText = folding.firstElementChild
+        const foldingContent = foldingText.nextElementSibling
+
+        let offsetWidth
+        let offsetHeight
+        const resizeObserver = new ResizeObserver(([entry]) => {
+          if(!entry.contentRect.height) return
+
+          const openedBefore = foldingContent.classList.contains('wiki-folding-opened')
+
+          if(!openedBefore) foldingContent.classList.add('wiki-folding-opened')
+          offsetWidth = foldingContent.offsetWidth
+          offsetHeight = foldingContent.offsetHeight
+          if(!openedBefore) foldingContent.classList.remove('wiki-folding-opened')
+
+          resizeObserver.disconnect()
+        })
+        resizeObserver.observe(foldingText)
+
+        let transitionCount = 0
+        const transitioning = () => transitionCount !== 0
+
+        foldingContent.addEventListener('transitionstart', _ => transitionCount++)
+        foldingContent.addEventListener('transitionend', _ => transitionCount--)
+        foldingContent.addEventListener('transitioncancel', _ => transitionCount--)
+
+        const setSizeToOffsetSize = () => {
+          foldingContent.style.maxWidth = offsetWidth + 'px'
+          foldingContent.style.maxHeight = offsetHeight + 'px'
+        }
+        const removeSize = () => {
+          foldingContent.style.maxWidth = ''
+          foldingContent.style.maxHeight = ''
+        }
+        const finishOpen = () => {
+          if(transitioning()) return
+
+          removeSize()
+          foldingContent.classList.add('wiki-folding-opened')
+
+          foldingContent.removeEventListener('transitionend', finishOpen)
+        }
+
+        // if(this.$store.state.localConfig['wiki.show_folding'])
+        //   foldingContent.classList.add('wiki-folding-open-anim', 'wiki-folding-opened')
+        foldingText.addEventListener('click', e => {
+          const foldingText = e.currentTarget
+          const foldingContent = foldingText.nextElementSibling
+
+          const opened = foldingContent.classList.contains('wiki-folding-open-anim')
+
+          if(opened) {
+            setSizeToOffsetSize()
+
+            requestAnimationFrame(_ => {
+              foldingContent.classList.remove('wiki-folding-open-anim')
+              foldingContent.classList.remove('wiki-folding-opened')
+
+              removeSize()
+            })
+          }
+          else {
+            foldingContent.classList.add('wiki-folding-open-anim')
+            setSizeToOffsetSize()
+
+            foldingContent.addEventListener('transitionend', finishOpen)
+          }
+        })
+      }
 
       // let footnoteType = this.$store.state.localConfig['wiki.footnote_type'];
       let footnoteType = "popover"
@@ -351,79 +421,6 @@ export default {
         })
 
         footnote.addEventListener('mouseleave', mouseLeaveHandler)
-      }
-    },
-    setupFolding(element) {
-      const foldings = element.getElementsByClassName('wiki-folding')
-      for(let folding of foldings) {
-        const foldingText = folding.firstElementChild
-        const foldingContent = foldingText.nextElementSibling
-
-        let offsetWidth
-        let offsetHeight
-        const resizeObserver = new ResizeObserver(([entry]) => {
-          if(!entry.contentRect.height) return
-
-          const openedBefore = foldingContent.classList.contains('wiki-folding-opened')
-
-          if(!openedBefore) foldingContent.classList.add('wiki-folding-opened')
-          offsetWidth = foldingContent.offsetWidth
-          offsetHeight = foldingContent.offsetHeight
-          if(!openedBefore) foldingContent.classList.remove('wiki-folding-opened')
-
-          resizeObserver.disconnect()
-        })
-        resizeObserver.observe(foldingText)
-
-        let transitionCount = 0
-        const transitioning = () => transitionCount !== 0
-
-        foldingContent.addEventListener('transitionstart', _ => transitionCount++)
-        foldingContent.addEventListener('transitionend', _ => transitionCount--)
-        foldingContent.addEventListener('transitioncancel', _ => transitionCount--)
-
-        const setSizeToOffsetSize = () => {
-          foldingContent.style.maxWidth = offsetWidth + 'px'
-          foldingContent.style.maxHeight = offsetHeight + 'px'
-        }
-        const removeSize = () => {
-          foldingContent.style.maxWidth = ''
-          foldingContent.style.maxHeight = ''
-        }
-        const finishOpen = () => {
-          if(transitioning()) return
-
-          removeSize()
-          foldingContent.classList.add('wiki-folding-opened')
-
-          foldingContent.removeEventListener('transitionend', finishOpen)
-        }
-
-        // if(this.$store.state.localConfig['wiki.show_folding'])
-        //   foldingContent.classList.add('wiki-folding-open-anim', 'wiki-folding-opened')
-        foldingText.addEventListener('click', e => {
-          const foldingText = e.currentTarget
-          const foldingContent = foldingText.nextElementSibling
-
-          const opened = foldingContent.classList.contains('wiki-folding-open-anim')
-
-          if(opened) {
-            setSizeToOffsetSize()
-
-            requestAnimationFrame(_ => {
-              foldingContent.classList.remove('wiki-folding-open-anim')
-              foldingContent.classList.remove('wiki-folding-opened')
-
-              removeSize()
-            })
-          }
-          else {
-            foldingContent.classList.add('wiki-folding-open-anim')
-            setSizeToOffsetSize()
-
-            foldingContent.addEventListener('transitionend', finishOpen)
-          }
-        })
       }
     },
     async formSubmit(e) {
