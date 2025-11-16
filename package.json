@@ -568,6 +568,7 @@
         "build:server": "cd server && yarn install",
         "build:frontend": "cd client/media/frontend && yarn install && yarn run build",
         "build:bundle": "node esbuild.js",
+        "build:frontend-bundle": "yarn run build:frontend && yarn run build:bundle",
         "watch": "yarn run build:bundle --watch"
     },
     "devDependencies": {

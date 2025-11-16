@@ -62,7 +62,6 @@ export default {
       }
     })
 
-    this.setupWikiContent()
     import('@justinribeiro/lite-youtube')
   },
   beforeUnmount() {
