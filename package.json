@@ -3,7 +3,7 @@
     "displayName": "나무코드 Namucode",
     "description": "나무위키 VS Code 확장 프로그램",
     "publisher": "jhk1090",
-    "version": "1.8.2",
+    "version": "1.8.3",
     "engines": {
         "vscode": "^1.75.0"
     },
