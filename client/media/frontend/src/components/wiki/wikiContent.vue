@@ -76,7 +76,7 @@ export default {
     },
     async userboxHtml() {
       await this.$nextTick()
-      this.setupWikiContent(this.$refs.userbox)
+      if (this.$refs.userbox) this.setupWikiContent(this.$refs.userbox)
     },
     'popover.show'(newValue) {
       if(!newValue)
