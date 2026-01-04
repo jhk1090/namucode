@@ -232,7 +232,7 @@
                     "beginCaptures": {
                         "1": { "name": "keyword.control.bracket.namu" }
                     },
-                    "while": "^(?!\\s*\\}\\}\\})",
+                    "end": "(?=\\})",
                     "patterns": [{ "include": "text.html.derivative" }]
                 },
                 {
@@ -241,7 +241,7 @@
                     "beginCaptures": {
                         "1": { "name": "keyword.control.bracket.namu" }
                     },
-                    "end": "(?=$)",
+                    "end": "(?=\\n)",
                     "patterns": [
                         {
                             "include": "source.js"
@@ -254,7 +254,7 @@
                     "beginCaptures": {
                         "1": { "name": "keyword.control.bracket.namu" }
                     },
-                    "while": "^(?!\\s*\\}\\}\\})",
+                    "end": "(?=\\}\\}\\})",
                     "patterns": [{ "include": "source.css" }]
                 },
                 {
@@ -264,7 +264,7 @@
                         "1": { "name": "keyword.control.bracket.namu" },
                         "2": { "name": "support.function.language-name.namu" }
                     },
-                    "while": "^(?!\\s*\\}\\}\\})",
+                    "end": "(?=\\}\\}\\})",
                     "patterns": [{ "include": "source.asp.vb.net" }]
                 },
                 {
@@ -274,7 +274,7 @@
                         "1": { "name": "keyword.control.bracket.namu" },
                         "2": { "name": "support.function.language-name.namu" }
                     },
-                    "while": "^(?!\\s*\\}\\}\\})",
+                    "end": "(?=\\}\\}\\})",
                     "patterns": [{ "include": "source.cpp" }]
                 },
                 {
@@ -284,7 +284,7 @@
                         "1": { "name": "keyword.control.bracket.namu" },
                         "2": { "name": "support.function.language-name.namu" }
                     },
-                    "while": "^(?!\\s*\\}\\}\\})",
+                    "end": "(?=\\}\\}\\})",
                     "patterns": [{ "include": "source.cs" }]
                 },
                 {
@@ -294,7 +294,7 @@
                         "1": { "name": "keyword.control.bracket.namu" },
                         "2": { "name": "support.function.language-name.namu" }
                     },
-                    "while": "^(?!\\s*\\}\\}\\})",
+                    "end": "(?=\\}\\}\\})",
                     "patterns": [{ "include": "source.css" }]
                 },
                 {
@@ -304,7 +304,7 @@
                         "1": { "name": "keyword.control.bracket.namu" },
                         "2": { "name": "support.function.language-name.namu" }
                     },
-                    "while": "^(?!\\s*\\}\\}\\})",
+                    "end": "(?=\\}\\}\\})",
                     "patterns": [{ "include": "source.erlang" }]
                 },
                 {
@@ -314,7 +314,7 @@
                         "1": { "name": "keyword.control.bracket.namu" },
                         "2": { "name": "support.function.language-name.namu" }
                     },
-                    "while": "^(?!\\s*\\}\\}\\})",
+                    "end": "(?=\\}\\}\\})",
                     "patterns": [{ "include": "source.go" }]
                 },
                 {
@@ -324,7 +324,7 @@
                         "1": { "name": "keyword.control.bracket.namu" },
                         "2": { "name": "support.function.language-name.namu" }
                     },
-                    "while": "^(?!\\s*\\}\\}\\})",
+                    "end": "(?=\\}\\}\\})",
                     "patterns": [{ "include": "text.html.derivative" }]
                 },
                 {
@@ -334,7 +334,7 @@
                         "1": { "name": "keyword.control.bracket.namu" },
                         "2": { "name": "support.function.language-name.namu" }
                     },
-                    "while": "^(?!\\s*\\}\\}\\})",
+                    "end": "(?=\\}\\}\\})",
                     "patterns": [{ "include": "source.js" }]
                 },
                 {
@@ -344,7 +344,7 @@
                         "1": { "name": "keyword.control.bracket.namu" },
                         "2": { "name": "support.function.language-name.namu" }
                     },
-                    "while": "^(?!\\s*\\}\\}\\})",
+                    "end": "(?=\\}\\}\\})",
                     "patterns": [{ "include": "source.java" }]
                 },
                 {
@@ -354,7 +354,7 @@
                         "1": { "name": "keyword.control.bracket.namu" },
                         "2": { "name": "support.function.language-name.namu" }
                     },
-                    "while": "^(?!\\s*\\}\\}\\})",
+                    "end": "(?=\\}\\}\\})",
                     "patterns": [{ "include": "source.json" }]
                 },
                 {
@@ -364,7 +364,7 @@
                         "1": { "name": "keyword.control.bracket.namu" },
                         "2": { "name": "support.function.language-name.namu" }
                     },
-                    "while": "^(?!\\s*\\}\\}\\})",
+                    "end": "(?=\\}\\}\\})",
                     "patterns": [{ "include": "source.kotlin" }]
                 },
                 {
@@ -374,7 +374,7 @@
                         "1": { "name": "keyword.control.bracket.namu" },
                         "2": { "name": "support.function.language-name.namu" }
                     },
-                    "while": "^(?!\\s*\\}\\}\\})",
+                    "end": "(?=\\}\\}\\})",
                     "patterns": [{ "include": "source.lisp" }]
                 },
                 {
@@ -384,7 +384,7 @@
                         "1": { "name": "keyword.control.bracket.namu" },
                         "2": { "name": "support.function.language-name.namu" }
                     },
-                    "while": "^(?!\\s*\\}\\}\\})",
+                    "end": "(?=\\}\\}\\})",
                     "patterns": [{ "include": "source.lua" }]
                 },
                 {
@@ -394,7 +394,7 @@
                         "1": { "name": "keyword.control.bracket.namu" },
                         "2": { "name": "support.function.language-name.namu" }
                     },
-                    "while": "^(?!\\s*\\}\\}\\})",
+                    "end": "(?=\\}\\}\\})",
                     "patterns": [{ "include": "text.html.markdown" }]
                 },
                 {
@@ -404,7 +404,7 @@
                         "1": { "name": "keyword.control.bracket.namu" },
                         "2": { "name": "support.function.language-name.namu" }
                     },
-                    "while": "^(?!\\s*\\}\\}\\})",
+                    "end": "(?=\\}\\}\\})",
                     "patterns": [{ "include": "source.objc" }]
                 },
                 {
@@ -414,7 +414,7 @@
                         "1": { "name": "keyword.control.bracket.namu" },
                         "2": { "name": "support.function.language-name.namu" }
                     },
-                    "while": "^(?!\\s*\\}\\}\\})",
+                    "end": "(?=\\}\\}\\})",
                     "patterns": [{ "include": "source.perl" }]
                 },
                 {
@@ -424,7 +424,7 @@
                         "1": { "name": "keyword.control.bracket.namu" },
                         "2": { "name": "support.function.language-name.namu" }
                     },
-                    "while": "^(?!\\s*\\}\\}\\})",
+                    "end": "(?=\\}\\}\\})",
                     "patterns": [{ "include": "source.php" }]
                 },
                 {
@@ -434,7 +434,7 @@
                         "1": { "name": "keyword.control.bracket.namu" },
                         "2": { "name": "support.function.language-name.namu" }
                     },
-                    "while": "^(?!\\s*\\}\\}\\})",
+                    "end": "(?=\\}\\}\\})",
                     "patterns": [{ "include": "source.powershell" }]
                 },
                 {
@@ -444,7 +444,7 @@
                         "1": { "name": "keyword.control.bracket.namu" },
                         "2": { "name": "support.function.language-name.namu" }
                     },
-                    "while": "^(?!\\s*\\}\\}\\})",
+                    "end": "(?=\\}\\}\\})",
                     "patterns": [{ "include": "source.python" }]
                 },
                 {
@@ -454,7 +454,7 @@
                         "1": { "name": "keyword.control.bracket.namu" },
                         "2": { "name": "support.function.language-name.namu" }
                     },
-                    "while": "^(?!\\s*\\}\\}\\})",
+                    "end": "(?=\\}\\}\\})",
                     "patterns": [{ "include": "source.ruby" }]
                 },
                 {
@@ -464,7 +464,7 @@
                         "1": { "name": "keyword.control.bracket.namu" },
                         "2": { "name": "support.function.language-name.namu" }
                     },
-                    "while": "^(?!\\s*\\}\\}\\})",
+                    "end": "(?=\\}\\}\\})",
                     "patterns": [{ "include": "source.rust" }]
                 },
                 {
@@ -474,7 +474,7 @@
                         "1": { "name": "keyword.control.bracket.namu" },
                         "2": { "name": "support.function.language-name.namu" }
                     },
-                    "while": "^(?!\\s*\\}\\}\\})",
+                    "end": "(?=\\}\\}\\})",
                     "patterns": [{ "include": "source.shell" }]
                 },
                 {
@@ -484,7 +484,7 @@
                         "1": { "name": "keyword.control.bracket.namu" },
                         "2": { "name": "support.function.language-name.namu" }
                     },
-                    "while": "^(?!\\s*\\}\\}\\})",
+                    "end": "(?=\\}\\}\\})",
                     "patterns": [{ "include": "source.sql" }]
                 },
                 {
@@ -494,7 +494,7 @@
                         "1": { "name": "keyword.control.bracket.namu" },
                         "2": { "name": "support.function.language-name.namu" }
                     },
-                    "while": "^(?!\\s*\\}\\}\\})",
+                    "end": "(?=\\}\\}\\})",
                     "patterns": [{ "include": "source.swift" }]
                 },
                 {
@@ -504,7 +504,7 @@
                         "1": { "name": "keyword.control.bracket.namu" },
                         "2": { "name": "support.function.language-name.namu" }
                     },
-                    "while": "^(?!\\s*\\}\\}\\})",
+                    "end": "(?=\\}\\}\\})",
                     "patterns": [{ "include": "source.ts" }]
                 },
                 {
@@ -514,7 +514,7 @@
                         "1": { "name": "keyword.control.bracket.namu" },
                         "2": { "name": "support.function.language-name.namu" }
                     },
-                    "while": "^(?!\\s*\\}\\}\\})",
+                    "end": "(?=\\}\\}\\})",
                     "patterns": [{ "include": "text.xml" }]
                 },
                 {
