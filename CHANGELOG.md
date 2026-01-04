@@ -1,6 +1,6 @@
 # 업데이트 로그
 ## v1.8.5
-#### 📆 2026. ?. ?.
+#### 📆 2026. 1. 4.
 ### 💡 추가 - the seed 신규 문법 대응
 - [#!wiki class, #!wiki lang, #!style 등](https://board.namu.wiki/b/free/3084401?p=1) 신규 문법 대응
 
