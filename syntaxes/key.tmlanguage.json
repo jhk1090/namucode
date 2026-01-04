@@ -199,18 +199,32 @@
                     }
                 },
                 {
-                    "match": "(#!wiki)(?:\\s+(?:(?:(style)=\\\"([^\"]*)\\\"(?:\\s+(dark-style)=\\\"([^\"]*)\\\")?)|(?:(dark-style)=\\\"([^\"]*)\\\"(?:\\s+(style)=\\\"([^\"]*)\\\")?)))?",
-                    "captures": {
-                        "1": { "name": "keyword.control.bracket.namu" },
-                        "2": { "name": "variable.parameter.bracket.namu" },
-                        "3": { "name": "meta.embedded.line.css", "patterns": [{ "include": "#wiki-style-line-css" }] },
-                        "4": { "name": "variable.parameter.bracket.namu" },
-                        "5": { "name": "meta.embedded.line.css", "patterns": [{ "include": "#wiki-style-line-css" }] },
-                        "6": { "name": "variable.parameter.bracket.namu" },
-                        "7": { "name": "meta.embedded.line.css", "patterns": [{ "include": "#wiki-style-line-css" }] },
-                        "8": { "name": "variable.parameter.bracket.namu" },
-                        "9": { "name": "meta.embedded.line.css", "patterns": [{ "include": "#wiki-style-line-css" }] }
-                    }
+                    "begin": "(#!wiki)",
+                    "beginCaptures": {
+                        "1": { "name": "keyword.control.bracket.namu" }
+                    },
+                    "end": "(?=$)",
+                    "patterns": [
+                        {
+                            "match": "(style|dark-style)=\\\"([^\"]*)\\\"",
+                            "captures": {
+                                "1": { "name": "variable.parameter.bracket.namu" },
+                                "2": { 
+                                    "name": "meta.embedded.line.css",
+                                    "patterns": [{ "include": "#wiki-style-line-css" }] 
+                                }
+                            }
+                        },
+                        {
+                            "match": "(class|lang)=\\\"([^\"]*)\\\"",
+                            "captures": {
+                              "1": { "name": "variable.parameter.bracket.namu" },
+                              "2": {
+                                "name": "string.quoted.double.namu"
+                              }
+                            }
+                        }
+                    ]
                 },
                 {
                     "name": "meta.embedded.block.html",
@@ -233,6 +247,15 @@
                             "include": "source.js"
                         }
                     ]
+                },
+                {
+                    "name": "meta.embedded.block.css",
+                    "begin": "(#!style)\n",
+                    "beginCaptures": {
+                        "1": { "name": "keyword.control.bracket.namu" }
+                    },
+                    "end": "(?=\\}\\}\\})",
+                    "patterns": [{ "include": "source.css" }]
                 },
                 {
                     "name": "meta.embedded.block.basic",
