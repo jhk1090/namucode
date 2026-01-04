@@ -241,7 +241,7 @@
                     "beginCaptures": {
                         "1": { "name": "keyword.control.bracket.namu" }
                     },
-                    "while": "^(?!\\s*\\}\\}\\})",
+                    "end": "(?=$)",
                     "patterns": [
                         {
                             "include": "source.js"
