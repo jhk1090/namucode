@@ -81,7 +81,7 @@
 
 현재 지원하는 내용 접기는 다음과 같습니다.
 - 문단 접기 `== 문단 ==`
-- `#!wiki #!folding #!html #!syntax #!if` 접기
+- `#!wiki #!folding #!html #!syntax #!if #!style` 접기
 - `{{{+1 ...}}} {{{#red ...}}} {{{}}}` 접기
 
 ### 코드 분석 기능
