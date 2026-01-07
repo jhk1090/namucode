@@ -1359,7 +1359,9 @@ class NamumarkParser extends EmbeddedActionsParser {
 
             return {
                 type: 'styleSyntax',
-                content
+                content,
+                startLine: getOriginalLine(Store.commentLines, this.rootStartLine + tok.startLine - 1) + 1,
+                endLine: getOriginalLine(Store.commentLines, this.rootStartLine + tok.endLine - 1) + 1
             }
         });
 

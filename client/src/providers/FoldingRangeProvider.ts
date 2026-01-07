@@ -17,7 +17,7 @@ export class FoldingRangeProvider implements vscode.FoldingRangeProvider {
     const result = await DocumentSymbolProvider.createParserPromise(document, { editorComment: false, maxParsingDepth, maxCharacter })
 
 		const targetDepthTypes = ["scaleText", "colorText", "wikiSyntax", "folding", "ifSyntax"]
-		const targetFlatTypes = ["syntaxSyntax", "htmlSyntax", "literal"]
+		const targetFlatTypes = ["syntaxSyntax", "htmlSyntax", "literal", "styleSyntax"]
     const specialTypes = ["paragraph", "heading", "table", "link", "footnote"]
 
     const allTypes = [...targetDepthTypes, ...targetFlatTypes, ...specialTypes]
