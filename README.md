@@ -121,6 +121,7 @@
 - **if** - if 문법을 삽입합니다.
 - **wikistyle**, **ws** - wiki style 문법을 삽입합니다.
 - **wikistyledark**, **wsd** - wiki style 문법을 삽입합니다. (dark-style 포함)
+- **style** - style 문법을 삽입합니다.
 - **syntax** - 문법 강조 구문을 삽입합니다.
 - **HTML** - HTML 구문을 삽입합니다.
 - **h\<n\>** - \<n\>단계 문단을 삽입합니다.
