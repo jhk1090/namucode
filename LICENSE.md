@@ -22,8 +22,7 @@ SOFTWARE.
 
 ### Third-Party Components Notice
 
-This project includes portions of code from [the tree](https://github.com/wjdgustn/thetree),  
-which is originally distributed under a proprietary license.
+This project includes portions of code from [the tree](https://github.com/wjdgustn/thetree), which is originally distributed under a proprietary license.
 
 The inclusion of this code has been **explicitly authorized** by [정현수](https://github.com/wjdgustn), granting jhk1090 the rights to use, modify, and redistribute the code as part of this project.
 
