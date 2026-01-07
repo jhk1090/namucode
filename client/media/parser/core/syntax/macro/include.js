@@ -3,7 +3,7 @@ const mainUtils = require('../../mainUtil');
 const parser = require('../../parser');
 
 module.exports = async (params, { toHtml, includeData, workspaceDocuments, Store }, obj) => {
-    if(includeData) return '';
+    if(includeData || !obj.splittedParams.length) return '';
 
     const docName = mainUtils.parseDocumentName(obj.splittedParams[0]);
     const doc = workspaceDocuments.find(a => a.namespace === docName.namespace && a.title === docName.title);
@@ -21,6 +21,7 @@ module.exports = async (params, { toHtml, includeData, workspaceDocuments, Store
     const final = await toHtml(result, {
         document: docName,
         includeData: obj.includeData,
+        includeIndex: ++Store.includeIndex,
         Store: {
             ...Store,
             heading: {

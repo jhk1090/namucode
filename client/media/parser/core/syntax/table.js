@@ -1,6 +1,6 @@
 const utils = require('../utils');
 
-module.exports = async (obj, toHtml) => {
+module.exports = async (obj, { toHtml, classGenerator }) => {
     const rows = obj.rows;
 
     let tableAlign;
@@ -14,8 +14,10 @@ module.exports = async (obj, toHtml) => {
     let tableStyle = ';';
     let tableDarkStyle = ';';
 
+    let tableClass = '';
+
     let prevColspan = 1;
-    const aliveRowSpans = [];
+    const aliveRowSpans = {};
 
     const htmlRows = [];
     for(let colIndex in rows) {
@@ -29,9 +31,8 @@ module.exports = async (obj, toHtml) => {
         let trStyle = ';';
         let trDarkStyle = ';';
 
-        for(let i = 0; i < aliveRowSpans.length; i++) {
-            const val = aliveRowSpans[i];
-            if(val > 0) aliveRowSpans[i]--;
+        for(let [key, value] of Object.entries(aliveRowSpans)) {
+            if(value > 0) aliveRowSpans[key]--;
         }
 
         let visualRowIndex = -1;
@@ -51,6 +52,7 @@ module.exports = async (obj, toHtml) => {
             const tdClassList = [];
             let tdStyle = ';';
             let tdDarkStyle = ';';
+            let tdClass = '';
             let align;
             let rowspan;
             let colspanAssigned = false;
@@ -140,6 +142,10 @@ module.exports = async (obj, toHtml) => {
                         tableWrapStyle += `width:${size.value}${size.unit};`;
                         tableStyle += `width:100%;`;
                     }
+                    else if(name === 'class') {
+                        if(tableClass || !value) break;
+                        tableClass = value;
+                    }
                     else break;
                 }
                 else if(tagStr.startsWith('-')) {
@@ -148,7 +154,7 @@ module.exports = async (obj, toHtml) => {
                     const num = parseInt(tagStr.slice(1));
                     if(isNaN(num) || num < 0) break;
 
-                    colspan = num;
+                    colspan = Math.min(num, 1000);
                     colspanAssigned = true;
                 }
                 else if(tagStr.startsWith('|') || tagStr.slice(1).startsWith('|')) {
@@ -247,6 +253,10 @@ module.exports = async (obj, toHtml) => {
                     if(colKeepAll.includes(rowIndex)) break;
                     colKeepAll[rowIndex] = true;
                 }
+                else if(name === 'class') {
+                    if(!value) break;
+                    tdClass = value;
+                }
                 else if([1, 2].includes(splittedValue.length)
                     && splittedValue.every(a => utils.validateColor(a))) {
                     if(tdStyle.includes(';background-color:')) break;
@@ -290,6 +300,8 @@ module.exports = async (obj, toHtml) => {
             tdStyle = tdStyle.slice(1);
             tdDarkStyle = tdDarkStyle.slice(1);
 
+            tdClassList.push(...classGenerator(tdClass, true));
+
             htmlValues.push(`<td${tdStyle ? ` style="${tdStyle}"` : ''}${tdDarkStyle ? ` data-dark-style="${tdDarkStyle}"` : ''}${colspan > 1 ? ` colspan="${colspan}"` : ''}${rowspan ? ` rowspan="${rowspan}"` : ''}${tdClassList.length ? ` class="${tdClassList.join(' ')}"` : ''}>${await toHtml(value)}</td>`.trim());
 
             for(let i = 0; i < colspan; i++) {
@@ -308,12 +320,13 @@ module.exports = async (obj, toHtml) => {
     }
 
     const tableWrapperClassList = ['wiki-table-wrap'];
-
     if(tableAlign) tableWrapperClassList.push(`table-${tableAlign}`);
+
+    tableClass = 'wiki-table' + (tableClass ? ` ${classGenerator(tableClass)}` : '');
 
     tableWrapStyle = tableWrapStyle.slice(1);
     tableStyle = tableStyle.slice(1);
     tableDarkStyle = tableDarkStyle.slice(1);
 
-    return `<div class="${tableWrapperClassList.join(' ')}"${tableWrapStyle ? ` style="${tableWrapStyle}"` : ''}><table class="wiki-table"${tableStyle ? ` style="${tableStyle}"` : ''}${tableDarkStyle ? ` data-dark-style="${tableDarkStyle}"` : ''}>${obj.caption ? `<caption>${await toHtml(obj.caption)}</caption>` : ''}<tbody>${htmlRows.join('')}</tbody></table></div>`;
+    return `<div class="${tableWrapperClassList.join(' ')}"${tableWrapStyle ? ` style="${tableWrapStyle}"` : ''}><table class="${tableClass}"${tableStyle ? ` style="${tableStyle}"` : ''}${tableDarkStyle ? ` data-dark-style="${tableDarkStyle}"` : ''}>${obj.caption ? `<caption>${await toHtml(obj.caption)}</caption>` : ''}<tbody>${htmlRows.join('')}</tbody></table></div>`;
 }

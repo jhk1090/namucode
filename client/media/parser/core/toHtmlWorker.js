@@ -2,6 +2,7 @@ const { highlight } = require('highlight.js');
 const { getQuickJS } = require("quickjs-emscripten")
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const utils = require('./utils');
 const mainUtils = require('./mainUtil'); // ../global 이였으나, ../로 통합
@@ -18,7 +19,7 @@ const topToHtml = module.exports = async parameter => {
   if(parameter[0]?.batch) return await Promise.all(parameter[0].batch.map(a => topToHtml(a)));
   
   const [parsed, options = {}] = parameter;
-  const { includeData = null, config = {}, document, workspaceDocuments, signal } = options;
+  const { includeData = null, config = {}, document, workspaceDocuments, signal, includeIndex = -1 } = options;
 
   if (signal.aborted) {
     throw new Error("Abort")
@@ -56,6 +57,7 @@ const topToHtml = module.exports = async parameter => {
     },
     error: null,
     errorCode: null,
+    includeIndex: -1,
     macro: {
       counts: {},
     },
@@ -212,6 +214,17 @@ const topToHtml = module.exports = async parameter => {
     Store.heading.html = html;
   }
 
+  const classGenerator = (className, noJoin = false) => {
+    const arr = className.split(' ').filter(a => a).map(str => '_' + crypto.createHash('sha256').update(JSON.stringify({
+        includeIndex,
+        // commentId,
+        str
+    })).digest('hex').slice(0, 16));
+
+    if(noJoin) return arr;
+    return arr.join(' ');
+  }
+
   let result = "";
   for (let obj of doc) {
     if (signal.aborted) {
@@ -248,7 +261,7 @@ const topToHtml = module.exports = async parameter => {
         break;
       }
       case "table":
-        result += await table(obj, toHtml);
+        result += await table(obj, { toHtml, classGenerator });
         break;
       case "indent":
         result += `<div class="wiki-indent">${await toHtml(obj.content)}</div>`;
@@ -280,29 +293,17 @@ const topToHtml = module.exports = async parameter => {
       case "wikiSyntax":
         let wikiParamsStr = await utils.parseIncludeParams(obj.wikiParamsStr, Store.qjsContext);
 
-        const styleCloseStr = '"';
+        let style = wikiParamsStr.match(/(?<=(^| )style=")(.*?)(?=")/)?.[0] || '';
+        let darkStyle = wikiParamsStr.match(/(?<=(^| )dark-style=")(.*?)(?=")/)?.[0] || '';
+        let className = wikiParamsStr.match(/(?<=(^| )class=")(.*?)(?=")/)?.[0] || '';
+        const lang = wikiParamsStr.match(/(?<=(^| )lang=")(.*?)(?=")/)?.[0] || '';
 
-        const darkStyleOpenStr = 'dark-style="';
-        const darkStyleIndex = wikiParamsStr.indexOf(darkStyleOpenStr);
-        const darkStyleEndIndex = wikiParamsStr.indexOf(styleCloseStr, darkStyleIndex + darkStyleOpenStr.length);
-        let darkStyle;
-        if (darkStyleIndex >= 0 && darkStyleEndIndex >= 0) {
-          darkStyle = wikiParamsStr.slice(darkStyleIndex + darkStyleOpenStr.length, darkStyleEndIndex);
-          wikiParamsStr = wikiParamsStr.slice(0, darkStyleIndex) + wikiParamsStr.slice(darkStyleEndIndex + styleCloseStr.length);
-        }
-
-        const styleOpenStr = 'style="';
-        const styleIndex = wikiParamsStr.indexOf(styleOpenStr);
-        const styleEndIndex = wikiParamsStr.indexOf('"', styleIndex + styleOpenStr.length);
-        let style;
-        if (styleIndex >= 0 && styleEndIndex >= 0) {
-          style = wikiParamsStr.slice(styleIndex + styleOpenStr.length, styleEndIndex);
-        }
+        className = classGenerator(className);
 
         style = utils.cssFilter(style);
         darkStyle = utils.cssFilter(darkStyle);
 
-        result += `<div${style ? ` style="${style}"` : ""}${darkStyle ? ` data-dark-style="${darkStyle}"` : ""}>${await toHtml(obj.content)}</div>`;
+        result += `<div${className ? ` class="${className}"` : ''}${lang ? ` lang="${utils.escapeHtml(lang)}"` : ''}${style ? ` style="${utils.escapeHtml(style)}"` : ''}${darkStyle ? ` data-dark-style="${utils.escapeHtml(darkStyle)}"` : ''}>${await toHtml(obj.content)}</div>`;
         break;
       case "syntaxSyntax":
         result += `<pre><code>${highlight(obj.content, { language: obj.lang }).value}</code></pre>`;
@@ -332,7 +333,13 @@ const topToHtml = module.exports = async parameter => {
         }
         if (evalResult) result += await toHtml(obj.content);
         break;
-
+      case 'styleSyntax':
+        result += `<style>${
+            utils.escapeCss(
+                utils.fullCssFilter(await utils.parseIncludeParams(obj.content, Store.qjsContext), { classGenerator })
+            )
+        }</style>`;
+        break;
       case "text":
         result += utils.escapeHtml(await utils.parseIncludeParams(obj.text, Store.qjsContext)).replaceAll("\n", "<br>");
         break;

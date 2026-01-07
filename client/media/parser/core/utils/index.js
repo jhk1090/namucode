@@ -3,7 +3,7 @@ const {
     validateHTMLColorName
 } = require('validate-color');
 const katex = require('katex');
-const CSSFilter = require('cssfilter');
+const csstree = require('css-tree');
 const sanitizeHtml = require('sanitize-html');
 const fs = require('fs');
 const path = require('path');
@@ -18,13 +18,15 @@ const baseSanitizeHtmlOptions = {
             'code'
         ].includes(a)),
         'audio',
-        'video'
+        'video',
+        'iframe'
     ],
     allowedAttributes: {
         '*': ['style'],
         a: ['href', 'class', 'rel', 'target'],
         audio: ['width', 'height', 'src', 'controls', 'loop'],
-        video: ['width', 'height', 'src', 'controls', 'loop']
+        video: ['width', 'height', 'src', 'controls', 'loop'],
+        iframe: ['src', 'width', 'height', 'frameborder', 'allowfullscreen']
     },
     allowedSchemes: ['http', 'https', 'ftp'],
     transformTags: {
@@ -52,37 +54,47 @@ const sanitizeHtmlOptions = {
     }
 }
 
-const filter = new CSSFilter.FilterCSS({
-    whiteList: {
-        ...Object.assign({}, ...allowedNames.map(a => ({[a]: true}))),
-        display: v => [
-            'block',
-            'flex',
-            'inline',
-            'inline-block',
-            'inline-flex',
-            'inline-table',
-            'list-item',
-            'none',
-            'table',
-            'table-caption',
-            'table-cell',
-            'table-column',
-            'table-column-group',
-            'table-footer-group',
-            'table-header-group',
-            'table-row-group'
-        ].includes(v),
-        'text-align': v => [
-            'left',
-            'right',
-            'center'
-        ].includes(v)
-    },
-    onAttr: (name, value, options) => {
-        if(value.startsWith('url(')) return '';
-    }
-});
+const allowedValues = {
+    'align-items': v => [
+        'normal',
+        'stretch',
+        'center',
+        'start',
+        'end',
+        'flex-start',
+        'flex-end',
+        'self-start',
+        'self-end',
+        'baseline',
+        'first baseline',
+        'last baseline'
+    ].includes(v),
+    display: v => [
+        'block',
+        'flex',
+        'inline',
+        'inline-block',
+        'inline-flex',
+        'inline-table',
+        'list-item',
+        'none',
+        'table',
+        'table-caption',
+        'table-cell',
+        'table-row',
+        'table-column',
+        'table-column-group',
+        'table-footer-group',
+        'table-header-group',
+        'table-row-group'
+    ].includes(v),
+    'text-align': v => [
+        'left',
+        'right',
+        'center',
+        'justify'
+    ].includes(v)
+}
 
 function parsedToTextObj(content) {
     const result = [];
@@ -123,6 +135,8 @@ module.exports = {
         .replaceAll("&gt;", '>')
         .replaceAll("&quot;", `"`)
         .replaceAll("&#039;", `'`),
+    escapeCss: text => (text?.toString() ?? '')
+        .replaceAll('<', '\\003c '),
     parseSize(text) {
         let value = Number(text);
         let unit = 'px';
@@ -157,6 +171,12 @@ module.exports = {
             if(startPos === -1) break;
             const endPos = text.indexOf('@', startPos + 1);
             if(endPos === -1) break;
+            const newlinePos = text.indexOf('\n', startPos + 1);
+            if(newlinePos !== -1 && newlinePos < endPos) {
+                newText += text.slice(textPos, newlinePos + 1);
+                textPos = newlinePos + 1;
+                continue;
+            }
 
             newText += text.slice(textPos, startPos);
             textPos = endPos + 1;
@@ -191,7 +211,150 @@ module.exports = {
     katex: text => katex.renderToString(text, {
         throwOnError: false
     }),
-    cssFilter: css => filter.process(css),
+    cssFilter(css) {
+        if(!css) return css;
+        return this.fullCssFilter(`:root{${css}}`, { skipWrap: true }).slice(6, -1);
+    },
+    fullCssFilter(css, { skipWrap = false, classGenerator }) {
+        if(!css) return css;
+
+        // let hasError = false;
+        const ast = csstree.parse(css, {
+            // onParseError() {
+            //     hasError = true;
+            // }
+        });
+        // if(hasError) return '';
+
+        csstree.walk(ast, {
+            enter(node, item, list) {
+                switch(node.type) {
+                    case 'Declaration': {
+                        if(!allowedNames.includes(node.property))
+                            list.remove(item);
+                        if(allowedValues[node.property]) {
+                            const valueStr = csstree.generate(node.value);
+                            if(!allowedValues[node.property](valueStr))
+                                list.remove(item);
+                        }
+                        break;
+                    }
+                    case 'ClassSelector': {
+                        node.name = classGenerator(node.name);
+                        break;
+                    }
+                    case 'TypeSelector': {
+                        if(![
+                            'table',
+                            'tbody',
+                            'tr',
+                            'td'
+                        ].includes(node.name))
+                            list.remove(item);
+                        else if(item.prev?.data.type !== 'Combinator' && ![
+                            'IdSelector',
+                            'ClassSelector'
+                        ].includes(item.next?.data.type))
+                            list.remove(item);
+
+                        break;
+                    }
+                    case 'Combinator': {
+                        if(item.prev == null)
+                            list.remove(item);
+                        break;
+                    }
+
+                    case 'Rule':
+                    case 'Atrule':
+                    case 'SelectorList':
+                    case 'Selector':
+                    case 'PseudoClassSelector':
+                    case 'PseudoElementSelector':
+                    case 'Block':
+                    case 'Value':
+                    case 'Identifier':
+                    case 'String':
+                    case 'Number':
+                    case 'Percentage':
+                    case 'Hash':
+                    case 'Operator':
+                    case 'Dimension':
+                    case 'Nth':
+                    case 'AnPlusB':
+                    case 'Function':
+                        break;
+                    default:
+                        list?.remove(item);
+                }
+            },
+            leave(node, item, list) {
+                switch(node.type) {
+                    case 'Declaration': {
+                        if(node.value.type !== 'Value' || node.value.children.isEmpty)
+                            list.remove(item);
+                        break;
+                    }
+                    case 'Rule': {
+                        if(node.prelude.children?.some(
+                            selector => selector.children?.filter(a => a.type !== 'Combinator').isEmpty ?? true
+                        ) ?? true)
+                            list.remove(item);
+                        break;
+                    }
+                    case 'Selector': {
+                        if(!skipWrap && !node.children.isEmpty) node.children.prependList(new csstree.List().fromArray([
+                            {
+                                type: 'ClassSelector',
+                                name: 'wiki-content'
+                            },
+                            {
+                                type: 'AttributeSelector',
+                                name: {
+                                    type: 'Identifier',
+                                    name: 'class'
+                                },
+                                matcher: null,
+                                value: null,
+                                flags: null
+                            },
+                            {
+                                type: 'Combinator',
+                                name: ' '
+                            }
+                        ]));
+                        break;
+                    }
+                    case 'Atrule': {
+                        if(node.name === 'theseed-dark-mode') {
+                            list.insertList(node.block.children.map(rule => {
+                                if(rule.prelude?.children) rule.prelude.children = rule.prelude.children.map(selector => {
+                                    selector.children?.prependList(new csstree.List().fromArray([
+                                        {
+                                            type: 'ClassSelector',
+                                            name: 'theseed-dark-mode'
+                                        },
+                                        {
+                                            type: 'Combinator',
+                                            name: ' '
+                                        }
+                                    ]));
+                                    return selector;
+                                });
+                                return rule;
+                            }), item);
+                        }
+                        list.remove(item);
+                        break;
+                    }
+                }
+            }
+        });
+
+        // console.log(JSON.stringify(ast, null, 2));
+        // console.log(csstree.generate(ast));
+        return csstree.generate(ast);
+    },
     parsedToText(content, putSpace = false) {
         const obj = parsedToTextObj(content);
         return obj.map(a => a.text).join(putSpace ? ' ' : '');
@@ -240,6 +403,7 @@ module.exports = {
             각주: require("../syntax/macro/footnote").format, // footnote alias
             include: require("../syntax/macro/include"),
             math: require("../syntax/macro/math"),
+            navertv: require("../syntax/macro/navertv"),
             nicovideo: require("../syntax/macro/nicovideo"),
             pagecount: require("../syntax/macro/pagecount"),
             ruby: require("../syntax/macro/ruby"),
@@ -266,7 +430,7 @@ module.exports = {
         //             macros[alias] = macro.format;
 
         //     if(macro.allowThread)
-        //         threadMacros.push(macroName, ...(macro.aliases ?? []));
+        //         threadMacros.push(macro.name, ...(macro.aliases ?? []));
         // }
 
         if(global.__THETREE__)

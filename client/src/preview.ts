@@ -239,7 +239,7 @@ export class MarkPreview {
                             style-src ${webview.cspSource} 'unsafe-inline';
                             img-src ${webview.cspSource} https://i.ytimg.com data: 'unsafe-inline';
                             font-src ${webview.cspSource} 'unsafe-inline';
-                            frame-src https://www.youtube.com https://*.nicovideo.jp;
+                            frame-src https://www.youtube.com https://*.nicovideo.jp https://tv.naver.com;
                             script-src 'nonce-${nonce}';">
     
                     <meta http-equiv="Permissions-Policy"

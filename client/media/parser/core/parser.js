@@ -487,6 +487,14 @@ const IfSyntax = createToken({
     }),
     start_chars_hint: ['{']
 });
+const StyleSyntax = createToken({
+    name: 'StyleSyntax',
+    ...nestedRegex(/{{{#!style\n+?/, /}}}/, {
+        allowNewline: true,
+        openCheckRegex: /{{{/
+    }),
+    start_chars_hint: ['{']
+});
 const ColorText = createToken({
     name: 'ColorText',
     ...nestedRegex(/{{{#/, /}}}/, {
@@ -656,6 +664,7 @@ const inlineTokens = [
     CommentMention,
     Folding,
     IfSyntax,
+    StyleSyntax,
     ColorText,
     Literal,
     // Comment,
@@ -798,7 +807,9 @@ class NamumarkParser extends EmbeddedActionsParser {
                 {
                     GATE: () => {
                         const tok = $.LA(1);
-                        return tok.tokenType === Macro && tok.payload?.name === 'include';
+                        return tok.tokenType === Macro
+                            && tok.payload?.name === 'include'
+                            && !!tok.payload?.splittedParams.length;
                     },
                     ALT: () => $.SUBRULE($.include)
                 },
@@ -1136,6 +1147,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                         { ALT: () => $.SUBRULE($.commentMention) },
                         { ALT: () => $.SUBRULE($.folding) },
                         { ALT: () => $.SUBRULE($.ifSyntax) },
+                        { ALT: () => $.SUBRULE($.styleSyntax) },
                         { ALT: () => $.SUBRULE($.colorText) },
                         { ALT: () => $.SUBRULE($.literal) },
                         { ALT: () => $.SUBRULE($.categoryWithNewline) },
@@ -1338,6 +1350,16 @@ class NamumarkParser extends EmbeddedActionsParser {
                 content,
                 startLine,
                 endLine
+            }
+        });
+
+        $.RULE('styleSyntax', () => {
+            const tok = $.CONSUME(StyleSyntax);
+            const content = tok.image.slice(10, -3).trim();
+
+            return {
+                type: 'styleSyntax',
+                content
             }
         });
 
@@ -1574,7 +1596,7 @@ class NamumarkParser extends EmbeddedActionsParser {
 
             const data = {};
             $.ACTION(() => {
-                if(name === 'include') {
+                if(name === 'include' && splittedParams.length) {
                     const docName = splittedParams[0];
                     Store.includes.push(docName);
                     data.topParagraph = false;
