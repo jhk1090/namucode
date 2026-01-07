@@ -29,8 +29,24 @@ export function getConfig(): Config {
         linkTarget: "https://namu.wiki/w/$1",
       },
       {
-        linkPattern: "\\[(?:youtube|kakaotv|nicovideo|vimeo|navertv)\\((.[^\\)\\]]*)\\)\\]", // [youtube(링크)]
+        linkPattern: "\\[(?:youtube)\\((.[^\\)\\]]*)\\)\\]", // [youtube(링크)]
         linkTarget: "https://youtube.com/watch?v=$1",
+      },
+      {
+        linkPattern: "\\[(?:kakaotv)\\((.[^\\)\\]]*)\\)\\]", // [kakaotv(링크)]
+        linkTarget: "https://tv.kakao.com/v/$1",
+      },
+      {
+        linkPattern: "\\[(?:nicovideo)\\((.[^\\)\\]]*)\\)\\]", // [nicovideo(링크)]
+        linkTarget: "https://www.nicovideo.jp/watch/$1",
+      },
+      {
+        linkPattern: "\\[(?:vimeo)\\((.[^\\)\\]]*)\\)\\]", // [vimeo(링크)]
+        linkTarget: "https://vimeo.com/$1",
+      },
+      {
+        linkPattern: "\\[(?:navertv)\\((.[^\\)\\]]*)\\)\\]", // [navertv(링크)]
+        linkTarget: "https://tv.naver.com/v/$1",
       },
     ],
   };

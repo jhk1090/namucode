@@ -71,6 +71,11 @@
     "body": ["{{{#!if ${1:표현식}", "${2:내용}", "}}}"],
     "description": "if 문법을 삽입합니다."
   },
+  "스타일": {
+    "prefix": ["style"],
+    "body": ["{{{#!style", "${1:내용}", "}}}"],
+    "description": "style 문법을 삽입합니다."
+  },
   "위키스타일": {
     "prefix": ["wikistyle", "ws"],
     "body": ["{{{#!wiki style=\"${1:스타일}\"", "${2:내용}", "}}}"],
