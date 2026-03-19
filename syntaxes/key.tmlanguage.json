@@ -211,7 +211,10 @@
                                 "1": { "name": "variable.parameter.bracket.namu" },
                                 "2": { 
                                     "name": "meta.embedded.line.css",
-                                    "patterns": [{ "include": "#wiki-style-line-css" }] 
+                                    "patterns": [
+                                      {
+                                        "include": "source.css#rule-list-innards"
+                                      }] 
                                 }
                             }
                         },
@@ -560,13 +563,6 @@
                     }
                 }
             ]
-        },
-        "wiki-style-line-css": {
-            "match": "([-a-zA-Z0-9]+)\\s*:\\s*([^;]+)(?:;|$)",
-            "captures": {
-                "1": { "name": "support.type.property-name.css" },
-                "2": { "name": "constant.numeric.css" }
-            }
         }
     }
 }
