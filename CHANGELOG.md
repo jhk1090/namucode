@@ -1,4 +1,15 @@
 # 업데이트 로그
+## v1.8.9
+#### 📆 2026. 3. 21.
+### ⛏️ 수정 - the seed 신규 문법에 대응되는 the tree 파서로 업데이트
+- wjdgustn/thetree@62cf7a1 + wjdgustn/thetree-frontend@1cffd72 대응
+ - rowclass, thead, \[목차(hide)], rowif 신규 문법 대응
+ - 기타 구현 오류 수정
+
+### ⛏️ 수정 - 기타
+- 틀 매개변수 편집기 문구 일부 수정
+- wiki style의 문법 하이라이팅을 정확한 CSS 임베딩으로 변경
+
 ## v1.8.8
 #### 📆 2026. 1. 7.
 ### ⛏️ 수정 - the seed 신규 문법에 대응되는 the tree 파서로 업데이트
