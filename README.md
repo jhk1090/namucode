@@ -175,7 +175,7 @@
 
 본 프로젝트는 복합 라이센스가 채택되었습니다.
 
-- 프로젝트 일부에는 [정현수](https://github.com/wjdgustn)님의 [the tree](https://github.com/wjdgustn/thetree) 및 [the tree frontend](https://github.com/wjdgustn/thetree-frontend) 프로젝트의 코드가 포함되어 있으며, 이는 원저작자의 명시적 허락을 받아 사용되었습니다. 사용 범위는 `client/media/parser` 및 `client/media/frontend`의 하위 파일 모두이며, `client/src/providers/DocumentSymbolProvider.ts`에 종속성이 있습니다. 해당 부분의 저작권은 원저작자에게 있습니다.
+- 프로젝트 일부에는 [정현수](https://github.com/wjdgustn)님의 [the tree](https://github.com/wjdgustn/thetree) 및 [the tree frontend](https://github.com/wjdgustn/thetree-frontend) 프로젝트의 코드가 포함되어 있으며, 이는 원저작자의 명시적 허락을 받아 사용되어 재배포되었습니다. 사용 범위는 `client/media/parser` 및 `client/media/frontend`의 하위 파일 모두이며, `client/src/providers/DocumentSymbolProvider.ts`에 종속성이 있습니다. 해당 부분의 저작권은 원 저작자에게 있으며 허가 없이 재배포할 수 없습니다.
 - 이 프로젝트에 사용된 나무위키 아이콘 저작자는 kein, 저작권은 umanle S.R.L.가 소유하고 있으며, CC BY-NC-SA 2.0 KR 하에 배포됩니다. [(참고)](https://namu.wiki/w/%ED%8C%8C%EC%9D%BC:%EB%82%98%EB%AC%B4%EC%9C%84%ED%82%A4%20%EC%95%84%EC%9D%B4%EC%BD%98.svg)
 - 이외의 모든 코드와 저작물은 **MIT License** 하에 배포됩니다.
 
