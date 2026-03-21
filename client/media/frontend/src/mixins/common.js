@@ -2,6 +2,12 @@ import { decode } from '@msgpack/msgpack';
 
 export default {
     methods: {
+        encodeSpecialChars(str, exclude = []) {
+            if(!str) return str;
+
+            const specialChars = '?&=+$#%\\'.split('');
+            return str.split('').map(a => specialChars.includes(a) && !exclude.includes(a) ? encodeURIComponent(a) : a).join('');
+        },
         doc_action_link(document, route, query = {}) {
             const specialUrls = [
                 '.',
