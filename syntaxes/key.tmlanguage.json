@@ -109,7 +109,7 @@
             ]
         },
         "anchors": {
-            "match": "\\[((anchor|age|dday|youtube|kakaotv|niconicovideo|vimeo|nicovideo|navertv)\\(([^\\)]*(\\){1,})?)\\)|(pagecount)(\\(([^\\)]*(\\){1,})?)\\))?)\\]",
+            "match": "\\[((anchor|age|dday|youtube|kakaotv|niconicovideo|vimeo|nicovideo|navertv|목차|tableofcontents)\\(([^\\)]*(\\){1,})?)\\)|(pagecount)(\\(([^\\)]*(\\){1,})?)\\))?)\\]",
             "captures": {
                 "2": {
                     "name": "keyword.control.namu"
@@ -135,12 +135,12 @@
             "patterns": [{ "include": "text.tex.latex" }]
         },
         "macros": {
-            "begin": "\\[(?=clearfix|date|datetime|목차|tableofcontents|각주|footnote|br)",
+            "begin": "\\[(?=clearfix|date|datetime|각주|footnote|br)",
             "end": "\\]",
             "patterns": [
                 {
                     "name": "keyword.control.namu",
-                    "match": "clearfix|date|datetime|목차|tableofcontents|각주|footnote|br"
+                    "match": "clearfix|date|datetime|각주|footnote|br"
                 }
             ]
         },
