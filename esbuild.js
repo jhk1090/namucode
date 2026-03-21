@@ -102,7 +102,9 @@ async function copyQuickJS() {
 // 복사할 파일 목록
 const mediaFiles = [
   'script.js',
-  'reset.css'
+  'reset.css',
+  'IPEScript.js',
+  'IPEStyle.css',
 ];
 
 // 원본 경로

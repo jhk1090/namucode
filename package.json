@@ -542,7 +542,7 @@
             "namucode-activitybar": [
                 {
                     "type": "webview",
-                    "id": "includeParameterEditor",
+                    "id": "namucode-includeParameterEditor",
                     "name": "틀 매개변수 편집기",
                     "when": "activeWebviewPanelId =~ /namucode-webview-/",
                     "icon": "$(wand)",

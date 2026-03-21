@@ -13,6 +13,7 @@ import { MarkPreview, getWebviewOptions } from './preview';
 import { FoldingRangeProvider } from './providers/FoldingRangeProvider';
 import { DocumentSymbolProvider, TreeSymbol, ParagraphTreeSymbol } from './providers/DocumentSymbolProvider';
 import { SemanticTokenLegend, SemanticTokenProvider } from './providers/SemanticTokenProvider';
+import { IPEProvider } from './providers/IPEProvider';
 
 let client: LanguageClient;
 let activeRules: vscode.Disposable[] = [];
@@ -194,183 +195,12 @@ export async function activate(context: ExtensionContext) {
     }
   }
 
-  const getIncludeParameterEditorHtml = () => {
-    return `
-          <html>
-            <head>
-            <style>
-            body {
-              padding: 0 var(--container-paddding);
-              color: var(--vscode-foreground);
-              font-size: var(--vscode-font-size);
-              font-weight: var(--vscode-font-weight);
-              font-family: var(--vscode-font-family);
-              background-color: var(--vscode-editor-background);
-            }
-              
-            code {
-              font-size: var(--vscode-editor-font-size);
-              font-family: var(--vscode-editor-font-family);
-            }
-
-            button {
-              border: none;
-              padding: var(--input-padding-vertical) var(--input-padding-horizontal);
-              width: 100%;
-              text-align: center;
-              outline: 1px solid transparent;
-              outline-offset: 2px !important;
-              color: var(--vscode-button-foreground);
-              background: var(--vscode-button-background);
-            }
-
-            button:hover {
-              cursor: pointer;
-              background: var(--vscode-button-hoverBackground);
-            }
-
-            button:focus {
-              outline-color: var(--vscode-focusBorder);
-            }
-
-            textarea {
-              display: block;
-              width: 100%;
-              border: 1px solid transparent;
-              font-family: var(--vscode-font-family);
-              padding: var(--input-padding-vertical) var(--input-padding-horizontal);
-              color: var(--vscode-input-foreground);
-              outline-color: var(--vscode-input-border);
-              background-color: var(--vscode-input-background);
-              resize: none;
-              overflow: hidden;
-              min-height: 50px;
-            }
-            </style>
-            </head>
-            <body style="padding:10px; padding-bottom: 40px;">
-              <h3>매개변수 편집기</h3>
-              <p>미리보기에 적용될 매개변수를 지정해보세요! <code>매개변수=값</code> 꼴로 지정할 수 있으며, 쉼표로 구분해 여러 매개변수를 넣을 수 있습니다. <code>\\,</code> 또는 <code>\\=</code>와 같은 이스케이프 문자도 적용 가능합니다.</p>
-              <p>적용 시 현재 열려있는 미리보기와 앞으로 열리는 미리보기 모두를 대상으로 적용됩니다. 단, 이 기능을 사용하면 중첩 include문 방지로 인해 include 문법을 사용할 수 없습니다.</p>
-              <p id="error" style="display: none; color: red;">매개변수 형식이 잘못되었습니다. 도움말이 필요하다면 <a href="https://github.com/jhk1090/namucode/blob/main/docs/preview.md#q-틀-매개변수-편집기-사용-중-매개변수-형식이-잘못되었습니다라고-뜹니다">여기</a>를 참고하세요.</p>
-              <textarea id="input" style="width: 100%"></textarea>
-              <div style="width: calc(100% - 20px); position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: row; gap: 5px;">
-                <button id="apply" style="width: 100%; padding: 5px;">적용</button>
-                <button id="reset" style="width: 100%; padding: 5px;">초기화</button>
-              </div>
-              <script>
-                const vscode = acquireVsCodeApi();
-                const textarea = document.getElementById('input');
-                const button = document.getElementById("apply");
-                const reset = document.getElementById("reset");
-                const error = document.getElementById("error");
-
-                const isValid = (content) => {
-                  if (content === "") return true;
-                  const fullRe = /^(?:(?:\\\\.|[^=,\\\\])+=(?:\\\\.|[^,\\\\])*)(?:,(?:\\\\.|[^=,\\\\])+=(?:\\\\.|[^,\\\\])*)*$/;
-                  return fullRe.test(content)
-                }
-
-                const parseParams = (content) => {
-                    content = content.replaceAll("\\n", "")
-                    content = content.replaceAll("\\t", "")
-
-                    // 전체 형식 검증 (선택적)
-                    const fullRe = /^(?:(?:\\\\.|[^=,\\\\])+=(?:\\\\.|[^,\\\\])*)(?:,(?:\\\\.|[^=,\\\\])+=(?:\\\\.|[^,\\\\])*)*$/;
-                    if (!fullRe.test(content)) {
-                        throw new Error("Invalid format");
-                    }
-
-                    const pairRe = /((?:\\\\.|[^=,\\\\])+)=((?:\\\\.|[^,\\\\])*)/g;
-
-                    const result = {};
-                    let m;
-                    while ((m = pairRe.exec(content)) !== null) {
-                        const rawKey = m[1];
-                        const rawVal = m[2];
-                        const key = rawKey.trim();
-                        const val = rawVal.trim();
-                        result[key] = val;
-                    }
-                    return result;
-                }
-
-                // 이전 상태 복원
-                const state = vscode.getState();
-                if (state?.text) textarea.value = state.text;
-
-                function autoResize() {
-                  textarea.style.height = 'auto';         // 높이 초기화
-                  textarea.style.height = textarea.scrollHeight + 'px'; // scrollHeight만큼 늘리기
-                }
-
-                // 입력값이 바뀔 때마다 저장
-                textarea.addEventListener('input', () => {
-                  if (isValid(textarea.value)) {
-                    error.style.display = "none";
-                    textarea.style.borderColor = "transparent";
-                  } else {
-                    error.style.display = "block";
-                    textarea.style.borderColor = "red";
-                  }
-
-                  vscode.setState({ text: textarea.value });
-                  autoResize();
-                });
-
-                button.addEventListener("click", () => {
-                  try {
-                    const data = textarea.value.trim() === "" ? "{}" : JSON.stringify(parseParams(textarea.value))
-                    error.style.display = "none";
-                    textarea.style.borderColor = "transparent";
-
-                    vscode.postMessage({ type: 'update', data });
-                  } catch (e) {
-                    error.style.display = "block";
-                    textarea.style.borderColor = "red";
-                  }
-                })
-
-                reset.addEventListener("click", () => {
-                  textarea.value = "";
-                  vscode.setState({ text: textarea.value });
-                  button.click();
-                })
-
-                window.addEventListener("message", (event) => {
-                  const message = event.data;
-                  textarea.value = message;
-                  vscode.setState({ text: textarea.value });
-                })
-
-                autoResize();
-              </script>
-            </body>
-          </html>
-        `;
-  }
-
+  const includeParameterEditorProvider = new IPEProvider(context.extensionUri, context);
   context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider("includeParameterEditor", {
-      resolveWebviewView(webviewView) {
-        webviewView.webview.options = { enableScripts: true };
-        webviewView.webview.html = getIncludeParameterEditorHtml();
-        webviewView.webview.onDidReceiveMessage(msg => {
-          if (msg.type === 'update') {
-            const data = JSON.parse(msg.data)
-            context.workspaceState.update('includeParameterEditorInput', Object.keys(data).length === 0 ? null : data);
-            vscode.commands.executeCommand("namucode.retryPreview")
-          }
-        })
-        // 초기 설정
-        const editorInput = context.workspaceState.get("includeParameterEditorInput") as { [key: string]: string } | null;
-        webviewView.webview.postMessage(editorInput ? Object.entries(editorInput).map(([key, value]) => `${key}=${value}`).join(", ") : "")
-      },
-    })
-  );
+    vscode.window.registerWebviewViewProvider(IPEProvider.viewType, includeParameterEditorProvider));
 
   vscode.commands.registerCommand("namucode.openIncludeParameterEditor", async () => {
-    vscode.commands.executeCommand('includeParameterEditor.focus');
+    vscode.commands.executeCommand('namucode-includeParameterEditor.focus');
   });
 
   const retryPreview = vscode.commands.registerCommand("namucode.retryPreview", () => {
