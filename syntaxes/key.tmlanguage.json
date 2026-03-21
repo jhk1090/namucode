@@ -109,6 +109,7 @@
             ]
         },
         "anchors": {
+            "comment": "두 개의 범위로 나눠놓은 이유는 전자는 매개변수가 꼭 필요하며, 후자는 매개변수가 선택형이기 때문",
             "match": "\\[((anchor|age|dday|youtube|kakaotv|niconicovideo|vimeo|nicovideo|navertv)\\(([^\\)]*(\\){1,})?)\\)|(pagecount|목차|tableofcontents)(\\(([^\\)]*(\\){1,})?)\\))?)\\]",
             "captures": {
                 "2": {
