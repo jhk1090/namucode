@@ -1,6 +1,6 @@
 const utils = require('../utils');
 
-module.exports = async (obj, { toHtml, classGenerator }) => {
+module.exports = async (obj, { toHtml, classGenerator, Store }) => {
     const rows = obj.rows;
 
     let tableAlign;
@@ -19,8 +19,9 @@ module.exports = async (obj, { toHtml, classGenerator }) => {
     let prevColspan = 1;
     const aliveRowSpans = {};
 
-    const htmlRows = [];
-    for(let colIndex in rows) {
+    const headRows = [];
+    const bodyRows = [];
+    colLoop: for(let colIndex in rows) {
         colIndex = parseInt(colIndex);
         const row = rows[colIndex];
         const htmlValues = [];
@@ -30,6 +31,9 @@ module.exports = async (obj, { toHtml, classGenerator }) => {
         const trClassList = [];
         let trStyle = ';';
         let trDarkStyle = ';';
+        let hasRowClass = false;
+
+        let isTableHead = false;
 
         for(let [key, value] of Object.entries(aliveRowSpans)) {
             if(value > 0) aliveRowSpans[key]--;
@@ -257,6 +261,25 @@ module.exports = async (obj, { toHtml, classGenerator }) => {
                     if(!value) break;
                     tdClass = value;
                 }
+                else if(name === 'rowclass') {
+                    if(!value || hasRowClass) break;
+                    trClassList.push(classGenerator(value));
+                    hasRowClass = true;
+                }
+                else if(name === 'thead') {
+                    // caption 사용 시 th를 사용할 수 없는 건 변경될수도
+                    if(obj.caption || isTableHead || bodyRows.length)
+                        break;
+                    isTableHead = true;
+                }
+                else if(name === 'sortable') {
+                    if(!isTableHead || tdClassList.includes('wiki-table-sortable')) break;
+                    tdClassList.push('wiki-table-sortable');
+                }
+                else if(name === 'rowif') {
+                    const evalResult = await utils.runJavascript(Store.qjsContext, value);
+                    if(!evalResult) continue colLoop;
+                }
                 else if([1, 2].includes(splittedValue.length)
                     && splittedValue.every(a => utils.validateColor(a))) {
                     if(tdStyle.includes(';background-color:')) break;
@@ -271,17 +294,36 @@ module.exports = async (obj, { toHtml, classGenerator }) => {
 
             if(paramStr != null) firstTextObj.text = originalParamStr.slice(prevParamStrLength - paramStr.length);
 
-            if(valueObj.align === 'center' && firstTextObj && lastTextObj) {
-                align ??= 'center';
-                firstTextObj.text = firstTextObj.text.slice(1);
-                lastTextObj.text = lastTextObj.text.slice(0, -1);
-            } else if(valueObj.align === 'right' && firstTextObj) {
-                align ??= 'right';
-                firstTextObj.text = firstTextObj.text.slice(1);
-            } else if(valueObj.align === 'left' && lastTextObj) {
-                align ??= 'left';
-                lastTextObj.text = lastTextObj.text.slice(0, -1);
+            // if(valueObj.align === 'center' && firstTextObj && lastTextObj) {
+            //     align ??= 'center';
+            //     firstTextObj.text = firstTextObj.text.slice(1);
+            //     lastTextObj.text = lastTextObj.text.slice(0, -1);
+            // } else if(valueObj.align === 'right' && firstTextObj) {
+            //     align ??= 'right';
+            //     firstTextObj.text = firstTextObj.text.slice(1);
+            // } else if(valueObj.align === 'left' && lastTextObj) {
+            //     align ??= 'left';
+            //     lastTextObj.text = lastTextObj.text.slice(0, -1);
+            // }
+
+            const startsWithSpace = firstTextObj?.text.startsWith(' ');
+            const endsWithSpace = lastTextObj?.text.endsWith(' ');
+            if(!align) {
+                if(startsWithSpace && endsWithSpace) {
+                    align = 'center';
+                    firstTextObj.text = firstTextObj.text.slice(1);
+                    lastTextObj.text = lastTextObj.text.slice(0, -1);
+                }
+                else if(startsWithSpace) {
+                    align = 'right';
+                    firstTextObj.text = firstTextObj.text.slice(1);
+                }
+                else if(endsWithSpace) {
+                    align = 'left';
+                    lastTextObj.text = lastTextObj.text.slice(0, -1);
+                }
             }
+            
             if(align) tdStyle += `text-align:${align};`;
 
             if(!tdStyle.includes(';background-color:') && colBgColors[visualRowIndex])
@@ -302,7 +344,8 @@ module.exports = async (obj, { toHtml, classGenerator }) => {
 
             tdClassList.push(...classGenerator(tdClass, true));
 
-            htmlValues.push(`<td${tdStyle ? ` style="${tdStyle}"` : ''}${tdDarkStyle ? ` data-dark-style="${tdDarkStyle}"` : ''}${colspan > 1 ? ` colspan="${colspan}"` : ''}${rowspan ? ` rowspan="${rowspan}"` : ''}${tdClassList.length ? ` class="${tdClassList.join(' ')}"` : ''}>${await toHtml(value)}</td>`.trim());
+            const cellTag = isTableHead ? 'th' : 'td';
+            htmlValues.push(`<${cellTag}${tdStyle ? ` style="${tdStyle}"` : ''}${tdDarkStyle ? ` data-dark-style="${tdDarkStyle}"` : ''}${colspan > 1 ? ` colspan="${colspan}"` : ''}${rowspan ? ` rowspan="${rowspan}"` : ''}${tdClassList.length ? ` class="${tdClassList.join(' ')}"` : ''}>${await toHtml(value)}</${cellTag}>`.trim());
 
             for(let i = 0; i < colspan; i++) {
                 aliveRowSpans[visualRowIndex + i] = rowspan ?? 0;
@@ -314,7 +357,7 @@ module.exports = async (obj, { toHtml, classGenerator }) => {
 
         trStyle = trStyle.slice(1);
         trDarkStyle = trDarkStyle.slice(1);
-        htmlRows.push(`<tr${trStyle ? ` style="${trStyle}"` : ''}${trDarkStyle ? ` data-dark-style="${trDarkStyle}"` : ''}${trClassList.length ? ` class="${trClassList.join(' ')}"` : ''}>${htmlValues.join('')}</tr>`);
+        (isTableHead ? headRows : bodyRows).push(`<tr${trStyle ? ` style="${trStyle}"` : ''}${trDarkStyle ? ` data-dark-style="${trDarkStyle}"` : ''}${trClassList.length ? ` class="${trClassList.join(' ')}"` : ''}>${htmlValues.join('')}</tr>`);
 
         prevColspan = 1;
     }
@@ -328,5 +371,5 @@ module.exports = async (obj, { toHtml, classGenerator }) => {
     tableStyle = tableStyle.slice(1);
     tableDarkStyle = tableDarkStyle.slice(1);
 
-    return `<div class="${tableWrapperClassList.join(' ')}"${tableWrapStyle ? ` style="${tableWrapStyle}"` : ''}><table class="${tableClass}"${tableStyle ? ` style="${tableStyle}"` : ''}${tableDarkStyle ? ` data-dark-style="${tableDarkStyle}"` : ''}>${obj.caption ? `<caption>${await toHtml(obj.caption)}</caption>` : ''}<tbody>${htmlRows.join('')}</tbody></table></div>`;
+    return `<div class="${tableWrapperClassList.join(' ')}"${tableWrapStyle ? ` style="${tableWrapStyle}"` : ''}><table class="${tableClass}"${tableStyle ? ` style="${tableStyle}"` : ''}${tableDarkStyle ? ` data-dark-style="${tableDarkStyle}"` : ''}>${obj.caption ? `<caption>${await toHtml(obj.caption)}</caption>` : ''}${headRows.length ? `<thead>${headRows.join('')}</thead>` : ''}${bodyRows.length ? `<tbody>${bodyRows.join('')}</tbody>` : ''}</table></div>`;
 }

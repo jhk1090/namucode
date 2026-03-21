@@ -234,7 +234,7 @@ const Indent = createToken({
 });
 const Text = createToken({
     name: 'Text',
-    pattern: /[^\\'\r\n_\[\]~\-^,|{#@]+|['\r\n_\[\]~\-^,|{#@]/
+    pattern: /[^\\'\r\n_\[\]~\-^,|{#@<]+|['\r\n_\[\]~\-^,|{#@<]/
 });
 
 const HeadingRegex = /^(={1,6})(#)? +(.+?) +\2\1$/m;
@@ -266,7 +266,7 @@ const TableSplit = createToken({
     pattern: /\|\|/
 });
 // {{{}}} 안 * 뒤에 ? 있었음, 넓게 잡으려고 빼 둠
-const CaptionRegex = /^\|[\s\S]*?\|/;
+const CaptionRegex = /^\|(?:\[\[[\s\S]*?]]|[\s\S])*?(?<!\\)(?:\\\\)*\|/;
 const TableRow = createToken({
     name: 'TableRow',
     // ...fullLineRegex(/^\|\|({{{[\s\S]*}}}|[\s\S])*?\|\|$/m)
@@ -374,21 +374,15 @@ const Italic = createToken({
     ...inlineRegex(/''(?!')/, /''/),
     start_chars_hint: [`'`]
 });
-const Strike = createToken({
-    name: 'Strike',
-    // pattern: (text, startOffset) => {
-    //     const str = text.slice(startOffset);
-    //     const match = str.match(/(~~|--)([\s\S]+?)\1/);
-    //     if(!match || match.index > 0) return null;
-    //     if(match?.[0][0] === '-') {
-    //         const content = match[0].slice(2, -2);
-    //         if(!content.replaceAll('-', '').trim()) return null;
-    //     }
-    //     return match;
-    // },
-    // line_breaks: true
-    ...inlineRegex(/^~~|^--/, /(?<!\\)(?:\\\\)*~~|(?<!\\)(?:\\\\)*--/, true),
-    start_chars_hint: ['-', '~']
+const Strike1 = createToken({
+    name: 'Strike1',
+    ...inlineRegex(/~~/),
+    start_chars_hint: [`~`]
+});
+const Strike2 = createToken({
+    name: 'Strike2',
+    ...inlineRegex(/--/),
+    start_chars_hint: [`-`]
 });
 const Underline = createToken({
     name: 'Underline',
@@ -563,7 +557,14 @@ const Link = createToken({
     }),
     start_chars_hint: ['[']
 });
-const categoryWithNewlineRegex = nestedRegex(/\[\[분류:/, /]]\n/, {
+let localFile = '파일';
+let localCategory = '분류';
+// [namucode] localNamespaces 기능은 무필요
+// if(global.config?.localNamespaces) {
+//     localFile = global.config.localNamespaces[localFile];
+//     localCategory = global.config.localNamespaces[localCategory];
+// }
+const categoryWithNewlineRegex = nestedRegex(new RegExp(`\\[\\[(분류|${localCategory}):`), /]]\n/, {
     allowNewline: true,
     openCheckRegex: /\[/,
     closeCheckRegex: /]/
@@ -573,7 +574,7 @@ const CategoryWithNewline = createToken({
     pattern: (text, startOffset) => {
         const openLineIndex = text.lastIndexOf('\n', startOffset);
         const openLine = text.slice(openLineIndex + 1, text.indexOf('\n', openLineIndex + 1));
-        if(openLine.replace(/\[\[분류:(.*?)]]/, '')) return null;
+        if(openLine.replace(new RegExp(`\\[\\[(분류|${localCategory}):(.*?)]]`), '')) return null;
 
         return categoryWithNewlineRegex.pattern(text, startOffset);
     },
@@ -670,7 +671,8 @@ const inlineTokens = [
     // Comment,
     Bold,
     Italic,
-    Strike,
+    Strike1,
+    Strike2,
     Underline,
     Sup,
     Sub,
@@ -942,22 +944,22 @@ class NamumarkParser extends EmbeddedActionsParser {
                         for(let t of tokens) {
                             if(t.tokenType !== TableSplit) continue;
                             const str = sliced.slice(lastIdx, t.startOffset);
-                            const testStr = str.replace(/^(<(.*?)>)*/, '');
-                            let align;
-                            const startsWithSpace = testStr.startsWith(' ');
-                            const endsWithSpace = testStr.endsWith(' ');
+                            // const testStr = str.replace(/^(<(.*?)>)*/, '');
+                            // let align;
+                            // const startsWithSpace = testStr.startsWith(' ');
+                            // const endsWithSpace = testStr.endsWith(' ');
 
-                            if(startsWithSpace && endsWithSpace) {
-                                align ??= 'center';
-                                // str = str.slice(1);
-                                // str = str.slice(0, -1);
-                            } else if(startsWithSpace) {
-                                align ??= 'right';
-                                // str = str.slice(1);
-                            } else if(endsWithSpace) {
-                                align ??= 'left';
-                                // str = str.slice(0, -1);
-                            }
+                            // if(startsWithSpace && endsWithSpace) {
+                            //     align ??= 'center';
+                            //     // str = str.slice(1);
+                            //     // str = str.slice(0, -1);
+                            // } else if(startsWithSpace) {
+                            //     align ??= 'right';
+                            //     // str = str.slice(1);
+                            // } else if(endsWithSpace) {
+                            //     align ??= 'left';
+                            //     // str = str.slice(0, -1);
+                            // }
 
                             let startLine = tok.startLine + (lastTableSplit ? lastTableSplit.startLine : 1) - 1
                             const [line, left] = getOriginalLine(Store.commentLines, this.rootStartLine + startLine - 1, true)
@@ -966,7 +968,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                             let endLine = tok.startLine + t.endLine - 1
                             endLine = getOriginalLine(Store.commentLines, this.rootStartLine + endLine - 1) + 1
                             items.push({
-                                align,
+                                // align,
                                 value: parseBlock(str, 'table', false, true, startLine - 1 - left),
                                 startLine,
                                 endLine
@@ -1135,7 +1137,8 @@ class NamumarkParser extends EmbeddedActionsParser {
                     const tok = $.OR([
                         { ALT: () => $.SUBRULE($.bold) },
                         { ALT: () => $.SUBRULE($.italic) },
-                        { ALT: () => $.SUBRULE($.strike) },
+                        { ALT: () => $.SUBRULE($.strike1) },
+                        { ALT: () => $.SUBRULE($.strike2) },
                         { ALT: () => $.SUBRULE($.underline) },
                         { ALT: () => $.SUBRULE($.sup) },
                         { ALT: () => $.SUBRULE($.sub) },
@@ -1457,7 +1460,8 @@ class NamumarkParser extends EmbeddedActionsParser {
                 if(!parsedUrl && link) {
                     const maybeNamespace = link.split(':')[0];
                     if(maybeNamespace === '파일'
-                        || (maybeNamespace.includes('파일') && global.config?.namespaces?.length && global.config.namespaces.includes(maybeNamespace))) {
+                        || maybeNamespace === localFile
+                        || ((maybeNamespace.includes('파일') || maybeNamespace.includes(localFile)) && global.config?.namespaces?.length && global.config.namespaces.includes(maybeNamespace))) {
                         isFile = true;
                         parsedText = [{
                             type: 'text',
@@ -1490,8 +1494,9 @@ class NamumarkParser extends EmbeddedActionsParser {
             let isCategory = false;
             $.ACTION(() => {
                 if(!parsedUrl) {
-                    if(link.startsWith('분류:') && !Store.thread) {
-                        link = link.slice(3);
+                    const startsWithOriginalCategory = link.startsWith('분류:');
+                    if((startsWithOriginalCategory || link.startsWith(localCategory + ':')) && !Store.thread) {
+                        link = link.slice(startsWithOriginalCategory ? '분류:'.length : (localCategory + ':').length);
 
                         let blur;
                         if(hash === 'blur') {
@@ -1657,7 +1662,8 @@ class NamumarkParser extends EmbeddedActionsParser {
 
         $.RULE('bold', () => inlineHandler('bold', Bold, 3, -3));
         $.RULE('italic', () => inlineHandler('italic', Italic, 2, -2));
-        $.RULE('strike', () => inlineHandler('strike', Strike, 2, -2));
+        $.RULE('strike1', () => inlineHandler('strike', Strike1, 2, -2));
+        $.RULE('strike2', () => inlineHandler('strike', Strike2, 2, -2));
         $.RULE('underline', () => inlineHandler('underline', Underline, 2, -2));
         $.RULE('sup', () => inlineHandler('sup', Sup, 2, -2));
         $.RULE('sub', () => inlineHandler('sub', Sub, 2, -2));

@@ -186,7 +186,7 @@ module.exports = {
             const key = splittedContent[0];
             const value = splittedContent.slice(1).join('=');
 
-            if(splittedContent.length > 1 && !value) {
+            if(key.includes(' ') || (splittedContent.length > 1 && !value)) {
                 newText += `@${content}@`;
                 continue;
             }
@@ -230,12 +230,16 @@ module.exports = {
             enter(node, item, list) {
                 switch(node.type) {
                     case 'Declaration': {
-                        if(!allowedNames.includes(node.property))
+                        if(!allowedNames.includes(node.property) || node.value.type !== 'Value') {
                             list.remove(item);
-                        if(allowedValues[node.property]) {
+                            node.removed = true;
+                        }
+                        else if(allowedValues[node.property]) {
                             const valueStr = csstree.generate(node.value);
-                            if(!allowedValues[node.property](valueStr))
+                            if(!allowedValues[node.property](valueStr)) {
                                 list.remove(item);
+                                node.removed = true;
+                            }
                         }
                         break;
                     }
@@ -291,7 +295,7 @@ module.exports = {
             leave(node, item, list) {
                 switch(node.type) {
                     case 'Declaration': {
-                        if(node.value.type !== 'Value' || node.value.children.isEmpty)
+                        if(!node.removed && node.value.type === 'Value' && node.value.children.isEmpty)
                             list.remove(item);
                         break;
                     }
@@ -460,5 +464,23 @@ module.exports = {
             }
         });
         return isValid;
+    },
+    async runJavascript(qjsContext, expression, timeout = 100) {
+        if (!this.checkJavascriptValid(expression)) return;
+        let evalResult;
+        let handle;
+        try {
+          let aborted = false;
+          handle = qjsContext.evalCode(`with(safeGlobal){${expression}}`, {
+            shouldInterrupt: () => aborted,
+          })
+          setTimeout(() => (aborted = true), timeout);
+          evalResult = qjsContext.dump(handle.value)
+        } catch (e) {}
+        finally {
+          handle.dispose()
+        }
+        
+        return evalResult;
     }
 }

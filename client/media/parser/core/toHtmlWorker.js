@@ -189,7 +189,8 @@ const topToHtml = module.exports = async parameter => {
   }
 
   if (isTop) {
-    let html = '<div class="wiki-macro-toc">';
+    const openHtml = (hide = false) => `<div class="wiki-macro-toc"><details${hide ? '' : ' open'}><summary></summary>`;
+    let html = '';
     let indentLevel = 0;
     for (let heading of parsed.data.headings) {
       const prevIndentLevel = indentLevel;
@@ -209,9 +210,10 @@ const topToHtml = module.exports = async parameter => {
         anchor: `s-${heading.numText}`,
       });
     }
-    for (let i = 0; i < indentLevel + 1; i++) html += "</div>";
+    for (let i = 0; i < indentLevel + 1; i++)
+      html += (i === indentLevel ? '</details>' : '') + '</div>';
 
-    Store.heading.html = html;
+    Store.heading.getHtml = (hide = false) => openHtml(hide) + html;
   }
 
   const classGenerator = (className, noJoin = false) => {
@@ -261,7 +263,7 @@ const topToHtml = module.exports = async parameter => {
         break;
       }
       case "table":
-        result += await table(obj, { toHtml, classGenerator });
+        result += await table(obj, { toHtml, classGenerator, Store });
         break;
       case "indent":
         result += `<div class="wiki-indent">${await toHtml(obj.content)}</div>`;
@@ -317,20 +319,7 @@ const topToHtml = module.exports = async parameter => {
         )}</dd></dl>`;
         break;
       case "ifSyntax":
-        if (!utils.checkJavascriptValid(obj.expression)) break;
-        let evalResult;
-        let handle;
-        try {
-          let aborted = false;
-          handle = Store.qjsContext.evalCode(`with(safeGlobal){${obj.expression}}`, {
-            shouldInterrupt: () => aborted,
-          })
-          setTimeout(() => (aborted = true), 100);
-          evalResult = Store.qjsContext.dump(handle.value)
-        } catch (e) {}
-        finally {
-          handle.dispose()
-        }
+        const evalResult = await utils.runJavascript(Store.qjsContext, obj.expression)
         if (evalResult) result += await toHtml(obj.content);
         break;
       case 'styleSyntax':

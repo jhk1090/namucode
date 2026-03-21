@@ -31,12 +31,13 @@ module.exports = async (obj, options = {}) => {
         isImage = true;
     }
 
-    if(link.startsWith('분류:'))
+    if(mainUtils.parseDocumentName(link).namespace === '분류')
         return;
 
     if(link.startsWith(':')) {
         const slicedLink = link.slice(1);
-        const isSpecialLink = slicedLink.startsWith('파일:') || slicedLink.startsWith('분류:');
+        const parsedSlicedLink = mainUtils.parseDocumentName(slicedLink);
+        const isSpecialLink = parsedSlicedLink.namespace === '파일' || parsedSlicedLink.namespace === '분류';
 
         if(["파일", "분류"].some(a => slicedLink.startsWith(a + ':'))) {
             link = slicedLink;
@@ -76,7 +77,7 @@ module.exports = async (obj, options = {}) => {
         link = parsedLink.href;
         title = link;
 
-        if(imageDocNames.length && !obj.parsedText.some(a => a.type !== 'link' || !a.link.startsWith('파일:'))) {
+        if(imageDocNames.length && !obj.parsedText.some(a => a.type !== 'link' || mainUtils.parseDocumentName(a.link).namespace !== '파일')) {
             let passedCount = 0;
             // for(let docName of imageDocNames) {
             //     // config.external_link_icons == []
@@ -129,7 +130,7 @@ module.exports = async (obj, options = {}) => {
             if(hash) hasHash = true;
             title = link;
 
-            if(link.startsWith('문서:')) link = link.slice(3);
+            link = mainUtils.doc_fulltitle(mainUtils.parseDocumentName(link));
             if(link.includes('../')) link = `/w?doc=${encodeURIComponent(link)}${hash ? `#${hash}` : ''}`;
             else link = `/w/${mainUtils.encodeSpecialChars(link)}${hash ? `#${hash}` : ''}`;
 

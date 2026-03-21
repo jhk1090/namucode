@@ -4,7 +4,22 @@ module.exports = {
     name = name.slice(0, 255);
     const originalName = name.trim();
     const splitedName = originalName.split(":");
-    const probablyNamespace = splitedName.length > 1 ? splitedName[0] : null;
+    
+    let probablyNamespace = splitedName.length > 1 ? splitedName[0] : null;
+    // [namucode] 나무코드에는 필요없음
+    // if(config.lang) {
+    //     if(!Object.hasOwn(localeNamespaces, config.lang)) {
+    //         let langFile = langFiles[config.lang] = require(`../locale/${config.lang.slice(0, 2)}.json`);
+    //         if(!langFile.namespaces) langFile = langFiles['ko'] = require('../locale/ko.json');
+    //         localeNamespaces[config.lang] = {};
+    //         for(let [key, value] of Object.entries(langFile.namespaces)) {
+    //             localeNamespaces[config.lang][value] = key;
+    //         }
+    //     }
+
+    //     probablyNamespace = localeNamespaces[config.lang][probablyNamespace] ?? probablyNamespace;
+    // }
+
     const namespaceExists = [].includes(probablyNamespace);
     const namespace = namespaceExists ? probablyNamespace : "문서";
     let title = namespaceExists ? splitedName.slice(1).join(":") : originalName;
