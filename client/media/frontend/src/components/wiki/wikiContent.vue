@@ -15,6 +15,7 @@ import { computePosition, offset, flip, shift, autoUpdate } from '@floating-ui/v
 
 import WikiCategory from "@/components/wiki/wikiCategory"
 import Common from '@/mixins/common'
+import { sha256 } from '@/utils'
 
 export default {
   mixins: [Common],
@@ -72,7 +73,7 @@ export default {
   watch: {
     async content() {
       await this.$nextTick()
-      this.setupWikiContent()
+      await this.setupWikiContent()
     },
     async userboxHtml() {
       await this.$nextTick()
@@ -90,7 +91,7 @@ export default {
     getFootnotes(element) {
       return [...element.getElementsByClassName('wiki-fn-content')]
     },
-    setupWikiContent(element = this.$refs.div) {
+    async setupWikiContent(element = this.$refs.div) {
       {
         // const imageHide = this.$store.state.localConfig['wiki.image_hide']
         // const disableImageLazy = this.$store.state.localConfig['wiki.disable_image_lazy']
@@ -312,6 +313,10 @@ export default {
       const darkStyleElements = document.querySelectorAll('*[data-dark-style]')
       const darkStyles = []
       for(let element of darkStyleElements) {
+        const className = '_' + (await sha256(element.dataset.darkStyle))
+        if(element.classList.contains(className))
+          continue
+
         const styleData = element.dataset.darkStyle.split(';').map(a => a.trim()).filter(a => a)
         let style = ''
         for(let stylePart of styleData) {
@@ -323,7 +328,7 @@ export default {
         if(!darkStyle) {
           darkStyle = {
             style,
-            class: '_' + crypto.randomUUID().replaceAll('-', '')
+            class: '_' + className
           }
           darkStyles.push(darkStyle)
         }
@@ -364,6 +369,55 @@ export default {
         time.textContent = result
       }
 
+      const tables = [...element.getElementsByClassName('wiki-table')]
+      for(let table of tables) {
+        const thead = [...table.children].find(e => e.tagName === 'THEAD')
+        const tbody = [...table.children].find(e => e.tagName === 'TBODY')
+        if(!thead || !tbody) continue
+        if(tbody.querySelector('td[colspan]')
+            || tbody.querySelector('td[rowspan]'))
+          continue
+        const lastHeaderRow = [...thead.getElementsByTagName('tr')].pop()
+        if(!lastHeaderRow) continue
+        const headerCells = [...lastHeaderRow.children].filter(e => e.tagName === 'TH')
+        const rows = [...tbody.children].filter(e => e.tagName === 'TR')
+        for(let cellIndex in headerCells) {
+          const cell = headerCells[cellIndex]
+          if(!cell.classList.contains('wiki-table-sortable'))
+            continue
+          cell.classList.add('sortable-table-head-cell')
+          const sortDirections = ['original', 'asc', 'desc']
+          const nextSortDirection = str => sortDirections[(sortDirections.indexOf(str) + 1) % sortDirections.length]
+          const onCellClick = () => {
+            for(let otherCell of headerCells)
+              if(cell !== otherCell) delete otherCell.dataset.sortDirection
+            const direction = cell.dataset.sortDirection = nextSortDirection(cell.dataset.sortDirection || 'original')
+            const directionNum = direction === 'asc' ? 1 : -1
+            const sorted = [...rows]
+            if(direction !== 'original') sorted.sort((a, b) => {
+              const cellA = [...a.children].filter(e => e.tagName === 'TD')[cellIndex]
+              const cellB = [...b.children].filter(e => e.tagName === 'TD')[cellIndex]
+              const textA = cellA ? cellA.textContent : ''
+              const textB = cellB ? cellB.textContent : ''
+              if(textA === textB) return 0
+              const numA = textA ? parseFloat(textA.replaceAll(',', ''), 10) : NaN
+              const numB = textB ? parseFloat(textB.replaceAll(',', ''), 10) : NaN
+              if(isNaN(numA) || isNaN(numB))
+                return (textA > textB ? 1 : -1) * directionNum
+              else
+                return (numA - numB) * directionNum
+            })
+            for(let row of sorted)
+              tbody.appendChild(row)
+          }
+          cell.addEventListener('click', onCellClick)
+          this.cleanupFunctions.push(() => {
+            cell.removeEventListener('click', onCellClick)
+            cell.classList.remove('sortable-table-head-cell')
+          })
+        }
+      }
+      
       // if(!this.discuss) {
       //   const hash = decodeURIComponent(location.hash.slice(1));
       //   window.history.pushState(null, null, hash);

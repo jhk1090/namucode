@@ -418,12 +418,12 @@
         white-space: nowrap;
     }
 
-    .wiki-table td {
+    .wiki-table td, .wiki-table th {
         border: 1px solid #ddd;
         padding: 5px 10px;
     }
 
-    .wiki-table td .wiki-paragraph {
+    .wiki-table td .wiki-paragraph, .wiki-table th .wiki-paragraph {
         margin-bottom: 0;
     }
 
@@ -441,7 +441,7 @@
         margin-left: 20px;
     }
 
-    .wiki-table td.wiki-table-nopadding {
+    .wiki-table td.wiki-table-nopadding, .wiki-table th.wiki-table-nopadding {
         padding: 0;
     }
 
@@ -490,13 +490,41 @@
         border: 1px solid #ccc;
         display: inline-block;
         margin-left: 5px;
-        padding: 12px 20px 18px 0;
+        padding: 12px 20px 12px 0;
     }
 
-    .wiki-macro-toc:before {
-        content: "목차";
+    .wiki-macro-toc details summary {
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 320 512%27%3E%3C%21--%21Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--%3E%3Cpath fill=%27%23666%27 d=%27M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z%27/%3E%3C/svg%3E");
+        background-position: 100%;
+        background-repeat: no-repeat;
+        background-size: auto 14px;
+        cursor: pointer;
         font-size: 1.25em;
+        list-style: none;
         margin-left: 14px;
+        min-width: 60px;
+    }
+
+    .wiki-macro-toc details summary::marker {
+        content: "";
+        display: none;
+    }
+
+    .wiki-macro-toc details summary:before {
+        content: "목차";
+    }
+
+    .wiki-macro-toc details[open] {
+        padding-bottom: 4px;
+    }
+
+    .wiki-macro-toc details[open] summary {
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 448 512%27%3E%3C%21--%21Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--%3E%3Cpath fill=%27%23666%27 d=%27M201.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 338.7 54.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z%27/%3E%3C/svg%3E");
+        margin-bottom: 12px;
+    }
+
+    .toc-indent {
+        padding-left: 20px;
     }
 
     .wiki-macro-toc>.toc-indent:first-of-type {
@@ -505,10 +533,6 @@
 
     .toc-item {
         display: block;
-    }
-
-    .toc-indent {
-        padding-left: 20px;
     }
 
     .wiki-fn-content {
@@ -556,6 +580,27 @@
         font-size: 1em;
         vertical-align: baseline;
     }
+
+    /*! Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */
+    .wiki-table .wiki-table-sortable {
+        padding-right: 25px;
+    }
+
+    .wiki-table .sortable-table-head-cell {
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 640 640%27%3E%3Cpath fill=%27%23212529%27 d=%27M130.4 268.2c5 12 16.6 19.8 29.6 19.8h320c12.9 0 24.6-7.8 29.6-19.8s2.2-25.7-6.9-34.9l-160-160c-12.5-12.5-32.8-12.5-45.3 0l-160 160c-9.2 9.2-11.9 22.9-6.9 34.9zm0 103.5c-5 12-2.2 25.7 6.9 34.9l160 160c12.5 12.5 32.8 12.5 45.3 0l160-160c9.2-9.2 11.9-22.9 6.9-34.9S492.9 352 480 352H160c-12.9 0-24.6 7.8-29.6 19.8z%27/%3E%3C/svg%3E");
+        background-position: center right 4px;
+        background-repeat: no-repeat;
+        background-size: auto 13px;
+        cursor: pointer;
+    }
+
+    .wiki-table .sortable-table-head-cell[data-sort-direction=asc] {
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 640 640%27%3E%3C%21--%21Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--%3E%3Cpath fill=%27%23212529%27 d=%27M160 288c-12.9 0-24.6-7.8-29.6-19.8s-2.2-25.7 7-34.8l160-160c12.5-12.5 32.8-12.5 45.3 0l160 160c9.2 9.2 11.9 22.9 6.9 34.9S492.9 288 480 288z%27/%3E%3C/svg%3E");
+    }
+
+    .wiki-table .sortable-table-head-cell[data-sort-direction=desc] {
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 640 640%27%3E%3C%21--%21Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--%3E%3Cpath fill=%27%23212529%27 d=%27M160 352c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 7 34.8l160 160c12.5 12.5 32.8 12.5 45.3 0l160-160c9.2-9.2 11.9-22.9 6.9-34.9S492.9 352 480 352z%27/%3E%3C/svg%3E");
+    }
 }
 
 .theseed-dark-mode .wiki-content {
@@ -600,7 +645,7 @@
         background-color: #2d2f34;
     }
 
-    .wiki-table td {
+    .wiki-table td, .wiki-table th {
         border: 1px solid #383b40;
     }
 
@@ -611,5 +656,17 @@
     .wiki-footnote-unfolded, .wiki-link-unfolded {
         background-color: #2d2f34;
         color: #ddd;
+    }
+
+    .wiki-table .sortable-table-head-cell {
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 640 640%27%3E%3Cpath fill=%27%23e0e0e0%27 d=%27M130.4 268.2c5 12 16.6 19.8 29.6 19.8h320c12.9 0 24.6-7.8 29.6-19.8s2.2-25.7-6.9-34.9l-160-160c-12.5-12.5-32.8-12.5-45.3 0l-160 160c-9.2 9.2-11.9 22.9-6.9 34.9zm0 103.5c-5 12-2.2 25.7 6.9 34.9l160 160c12.5 12.5 32.8 12.5 45.3 0l160-160c9.2-9.2 11.9-22.9 6.9-34.9S492.9 352 480 352H160c-12.9 0-24.6 7.8-29.6 19.8z%27/%3E%3C/svg%3E");
+    }
+
+    .wiki-table .sortable-table-head-cell[data-sort-direction=asc] {
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 640 640%27%3E%3C%21--%21Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--%3E%3Cpath fill=%27%23e0e0e0%27 d=%27M160 288c-12.9 0-24.6-7.8-29.6-19.8s-2.2-25.7 7-34.8l160-160c12.5-12.5 32.8-12.5 45.3 0l160 160c9.2 9.2 11.9 22.9 6.9 34.9S492.9 288 480 288z%27/%3E%3C/svg%3E");
+    }
+
+    .wiki-table .sortable-table-head-cell[data-sort-direction=desc] {
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 640 640%27%3E%3C%21--%21Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--%3E%3Cpath fill=%27%23e0e0e0%27 d=%27M160 352c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 7 34.8l160 160c12.5 12.5 32.8 12.5 45.3 0l160-160c9.2-9.2 11.9-22.9 6.9-34.9S492.9 352 480 352z%27/%3E%3C/svg%3E");
     }
 }
