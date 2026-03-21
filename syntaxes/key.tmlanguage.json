@@ -109,7 +109,7 @@
             ]
         },
         "anchors": {
-            "match": "\\[((anchor|age|dday|youtube|kakaotv|niconicovideo|vimeo|nicovideo|navertv|목차|tableofcontents)\\(([^\\)]*(\\){1,})?)\\)|(pagecount)(\\(([^\\)]*(\\){1,})?)\\))?)\\]",
+            "match": "\\[((anchor|age|dday|youtube|kakaotv|niconicovideo|vimeo|nicovideo|navertv)\\(([^\\)]*(\\){1,})?)\\)|(pagecount|목차|tableofcontents)(\\(([^\\)]*(\\){1,})?)\\))?)\\]",
             "captures": {
                 "2": {
                     "name": "keyword.control.namu"
