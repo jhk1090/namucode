@@ -189,7 +189,9 @@ const topToHtml = module.exports = async parameter => {
   }
 
   if (isTop) {
-    const openHtml = (hide = false) => `<div class="wiki-macro-toc"><details${hide ? '' : ' open'}><summary></summary>`;
+    // [namucode] 번역 무필요
+    const tocTitle = "목차"
+    const openHtml = (hide = false) => `<div class="wiki-macro-toc"><details${hide ? '' : ' open'}><summary>${tocTitle}</summary>`;
     let html = '';
     let indentLevel = 0;
     for (let heading of parsed.data.headings) {
@@ -314,9 +316,7 @@ const topToHtml = module.exports = async parameter => {
         result += utils.sanitizeHtml(await utils.parseIncludeParams(obj.text, Store.qjsContext));
         break;
       case "folding":
-        result += `<dl class="wiki-folding"><dt>${utils.escapeHtml(obj.text)}</dt><dd class="wiki-folding-close-anim">${await toHtml(
-          obj.content
-        )}</dd></dl>`;
+        result += `<details class="wiki-folding"><summary>${utils.escapeHtml(obj.text)}</summary><div>${await toHtml(obj.content)}</div></details>`;
         break;
       case "ifSyntax":
         const evalResult = await utils.runJavascript(Store.qjsContext, obj.expression)

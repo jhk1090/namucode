@@ -261,10 +261,6 @@ const BlockQuote = createToken({
 //     ...fullLineRegex(/\|\|$/m, { isTable: true }),
 //     pop_mode: true
 // });
-const TableSplit = createToken({
-    name: 'TableSplit',
-    pattern: /\|\|/
-});
 // {{{}}} 안 * 뒤에 ? 있었음, 넓게 잡으려고 빼 둠
 const CaptionRegex = /^\|(?:\[\[[\s\S]*?]]|[\s\S])*?(?<!\\)(?:\\\\)*\|/;
 const TableRow = createToken({
@@ -467,7 +463,7 @@ const CommentMention = createToken({
 });
 const Folding = createToken({
     name: 'Folding',
-    ...nestedRegex(/{{{#!folding(\s)+?/, /}}}/, {
+    ...nestedRegex(/{{{#!folding+?/, /}}}/, {
         allowNewline: true,
         openCheckRegex: /{{{/
     }),
@@ -716,10 +712,20 @@ const modeGenerator = tokens => ({
 const blockLexer = new Lexer(modeGenerator(allTokens.filter(a => !['Heading'].includes(a.name))));
 const lexer = new Lexer(modeGenerator(allTokens));
 
+const TableSplit = createToken({
+    name: 'TableSplit',
+    pattern: /\|\|/
+});
+const RowIf = createToken({
+    name: 'RowIf',
+    pattern: /<rowif=(.+?)>/
+});
+
 const tableRowLexer = new Lexer([
     ...importantTokens,
     Newline,
     TableSplit,
+    RowIf,
     ...inlineTokens
 ]);
 
@@ -1307,7 +1313,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             const fullText = tok.image.slice(12, -3);
 
             const lines = fullText.split('\n');
-            const text = lines[0].slice(1);
+            const text = lines[0];
             let content = lines.slice(1).join('\n');
 
             let [startLine, startLeft] = getOriginalLine(Store.commentLines, this.rootStartLine + tok.startLine - 1, true)
