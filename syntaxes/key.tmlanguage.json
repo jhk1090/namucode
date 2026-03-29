@@ -547,7 +547,7 @@
             "end": "(?= |\n|$)",
             "patterns": [
                 {
-                    "match": "(<)([^>=|]*(?:\\|[^>=|]+)?)(?:=([^>|]*))?(>)",
+                    "match": "(<)(rowif)=([^>]*)(>)|(<)([^>=|]*(?:\\|[^>=|]+)?)(?:=([^>|]*))?(>)",
                     "captures": {
                         "1": {
                             "name": "punctuation.definition.tag.begin.namu"
@@ -559,6 +559,18 @@
                             "name": "string.unquoted.attribute-value.table.namu"
                         },
                         "4": {
+                            "name": "punctuation.definition.tag.end.namu"
+                        },
+                        "5": {
+                            "name": "punctuation.definition.tag.begin.namu"
+                        },
+                        "6": {
+                            "name": "entity.other.attribute-name.table.namu"
+                        },
+                        "7": {
+                            "name": "string.unquoted.attribute-value.table.namu"
+                        },
+                        "8": {
                             "name": "punctuation.definition.tag.end.namu"
                         }
                     }
