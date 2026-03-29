@@ -1,4 +1,10 @@
 # 업데이트 로그
+## v1.8.10
+#### 📆 2026. 3. 29.
+### ⛏️ 수정 - rowif 파싱 버그 수정 (#6)
+- rowif의 값에 `||`이 들어가면 테이블 구분자로 인식하여 rowif가 중도에 깨져버리는 버그 수정
+- wjdgustn/thetree@20665fb + wjdgustn/thetree-frontend@6b0069d 대응
+
 ## v1.8.9
 #### 📆 2026. 3. 21.
 ### ⛏️ 수정 - the seed 신규 문법에 대응되는 the tree 파서로 업데이트
