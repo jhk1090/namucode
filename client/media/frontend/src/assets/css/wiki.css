@@ -449,37 +449,20 @@
         word-break: keep-all;
     }
 
-    dl.wiki-folding {
-        margin: 0;
-    }
-
-    dl.wiki-folding dt {
+    details.wiki-folding summary {
         cursor: pointer;
         font-weight: 700;
-        -webkit-user-select: none;
-        -moz-user-select: none;
+        list-style: none;
         user-select: none;
     }
 
-    dl.wiki-folding dd {
-        margin: 0;
-        max-height: 0;
-        max-width: 0;
+    details.wiki-folding summary::marker {
+        content: "";
+        display: none;
+    }
+
+    details.wiki-folding>div {
         overflow: hidden;
-    }
-
-    .wiki-folding dd.wiki-folding-opened {
-        max-height: none;
-        max-width: none;
-    }
-
-    .wiki-folding dd.wiki-folding-close-anim {
-        transition: all .15s ease-out;
-    }
-
-    .wiki-folding dd.wiki-folding-open-anim {
-        opacity: 1;
-        transition: all .15s ease-in;
     }
 
     .wiki-clearfix {
@@ -508,10 +491,6 @@
     .wiki-macro-toc details summary::marker {
         content: "";
         display: none;
-    }
-
-    .wiki-macro-toc details summary:before {
-        content: "목차";
     }
 
     .wiki-macro-toc details[open] {

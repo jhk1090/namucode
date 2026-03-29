@@ -231,75 +231,20 @@ export default {
       }
 
       const foldings = element.getElementsByClassName('wiki-folding')
-      for(let folding of foldings) {
-        const foldingText = folding.firstElementChild
-        const foldingContent = foldingText.nextElementSibling
-
-        let offsetWidth
-        let offsetHeight
-        const resizeObserver = new ResizeObserver(([entry]) => {
-          if(!entry.contentRect.height) return
-
-          const openedBefore = foldingContent.classList.contains('wiki-folding-opened')
-
-          if(!openedBefore) foldingContent.classList.add('wiki-folding-opened')
-          offsetWidth = foldingContent.offsetWidth
-          offsetHeight = foldingContent.offsetHeight
-          if(!openedBefore) foldingContent.classList.remove('wiki-folding-opened')
-
-          resizeObserver.disconnect()
-        })
-        resizeObserver.observe(foldingText)
-
-        let transitionCount = 0
-        const transitioning = () => transitionCount !== 0
-
-        foldingContent.addEventListener('transitionstart', _ => transitionCount++)
-        foldingContent.addEventListener('transitionend', _ => transitionCount--)
-        foldingContent.addEventListener('transitioncancel', _ => transitionCount--)
-
-        const setSizeToOffsetSize = () => {
-          foldingContent.style.maxWidth = offsetWidth + 'px'
-          foldingContent.style.maxHeight = offsetHeight + 'px'
+      // [namucode] 별도 설정 불필요
+      const showFolding = true
+      const disableFoldingAnimation = false
+      for (let folding of foldings) {
+        if (!disableFoldingAnimation) this.cleanupFunctions.push(this.setupFoldingAnimation(folding).cleanup)
+        if (showFolding) folding.open = true
+      }
+      if (!disableFoldingAnimation) {
+        const tocs = element.getElementsByClassName('wiki-macro-toc')
+        for (let toc of tocs) {
+          const details = toc.getElementsByTagName('details')[0]
+          if (!details) continue
+          this.cleanupFunctions.push(this.setupFoldingAnimation(details).cleanup)
         }
-        const removeSize = () => {
-          foldingContent.style.maxWidth = ''
-          foldingContent.style.maxHeight = ''
-        }
-        const finishOpen = () => {
-          if(transitioning()) return
-
-          removeSize()
-          foldingContent.classList.add('wiki-folding-opened')
-
-          foldingContent.removeEventListener('transitionend', finishOpen)
-        }
-
-        // if(this.$store.state.localConfig['wiki.show_folding'])
-        //   foldingContent.classList.add('wiki-folding-open-anim', 'wiki-folding-opened')
-        foldingText.addEventListener('click', e => {
-          const foldingText = e.currentTarget
-          const foldingContent = foldingText.nextElementSibling
-
-          const opened = foldingContent.classList.contains('wiki-folding-open-anim')
-
-          if(opened) {
-            setSizeToOffsetSize()
-
-            requestAnimationFrame(_ => {
-              foldingContent.classList.remove('wiki-folding-open-anim')
-              foldingContent.classList.remove('wiki-folding-opened')
-
-              removeSize()
-            })
-          }
-          else {
-            foldingContent.classList.add('wiki-folding-open-anim')
-            setSizeToOffsetSize()
-
-            foldingContent.addEventListener('transitionend', finishOpen)
-          }
-        })
       }
 
       // let footnoteType = this.$store.state.localConfig['wiki.footnote_type'];
@@ -474,6 +419,77 @@ export default {
         })
 
         footnote.addEventListener('mouseleave', mouseLeaveHandler)
+      }
+    },
+    setupFoldingAnimation(details) {
+      const summary = details.getElementsByTagName('summary')[0]
+      const content = summary.nextElementSibling
+      if(!summary || !content) return
+      let animation = null
+      let isClosing = false
+      let isOpening = false
+      const onAnimationEnd = open => {
+        animation = null
+        isClosing = false
+        isOpening = false
+        details.open = open
+        details.style.height = ''
+        details.style.overflow = ''
+      }
+      const onSummaryClick = e => {
+        e.preventDefault()
+        details.style.overflow = 'hidden'
+        if(isClosing || !details.open) {
+          details.style.height = details.offsetHeight + 'px'
+          details.open = true
+          requestAnimationFrame(() => {
+            isOpening = true
+            const start = details.offsetHeight + 'px'
+            const end = summary.offsetHeight + content.offsetHeight + 'px'
+            animation?.cancel()
+            animation = details.animate({
+              height: [start, end]
+            }, {
+              duration: 100,
+              easing: 'ease-in'
+            })
+            animation.addEventListener('finish', () => {
+              onAnimationEnd(true)
+            })
+            animation.addEventListener('cancel', () => {
+              isOpening = false
+            })
+          })
+        }
+        else if(isOpening || details.open) {
+          requestAnimationFrame(() => {
+            isClosing = true
+            const start = details.offsetHeight + 'px'
+            const end = summary.offsetHeight + 'px'
+            animation?.cancel()
+            animation = details.animate({
+              height: [start, end]
+            }, {
+              duration: 100,
+              easing: 'ease-out'
+            })
+            animation.addEventListener('finish', () => {
+              onAnimationEnd(false)
+            })
+            animation.addEventListener('cancel', () => {
+              isClosing = false
+            })
+          })
+        }
+      }
+      summary.addEventListener('click', onSummaryClick)
+      return {
+        cleanup: () => {
+          animation?.cancel()
+          details.style.height = ''
+          details.style.overflow = ''
+          summary.removeEventListener('click', onSummaryClick)
+        }
       }
     },
     async formSubmit(e) {
