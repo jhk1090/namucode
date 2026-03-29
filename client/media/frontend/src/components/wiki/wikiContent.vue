@@ -232,7 +232,7 @@ export default {
 
       const foldings = element.getElementsByClassName('wiki-folding')
       // [namucode] 별도 설정 불필요
-      const showFolding = true
+      const showFolding = false
       const disableFoldingAnimation = false
       for (let folding of foldings) {
         if (!disableFoldingAnimation) this.cleanupFunctions.push(this.setupFoldingAnimation(folding).cleanup)
