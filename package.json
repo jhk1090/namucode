@@ -495,9 +495,20 @@
         },
         "configuration": [
             {
-                "id": "namucodeSetting",
-                "title": "나무코드 Namucode",
+                "title": "편집기 설정",
                 "order": 1,
+                "properties": {
+                    "namucode.editor.internalLinkDomain": {
+                        "type": "string",
+                        "default": "https://namu.wiki",
+                        "title": "내부 링크 도메인 주소 (편집기)",
+                        "markdownDescription": "**내부 링크 도메인 주소 (편집기)**. **편집기**에서 내부 링크가 걸릴 때 도메인 주소를 설정합니다. 예를 들어, `[[나무코드]]`가 입력되면 링크 처리되어,  `<도메인 주소>/w/나무코드`로 링크가 걸립니다."
+                    }
+                }
+            },
+            {
+                "title": "파서 설정",
+                "order": 2,
                 "properties": {
                     "namucode.parser.maxParsingCharacter": {
                         "type": "number",
@@ -510,12 +521,18 @@
                         "default": 30,
                         "title": "파싱 최대 깊이",
                         "markdownDescription": "**파싱 최대 깊이**. 미리보기 파서에서 문서 파싱 시 최대 얼마나 깊이 파싱될지 설정합니다. `{{{#!wiki style=\"\" }}}`과 같은 bracket 문법이 얼마나 겹쳐있는 지에 따라 깊이가 깊어집니다."
-                    },
+                    }
+                }
+            },
+            {
+                "title": "미리보기 설정",
+                "order": 3,
+                "properties": {
                     "namucode.preview.internalLinkDomain": {
                         "type": "string",
                         "default": "https://namu.wiki",
-                        "title": "내부 링크 도메인 주소",
-                        "markdownDescription": "**내부 링크 도메인 주소**. 미리보기에서 내부 링크가 걸릴 때 도메인 주소를 설정합니다. `[[나무코드]]`가 미리보기에서 표시된다면 `<도메인 주소>/w/나무코드`로 링크가 걸립니다."
+                        "title": "내부 링크 도메인 주소 (미리보기)",
+                        "markdownDescription": "**내부 링크 도메인 주소 (미리보기)**. **미리보기**에서 내부 링크가 걸릴 때 도메인 주소를 설정합니다. `[[나무코드]]`가 미리보기에서 표시된다면 `<도메인 주소>/w/나무코드`로 링크가 걸립니다."
                     },
                     "namucode.preview.workspaceReference": {
                         "type": "boolean",
