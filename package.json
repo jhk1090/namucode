@@ -496,7 +496,7 @@
         "configuration": [
             {
                 "id": "namucodeSetting",
-                "title": "Namucode",
+                "title": "나무코드 Namucode",
                 "order": 1,
                 "properties": {
                     "namucode.parser.maxParsingCharacter": {
