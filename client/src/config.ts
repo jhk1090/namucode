@@ -1,3 +1,5 @@
+import * as vscode from "vscode"
+
 interface ConfigRule {
     linkPattern: string;
     linkPatternFlags: string;
@@ -11,6 +13,8 @@ interface Config {
 export const EXTENSION_NAME = "namulink";
 
 export function getConfig(): Config {
+  const rootConfig = vscode.workspace.getConfiguration("namucode");
+  const internalLinkDomain = rootConfig.get<string>("editor.internalLinkDomain", "https://namu.wiki")
   const config: Config = {
     rules: [
       // FIXME: def all link patterns
@@ -18,15 +22,15 @@ export function getConfig(): Config {
       {
         linkPattern:
           "\\[\\[(?!http:\\/\\/)(?!https:\\/\\/)([^:].*?)(\\|.*?\\]\\]|\\]\\])", // [[링크]] 및 [[링크|내용]]
-        linkTarget: "https://namu.wiki/w/$1",
+        linkTarget: internalLinkDomain + "/w/$1",
       },
       {
         linkPattern: "\\[include\\(([^,\\)\\]]*)(?:,[^\\)]*)?\\)\\]", // [include(이름)]
-        linkTarget: "https://namu.wiki/w/$1",
+        linkTarget: internalLinkDomain + "/w/$1",
       },
       {
         linkPattern: "\\[\\[:(.*?)(\\|.*?\\]\\]|\\]\\])", // [[:링크]] 및 [[:링크|내용]]
-        linkTarget: "https://namu.wiki/w/$1",
+        linkTarget: internalLinkDomain + "/w/$1",
       },
       {
         linkPattern: "\\[(?:youtube)\\((.[^\\)\\]]*)\\)\\]", // [youtube(링크)]

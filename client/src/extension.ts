@@ -7,7 +7,7 @@ import * as path from "path";
 import { workspace, ExtensionContext } from "vscode";
 import * as vscode from "vscode";
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from "vscode-languageclient/node";
-import { EXTENSION_NAME, getConfig } from "./config";
+import { getConfig } from "./config";
 import { LinkDefinitionProvider } from "./providers/LinkDefinitionProvider";
 import { MarkPreview, getWebviewOptions } from './preview';
 import { FoldingRangeProvider } from './providers/FoldingRangeProvider';
