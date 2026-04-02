@@ -21,9 +21,24 @@ enum Level {
   UP,
   DOWN,
 }
+let oldDomain = vscode.workspace.getConfiguration("namucode").get<string>("editor.internalLinkDomain", "https://namu.wiki")
 
 export async function activate(context: ExtensionContext) {
   provideLink(context);
+
+  // namucode.editor.internalLinkDomain 변경 감지
+  const linkDomainChangeListener = vscode.workspace.onDidChangeConfiguration((event) => {
+    if (event.affectsConfiguration("namucode")) {
+      const config = vscode.workspace.getConfiguration("namucode");
+      const newDomain = config.get<string>("editor.internalLinkDomain", "https://namu.wiki");
+      if (oldDomain !== newDomain) {
+        oldDomain = newDomain;
+        provideLink(context)
+      }
+    }
+  })
+
+  context.subscriptions.push(linkDomainChangeListener)
   
   vscode.commands.registerCommand("namucode.linkify", () => {
     const editor = vscode.window.activeTextEditor;
