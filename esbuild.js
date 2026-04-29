@@ -12,8 +12,15 @@ const quickjsPackages = [
   '@jitl/quickjs-wasmfile-release-asyncify',
   '@jitl/quickjs-wasmfile-release-sync',
   'quickjs-emscripten',
-  'quickjs-emscripten-core'
+  'quickjs-emscripten-core',
 ];
+
+const serverExceptionModules = [
+  'vscode-css-languageservice',
+  '@vscode/l10n',
+  'vscode-languageserver-types',
+  'vscode-uri'
+]
 
 /**
  * @type {import('esbuild').Plugin}
@@ -48,7 +55,7 @@ async function buildProject(entry, outfile, extraOptions = {}) {
       sourcesContent: false,
       platform: "node",
       outfile,
-      external: ["vscode", ...(extraOptions.external || []), ...quickjsPackages],
+      external: ["vscode", ...(extraOptions.external || []), ...quickjsPackages, ...serverExceptionModules],
       logLevel: "warning",
       plugins: [esbuildProblemMatcherPlugin]
   });
@@ -83,11 +90,26 @@ function copyParserAssets() {
 }
 
 const nodeModulesDir = path.resolve(__dirname, 'client/node_modules');
+const serverNodeModulesDir = path.resolve(__dirname, 'server/node_modules');
 const distNodeModulesDir = path.resolve(__dirname, 'dist/node_modules');
 
 async function copyQuickJS() {
   for (const pkg of quickjsPackages) {
     const src = path.join(nodeModulesDir, pkg);
+    const dest = path.join(distNodeModulesDir, pkg);
+
+    try {
+      await fs.copy(src, dest, { overwrite: true });
+      console.log(`✅ Copied ${pkg} to dist`);
+    } catch (err) {
+      console.error(`❌ Failed to copy ${pkg}:`, err);
+    }
+  }
+}
+
+async function copyServerExceptionModules() {
+  for (const pkg of serverExceptionModules) {
+    const src = path.join(serverNodeModulesDir, pkg);
     const dest = path.join(distNodeModulesDir, pkg);
 
     try {
@@ -156,6 +178,7 @@ async function main() {
   // 빌드 끝나면 utils, syntax 폴더 복사
   copyParserAssets();
   copyQuickJS();
+  copyServerExceptionModules();
   copyMedia();
   copyFrontendDist();
 }

@@ -1,5 +1,8 @@
 # TODOs
 
+## asdfasdf
+- 일단 embeddedSupport에 client 단에서 가져온 documentSymbol을 가져와서 FoldingRangeProvider처럼 파싱해야 함.
+
 ## Progress
 
 - FIXME: 추가한 단축키와 스니펫 모두 README.md로 업데이트

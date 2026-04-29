@@ -2,7 +2,7 @@
   "name": "namucode-server",
   "description": "나무코드 서버 부분",
   "version": "1.0.0",
-  "author": "justcontributor",
+  "author": "jhk1090",
   "license": "MIT",
   "engines": {
     "node": "*"
@@ -12,6 +12,7 @@
     "url": "https://github.com/jhk1090/namucode.git"
   },
   "dependencies": {
+    "vscode-css-languageservice": "^6.3.10",
     "vscode-languageserver": "^9.0.1",
     "vscode-languageserver-textdocument": "^1.0.11"
   },

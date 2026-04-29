@@ -267,7 +267,20 @@ export async function activate(context: ExtensionContext) {
     },
   };
   client = new LanguageClient("Namucode", serverOptions, clientOptions);
-  client.start();
+  await client.start();
+
+  client.onRequest("namucode/getDocumentSymbol", async () => {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || editor.document.languageId !== 'namu') {
+      vscode.window.showWarningMessage('이 명령어는 나무마크 파일(*.namu)에서만 사용할 수 있습니다.');
+      return {};
+    }
+
+    const rootConfig = vscode.workspace.getConfiguration("namucode");
+		const maxParsingDepth = rootConfig.get<number>("parser.maxParsingDepth", 30);
+		const maxCharacter = rootConfig.get<number>("parser.maxParsingCharacter", 1500000);
+    return await DocumentSymbolProvider.createParserPromise(editor.document, { editorComment: false, maxParsingDepth, maxCharacter })
+  })
 }
 
 export function deactivate(): Thenable<void> | undefined {
