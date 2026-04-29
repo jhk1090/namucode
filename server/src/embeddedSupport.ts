@@ -23,10 +23,85 @@ export const CSS_STYLE_RULE = '__';
 
 interface EmbeddedRegion { languageId: string | undefined; start: number; end: number; attributeValue?: boolean; }
 
-export function getDocumentRegions(document: TextDocument, documentSymbol: Object): HTMLDocumentRegions {
+export function getDocumentRegions(document: TextDocument, documentSymbol: Record<string, any>): HTMLDocumentRegions {
 	const regions: EmbeddedRegion[] = [];
-	regions.push({ languageId: 'css', start: 0, end: 100 })
+
+	const targetDepthTypes = ["scaleText", "colorText", "wikiSyntax", "folding", "ifSyntax"]
+	const targetFlatTypes = ["syntaxSyntax", "htmlSyntax", "literal", "styleSyntax"]
+	const specialTypes = ["paragraph", "heading", "table", "link", "footnote"]
+
+	const allTypes = [...targetDepthTypes, ...targetFlatTypes, ...specialTypes]
+
+	const findTargetTypes = (array: any[]) => {
+		if (array.length === undefined) {
+			findTargetTypes([array]);
+			return;
+		}
+
+		for (const element of array) {
+			if (!allTypes.includes(element.type)) continue
+
+			if (targetDepthTypes.includes(element.type)) {
+				const tokStartLine = element.startLine - 1;
+				const tokEndLine = element.endLine - 2;
+				element.content = element.content ?? [];
+				if (tokStartLine < tokEndLine) {
+					for (const content of element.content) {
+						findTargetTypes(content);
+					}
+				}
+				continue;
+			}
+			if (targetFlatTypes.includes(element.type)) {
+				let { innerStartLine, endLine, innerStartColumn, innerEndColumn } = element;
+				// Zero-index base
+				innerStartLine -= 1
+				endLine -= 1
+				innerStartColumn -= 1
+				innerEndColumn -= 1
+
+				const startPosition = { line: innerStartLine, character: innerStartColumn }
+				const endPosition = { line: endLine, character: innerEndColumn }
+
+				if (element.type === "styleSyntax") {
+					regions.push({ languageId: 'css', start: document.offsetAt(startPosition), end: document.offsetAt(endPosition) })
+				}
+				continue;
+			}
+			if (element.type === "paragraph") {
+				for (const line of element.lines ?? []) {
+					findTargetTypes(line);
+				}
+				continue;
+			}
+			if (element.type === "heading") {
+				// heading은 상위에서만 적용됨: startLine == 0
+				findTargetTypes(element.content);
+				continue;
+			}
+			if (element.type === "table") {
+				for (const row of element.rows) {
+					for (const column of row) {
+						findTargetTypes(column.value ?? []);
+					}
+				}
+				continue;
+			}
+			if (element.type === "link") {
+				findTargetTypes(element.parsedText ?? []);
+				continue;
+			}
+			if (element.type === "footnote") {
+				findTargetTypes(element.value ?? []);
+				continue;
+			}
+		}
+	};
+
+	findTargetTypes(documentSymbol.result)
 	console.log(documentSymbol)
+	console.log(regions)
+
 	return {
 		getLanguageRanges: (range: Range) => getLanguageRanges(document, regions, range),
 		getEmbeddedDocument: (languageId: string, ignoreAttributeValues: boolean) => getEmbeddedDocument(document, regions, languageId, ignoreAttributeValues),

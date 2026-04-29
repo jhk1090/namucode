@@ -40,7 +40,7 @@ export interface LanguageModeRange extends Range {
 	attributeValue?: boolean;
 }
 
-export function getLanguageModes(documentSymbol: Object): LanguageModes {
+export function getLanguageModes(documentSymbol: Record<string, any>): LanguageModes {
 	const cssLanguageService = getCSSLanguageService();
 
 	const documentRegions = getLanguageModelCache<HTMLDocumentRegions>(10, 60, document =>

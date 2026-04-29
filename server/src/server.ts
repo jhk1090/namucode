@@ -25,15 +25,17 @@ export const GetDocumentSymbolFromClientRequest = new RequestType<string, object
 // supports full document sync only
 const documents = new TextDocuments(TextDocument);
 
-let languageModes: LanguageModes;
+
+
+let languageModes: LanguageModes | null;
 
 connection.onInitialize(async (_params: InitializeParams) => {
-	languageModes = getLanguageModes({});
-
 	documents.onDidClose(e => {
+		if (!languageModes) return
 		languageModes.onDocumentRemoved(e.document);
 	});
 	connection.onShutdown(() => {
+		if (!languageModes) return
 		languageModes.dispose();
 	});
 
@@ -48,15 +50,6 @@ connection.onInitialize(async (_params: InitializeParams) => {
 	};
 });
 
-connection.onInitialized(() => {
-	fetchDocumentSymbol();
-})
-
-async function fetchDocumentSymbol() {
-	const params = await connection.sendRequest("namucode/getDocumentSymbol") as Object;
-	languageModes = getLanguageModes(params);
-}
-
 connection.onDidChangeConfiguration(_change => {
 	// Revalidate all open text documents
 	documents.all().forEach(validateTextDocument);
@@ -69,7 +62,13 @@ documents.onDidChangeContent(change => {
 	validateTextDocument(change.document);
 });
 
+async function fetchDocumentSymbol() {
+	const documentSymbol = await connection.sendRequest("namucode/getDocumentSymbol") as Object;
+	languageModes = getLanguageModes(documentSymbol);
+}
+
 async function validateTextDocument(textDocument: TextDocument) {
+	if (!languageModes) return
 	try {
 		const version = textDocument.version;
 		const diagnostics: Diagnostic[] = [];
@@ -99,6 +98,7 @@ connection.onCompletion(async (textDocumentPosition, _token) => {
 	if (!document) {
 		return null;
 	}
+	if (!languageModes) return null;
 
 	const mode = languageModes.getModeAtPosition(document, textDocumentPosition.position);
 	if (!mode || !mode.doComplete) {
