@@ -32,7 +32,7 @@ let languageModes: LanguageModes | null;
 connection.onInitialize(async (_params: InitializeParams) => {
 	documents.onDidClose(e => {
 		if (!languageModes) return
-		languageModes.onDocumentRemoved(e.document);
+		languageModes.onDocumentRemoved();
 	});
 	connection.onShutdown(() => {
 		if (!languageModes) return
@@ -57,29 +57,29 @@ connection.onDidChangeConfiguration(_change => {
 
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
-documents.onDidChangeContent(change => {
-	fetchDocumentSymbol();
-	validateTextDocument(change.document);
+documents.onDidChangeContent(async (change) => {
+	await fetchDocumentSymbol(change.document);
+	await validateTextDocument(change.document);
 });
 
-async function fetchDocumentSymbol() {
+async function fetchDocumentSymbol(document: TextDocument) {
 	const documentSymbol = await connection.sendRequest("namucode/getDocumentSymbol") as Object;
-	languageModes = getLanguageModes(documentSymbol);
+	languageModes = getLanguageModes(documentSymbol, document);
 }
 
 async function validateTextDocument(textDocument: TextDocument) {
-	if (!languageModes) return
+	if (!languageModes) return;
 	try {
 		const version = textDocument.version;
 		const diagnostics: Diagnostic[] = [];
 		if (textDocument.languageId === 'namu') {
-			const modes = languageModes.getAllModesInDocument(textDocument);
+			const modes = languageModes.getAllModesInDocument();
 			const latestTextDocument = documents.get(textDocument.uri);
 			if (latestTextDocument && latestTextDocument.version === version) {
 				// check no new version has come in after in after the async op
 				modes.forEach(mode => {
 					if (mode.doValidation) {
-						mode.doValidation(latestTextDocument).forEach(d => {
+						mode.doValidation().forEach(d => {
 							diagnostics.push(d);
 						});
 					}
@@ -100,13 +100,13 @@ connection.onCompletion(async (textDocumentPosition, _token) => {
 	}
 	if (!languageModes) return null;
 
-	const mode = languageModes.getModeAtPosition(document, textDocumentPosition.position);
+	const mode = languageModes.getModeAtPosition(textDocumentPosition.position);
 	if (!mode || !mode.doComplete) {
 		return CompletionList.create();
 	}
 	const doComplete = mode.doComplete!;
 
-	return doComplete(document, textDocumentPosition.position);
+	return doComplete(textDocumentPosition.position);
 });
 
 // Make the text document manager listen on the connection

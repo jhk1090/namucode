@@ -1,7 +1,12 @@
 # TODOs
 
-## asdfasdf
-- 일단 embeddedSupport에 client 단에서 가져온 documentSymbol을 가져와서 FoldingRangeProvider처럼 파싱해야 함.
+## Intelligence 구현
+- 밑의 Folding 버그 수정 먼저하기
+- @theseed-dark-mode autocompletion
+- css class가 이미 선언되었을 경우 autocompletion
+
+## Folding 버그 수정
+- parser.js에서 blockquote, paragraph 등에서 parseBlock 함수에 rootStartLine 설정을 제대로 안해 folding이 버그가 발생함.
 
 ## Progress
 
