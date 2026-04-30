@@ -1225,7 +1225,7 @@ class NamumarkParser extends EmbeddedActionsParser {
 
             let content = tok.image.slice(6, -3);
             $.ACTION(() => {
-                content = parseBlock(content, 'scaleText', true, undefined, (tok.image[5] === "\n" ? startLine : startLine - 1) - startLeft, startColumn + offsetHead);
+                content = parseBlock(content, 'scaleText', true, undefined, (tok.image[5] === "\n" ? startLine : startLine - 1) - startLeft, (tok.image[5] === "\n" ? 0 : startColumn + offsetHead));
             });
 
             return {
@@ -1408,7 +1408,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             let endColumn = tok.endColumn
             let offsetTail = -1 * ("}}}").length + 1
 
-            let innerStartColumn = 0
+            let innerStartColumn = 1
             let innerEndColumn = endColumn + offsetTail
 
             return {
@@ -1439,7 +1439,7 @@ class NamumarkParser extends EmbeddedActionsParser {
             let offsetHead = ("{{{" + "#" + color + (darkColor ? ",#" + darkColor : "")).length + 1
 
             $.ACTION(() => {
-                content = parseBlock(content, 'colorText', true, undefined, (tok.image[5] === "\n" ? startLine : startLine - 1) - startLeft, startColumn + offsetHead);
+                content = parseBlock(content, 'colorText', true, undefined, (tok.image[offsetHead - 1] === "\n" ? startLine : startLine - 1) - startLeft, (tok.image[offsetHead - 1] === "\n" ? 0 : startColumn + offsetHead));
             });
 
             return {
