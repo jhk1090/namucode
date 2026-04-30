@@ -1024,20 +1024,34 @@ class NamumarkParser extends EmbeddedActionsParser {
 
         $.RULE('blockquote', () => {
             const lines = [];
+            let firstTok;
+            let endTok
             $.AT_LEAST_ONE(() => {
-                lines.push($.CONSUME(BlockQuote).image.slice(1));
+                let tok = $.CONSUME(BlockQuote)
+                if (!firstTok) firstTok = tok;
+                endTok = tok;
+                lines.push(tok.image.slice(1));
                 $.OPTION({
                     GATE: () => $.LA(2).tokenType === BlockQuote,
                     DEF: () => $.CONSUME(Newline)
                 });
             });
+
+            let [startLine, startLeft] = getOriginalLine(Store.commentLines, this.rootStartLine + firstTok.startLine - 1, true)
+            let [endLine, endLeft] = getOriginalLine(Store.commentLines, this.rootStartLine + endTok.endLine - 1, true)
+
+            startLine += 1
+            endLine += 1
+
             let content;
             $.ACTION(() => {
-                content = parseBlock(lines.join('\n'), 'blockquote');
+                content = parseBlock(lines.join('\n'), 'blockquote', undefined, undefined, startLine - 1 - startLeft);
             });
             return {
                 type: 'blockquote',
-                content
+                content,
+                startLine,
+                endLine
             }
         });
 
@@ -1051,6 +1065,9 @@ class NamumarkParser extends EmbeddedActionsParser {
                 if(next.tokenType !== List) return false;
                 return !listType || (next.image[1] === listType && !/^#\d+/.test(next.image.slice(3)));
             }
+
+            let listStartLine;
+            let listEndLine;
             $.AT_LEAST_ONE({
                 GATE: checkNext,
                 DEF: () => {
@@ -1071,8 +1088,17 @@ class NamumarkParser extends EmbeddedActionsParser {
 
                     if(content.startsWith(' ')) content = content.slice(1);
 
+                    let [startLine, startLeft] = getOriginalLine(Store.commentLines, this.rootStartLine + tok.startLine - 1, true)
+                    let [endLine, endLeft] = getOriginalLine(Store.commentLines, this.rootStartLine + tok.endLine - 1, true)
+
+                    startLine += 1
+                    endLine += 1
+
+                    if (!listStartLine) listStartLine = startLine;
+                    listEndLine = endLine;
+
                     $.ACTION(() => {
-                        content = parseBlock(content, 'list');
+                        content = parseBlock(content, 'list', undefined, undefined, startLine - 1 - startLeft);
                     });
                     items.push(content);
                     $.OPTION({
@@ -1086,26 +1112,42 @@ class NamumarkParser extends EmbeddedActionsParser {
                 type: 'list',
                 listType,
                 ...(listType === '*' ? {} : { startNum }),
-                items
+                items,
+                startLine: listStartLine,
+                endLine: listEndLine
             }
         });
 
         $.RULE('indent', () => {
             const lines = [];
+            let firstTok;
+            let endTok;
             $.AT_LEAST_ONE(() => {
-                lines.push($.CONSUME(Indent).image.slice(1));
+                let tok = $.CONSUME(Indent)
+                if (!firstTok) firstTok = tok;
+                endTok = tok;
+                lines.push(tok.image.slice(1));
                 $.OPTION({
                     GATE: () => $.LA(2).tokenType === Indent,
                     DEF: () => $.CONSUME(Newline)
                 });
             });
+
+            let [startLine, startLeft] = getOriginalLine(Store.commentLines, this.rootStartLine + firstTok.startLine - 1, true)
+            let [endLine, endLeft] = getOriginalLine(Store.commentLines, this.rootStartLine + endTok.endLine - 1, true)
+
+            startLine += 1
+            endLine += 1
+
             let content;
             $.ACTION(() => {
-                content = parseBlock(lines.join('\n'), 'indent');
+                content = parseBlock(lines.join('\n'), 'indent', undefined, undefined, startLine - 1 - startLeft);
             });
             return {
                 type: 'indent',
-                content
+                content,
+                startLine,
+                endLine
             }
         });
 
