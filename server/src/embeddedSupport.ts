@@ -54,15 +54,37 @@ export function getDocumentRegions(document: TextDocument, documentSymbol: Recor
 					const startOffset = document.offsetAt({ line: tokStartLine, character: 0 })
 					const targetLine = document.getText().substring(startOffset).split(/(\r)?\n/)[0];
 					const syntaxStart = targetLine.indexOf("{{{#!wiki")
-					let styleStart = targetLine.indexOf("style=\"", syntaxStart)
-					if (styleStart !== -1) {
-						styleStart += 7
-						let styleEnd = targetLine.indexOf("\"", styleStart)
-						styleEnd = styleEnd === -1 ? targetLine.length + 1 : styleEnd + 1
-						
-						if (styleStart < styleEnd) {
-							regions.push({ languageId: 'css-inline', start: startOffset + styleStart, end: startOffset + styleEnd })
-						}
+
+					const propertyRegex = /(style|dark-style|class|lang)=\"/g;
+					const stylePropertyRegex = /(style|dark-style)=\"/g;
+
+					propertyRegex.lastIndex = syntaxStart;
+					stylePropertyRegex.lastIndex = syntaxStart;
+
+					while (true) {
+						const styleStartMatch = propertyRegex.exec(targetLine);
+						if (styleStartMatch) {
+							let styleStart = styleStartMatch.index + styleStartMatch[0].length;
+
+							const styleEndRegex = /\"/g;
+							styleEndRegex.lastIndex = styleStart;
+
+							const styleEndMatch = styleEndRegex.exec(targetLine);
+							let styleEnd = styleEndMatch ? styleEndMatch.index + 1 : targetLine.length + 1;
+
+							if ((styleStart < styleEnd) && stylePropertyRegex.exec(targetLine)) {
+								regions.push({ languageId: 'css-inline', start: startOffset + styleStart, end: startOffset + styleEnd })
+							}
+
+							propertyRegex.lastIndex = styleEnd;
+							stylePropertyRegex.lastIndex = styleEnd;
+
+							if (!styleEndMatch) {
+								break;
+							}
+							continue;
+						}	
+						break;
 					}
 				}
 				continue;
