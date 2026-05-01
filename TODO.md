@@ -1,13 +1,5 @@
 # TODOs
 
-## Intelligence 구현
-- 밑의 Folding 버그 수정 먼저하기
-- @theseed-dark-mode autocompletion
-- css class가 이미 선언되었을 경우 autocompletion
-
-## Folding 버그 수정
-- parser.js에서 blockquote, paragraph 등에서 parseBlock 함수에 rootStartLine 설정을 제대로 안해 folding이 버그가 발생함.
-
 ## Progress
 
 - FIXME: 추가한 단축키와 스니펫 모두 README.md로 업데이트
@@ -17,6 +9,10 @@
 - 제한적인 linting 구현
   - 문단/리스트 상하 관계가 이상한 경우 경고
 - 단축키 폭넓게 추가
+
+### Intelligence 구현
+- wiki class의 class autocompletion (style에 등록된 클래스에서 가져오기)
+- wiki style (inline)
 
 ## Soon
 
