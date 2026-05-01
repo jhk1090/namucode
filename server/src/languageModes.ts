@@ -8,7 +8,7 @@ import {
 	CompletionList,
 	Diagnostic,
 	Position,
-	Range,
+	Range
 } from 'vscode-css-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { getCSSMode } from './modes/cssMode';
@@ -18,8 +18,8 @@ export * from 'vscode-css-languageservice';
 
 export interface LanguageMode {
 	getId(): string;
-	doValidation?: () => Diagnostic[];
-	doComplete?: (position: Position) => CompletionList;
+	doValidation?: (document: TextDocument) => Diagnostic[];
+	doComplete?: (document: TextDocument, position: Position) => CompletionList | null;
 	onDocumentRemoved(): void;
 	dispose(): void;
 }
@@ -40,7 +40,21 @@ export interface LanguageModeRange extends Range {
 }
 
 export function getLanguageModes(documentSymbol: Record<string, any>, document: TextDocument): LanguageModes {
-	const cssLanguageService = getCSSLanguageService();
+	const cssLanguageService = getCSSLanguageService({
+			customDataProviders: [
+				{
+					provideAtDirectives: () => [
+						{
+							name: '@theseed-dark-mode',
+							description: '다크 모드 전용 스타일을 정의합니다.',
+						}
+					],
+					provideProperties: () => [],
+					providePseudoClasses: () => [],
+					providePseudoElements: () => []
+				}
+			]
+	});
 
 	const documentRegions = getDocumentRegions(document, documentSymbol)
 

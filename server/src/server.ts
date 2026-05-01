@@ -44,7 +44,8 @@ connection.onInitialize(async (_params: InitializeParams) => {
 			textDocumentSync: TextDocumentSyncKind.Full,
 			// Tell the client that the server supports code completion
 			completionProvider: {
-				resolveProvider: false
+				resolveProvider: false,
+				triggerCharacters: ['.', '#', ':', '@', ' ']
 			}
 		}
 	};
@@ -79,11 +80,12 @@ async function validateTextDocument(textDocument: TextDocument) {
 				// check no new version has come in after in after the async op
 				modes.forEach(mode => {
 					if (mode.doValidation) {
-						mode.doValidation().forEach(d => {
+						mode.doValidation(textDocument).forEach(d => {
 							diagnostics.push(d);
 						});
 					}
 				});
+				// console.log(diagnostics)
 				connection.sendDiagnostics({ uri: latestTextDocument.uri, diagnostics });
 			}
 		}
@@ -106,7 +108,7 @@ connection.onCompletion(async (textDocumentPosition, _token) => {
 	}
 	const doComplete = mode.doComplete!;
 
-	return doComplete(textDocumentPosition.position);
+	return doComplete(document, textDocumentPosition.position);
 });
 
 // Make the text document manager listen on the connection

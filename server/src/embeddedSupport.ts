@@ -113,8 +113,6 @@ export function getDocumentRegions(document: TextDocument, documentSymbol: Recor
 	};
 
 	findTargetTypes(documentSymbol.result)
-	console.log(documentSymbol)
-	console.log(regions)
 
 	return {
 		getLanguageRanges: (range: Range) => getLanguageRanges(document, regions, range),
