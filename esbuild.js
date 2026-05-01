@@ -29,15 +29,23 @@ const esbuildProblemMatcherPlugin = {
   name: 'esbuild-problem-matcher',
   setup(build) {
     build.onStart(() => {
-      console.log(`[watch] build started → ${build.initialOptions.outfile}`);
+      const date = new Date();
+      const dateFormat = new Intl.DateTimeFormat("ko-KR", { hour: "numeric",
+    minute: "numeric",
+    second: "numeric", }).format(date);
+      console.log(`[${dateFormat}][watch] build started → ${build.initialOptions.outfile}`);
     });
     build.onEnd(result => {
+      const date = new Date();
+      const dateFormat = new Intl.DateTimeFormat("ko-KR", { hour: "numeric",
+    minute: "numeric",
+    second: "numeric", }).format(date);
       result.errors.forEach(({ text, location }) => {
         console.error(`✘ [ERROR] ${text}`);
         if (location == null) return;
         console.error(`    ${location.file}:${location.line}:${location.column}:`);
       });
-      console.log(`[watch] build finished → ${build.initialOptions.outfile}`);
+      console.log(`[${dateFormat}][watch] build finished → ${build.initialOptions.outfile}`);
     });
   }
 };

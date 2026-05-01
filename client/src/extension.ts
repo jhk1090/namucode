@@ -272,7 +272,6 @@ export async function activate(context: ExtensionContext) {
   client.onRequest("namucode/getDocumentSymbol", async () => {
     const editor = vscode.window.activeTextEditor;
     if (!editor || editor.document.languageId !== 'namu') {
-      vscode.window.showWarningMessage('이 명령어는 나무마크 파일(*.namu)에서만 사용할 수 있습니다.');
       return {};
     }
 

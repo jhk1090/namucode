@@ -51,7 +51,7 @@ export class DocumentSymbolProvider implements vscode.DocumentSymbolProvider {
     const cached = DocumentSymbolProvider.cache.get(key);
 
     if (result.errorCode && !cached.isMaxCharacterAlerted) {
-      const msg = await vscode.window.showWarningMessage(`파싱 허용 문서 최대 글자 수인 ${maxCharacter}자가 넘어가 목차 표시/문단 접기/미리보기 기능을 사용할 수 없습니다. 글자 수를 줄이거나 설정에서 "파싱 허용 문서 최대 글자 수"를 늘릴 수 있습니다.`, "설정");
+      const msg = await vscode.window.showWarningMessage(`파싱 허용 문서 최대 글자 수인 ${maxCharacter}자가 넘어갔습니다. 따라서, 목차 표시 · 문단 접기 · 미리보기 · 자동 완성 · 오류 표시 기능을 사용할 수 없습니다. 글자 수를 줄이거나 설정에서 "파싱 허용 문서 최대 글자 수"를 늘릴 수 있습니다.`, "설정");
       if (msg === "설정") {
         vscode.commands.executeCommand('workbench.action.openSettings', "@ext:jhk1090.namucode");
       }
