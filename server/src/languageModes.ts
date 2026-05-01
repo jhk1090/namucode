@@ -16,6 +16,7 @@ import { getCSSMode } from './modes/cssMode';
 import { getDocumentRegions } from './embeddedSupport';
 import { getCSSInlineMode } from './modes/cssInlineMode';
 import { getJSMode } from './modes/jsMode';
+import { getWikiClassMode } from './modes/wikiClassMode';
 
 export * from 'vscode-html-languageservice';
 
@@ -66,6 +67,7 @@ export function getLanguageModes(documentSymbol: Record<string, any>, document: 
 	modes['css'] = getCSSMode(cssLanguageService, documentRegions);
 	modes['css-inline'] = getCSSInlineMode(cssLanguageService, documentRegions);
 	modes['js'] = getJSMode(htmlLanguageService, documentRegions);
+	modes['wiki-class'] = getWikiClassMode(cssLanguageService, documentRegions);
 
 	return {
 		getModeAtPosition(

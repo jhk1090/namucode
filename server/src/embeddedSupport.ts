@@ -57,9 +57,13 @@ export function getDocumentRegions(document: TextDocument, documentSymbol: Recor
 
 					const propertyRegex = /(style|dark-style|class|lang)=\"/g;
 					const stylePropertyRegex = /(style|dark-style)=\"/g;
+					const classPropertyRegex = /(class)=\"/g;
+					const langPropertyRegex = /(lang)=\"/g;
 
 					propertyRegex.lastIndex = syntaxStart;
 					stylePropertyRegex.lastIndex = syntaxStart;
+					classPropertyRegex.lastIndex = syntaxStart;
+					langPropertyRegex.lastIndex = syntaxStart;
 
 					while (true) {
 						const styleStartMatch = propertyRegex.exec(targetLine);
@@ -72,12 +76,33 @@ export function getDocumentRegions(document: TextDocument, documentSymbol: Recor
 							const styleEndMatch = styleEndRegex.exec(targetLine);
 							let styleEnd = styleEndMatch ? styleEndMatch.index + 1 : targetLine.length + 1;
 
-							if ((styleStart < styleEnd) && stylePropertyRegex.exec(targetLine)) {
-								regions.push({ languageId: 'css-inline', start: startOffset + styleStart, end: startOffset + styleEnd })
+							if (styleStart < styleEnd) {
+								// 가장 낮은 걸 채택
+								let match;
+								let matchIndexPriority: number | undefined;
+								let languageIdPriority = "";
+
+								if (match = stylePropertyRegex.exec(targetLine)) {
+									if (!matchIndexPriority || matchIndexPriority > match.index) {
+										matchIndexPriority = match.index
+										languageIdPriority = "css-inline"
+									}
+								}
+								if (match = classPropertyRegex.exec(targetLine)) {
+									if (!matchIndexPriority || matchIndexPriority > match.index) {
+										matchIndexPriority = match.index
+										languageIdPriority = "wiki-class"
+									}
+								}
+								if (languageIdPriority !== "") {
+									regions.push({ languageId: languageIdPriority, start: startOffset + styleStart, end: startOffset + styleEnd })
+								}
 							}
 
 							propertyRegex.lastIndex = styleEnd;
 							stylePropertyRegex.lastIndex = styleEnd;
+							classPropertyRegex.lastIndex = styleEnd;
+							langPropertyRegex.lastIndex = styleEnd;
 
 							if (!styleEndMatch) {
 								break;

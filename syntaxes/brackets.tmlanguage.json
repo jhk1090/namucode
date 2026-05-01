@@ -57,7 +57,7 @@
               }
             },
             {
-              "match": "(class|lang)=\\\"([^\"]*)\\\"",
+              "match": "(class|lang)=\\\"([^\"]*)(\\\")?",
               "captures": {
                 "1": { "name": "variable.parameter.bracket.namu" },
                 "2": {
