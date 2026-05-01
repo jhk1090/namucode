@@ -32,7 +32,11 @@ export function getCSSMode(
 				
 				// 좌표 유지를 위해 앞부분을 줄바꿈(\n)으로 채운 가상 문서 생성
 				const prefix = document.getText().substring(0, document.offsetAt(region.start)).replace(/[^\r\n]/g, ' ');
-				const virtualDoc = TextDocument.create(document.uri, 'css', document.version, prefix + content);
+
+				let virtualText = prefix + content
+				virtualText = virtualText.replace(/@(.+)@/g, "  $1");
+
+				const virtualDoc = TextDocument.create(document.uri, 'css', document.version, virtualText);
 				
 				const stylesheet = cssLanguageService.parseStylesheet(virtualDoc);
 				const diagnostics = cssLanguageService.doValidation(virtualDoc, stylesheet);
@@ -66,6 +70,7 @@ export function getCSSMode(
 			const content = originalText.substring(regionStart, regionEnd);
 			let isolatedText = prefix + content;
 			isolatedText = isolatedText.replace(/@theseed-dark-mode/g, '@media all and (n)')
+			isolatedText = isolatedText.replace(/@(.+)@/g, "  $1");
 
 			const isolatedDoc = TextDocument.create(document.uri, 'css', document.version, isolatedText);
   		const stylesheet = cssLanguageService.parseStylesheet(isolatedDoc);
