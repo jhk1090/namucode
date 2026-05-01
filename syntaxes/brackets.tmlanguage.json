@@ -43,7 +43,7 @@
           "end": "(?=$)",
           "patterns": [
             {
-              "match": "(style|dark-style)=\\\"([^\"]*)\\\"",
+              "match": "(style|dark-style)=\\\"([^\"]*)(\\\")?",
               "captures": {
                 "1": { "name": "variable.parameter.bracket.namu" },
                 "2": {

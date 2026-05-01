@@ -45,7 +45,7 @@ connection.onInitialize(async (_params: InitializeParams) => {
 			// Tell the client that the server supports code completion
 			completionProvider: {
 				resolveProvider: false,
-				triggerCharacters: ['.', '#', ':', '@', ' ']
+				triggerCharacters: ['.', '#', ':', '@', '\"', ';', ' ']
 			}
 		}
 	};

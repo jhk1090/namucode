@@ -50,20 +50,34 @@ export function getDocumentRegions(document: TextDocument, documentSymbol: Recor
 						findTargetTypes(content);
 					}
 				}
+				if (element.type === "wikiSyntax") {
+					const startOffset = document.offsetAt({ line: tokStartLine, character: 0 })
+					const targetLine = document.getText().substring(startOffset).split(/(\r)?\n/)[0];
+					const syntaxStart = targetLine.indexOf("{{{#!wiki")
+					let styleStart = targetLine.indexOf("style=\"", syntaxStart)
+					if (styleStart !== -1) {
+						styleStart += 7
+						let styleEnd = targetLine.indexOf("\"", styleStart)
+						styleEnd = styleEnd === -1 ? targetLine.length + 1 : styleEnd + 1
+						
+						if (styleStart < styleEnd) {
+							regions.push({ languageId: 'css-inline', start: startOffset + styleStart, end: startOffset + styleEnd })
+						}
+					}
+				}
 				continue;
 			}
 			if (targetFlatTypes.includes(element.type)) {
-				let { innerStartLine, endLine, innerStartColumn, innerEndColumn } = element;
-				// Zero-index base
-				innerStartLine -= 1
-				endLine -= 1
-				innerStartColumn -= 1
-				innerEndColumn -= 1
-
-				const startPosition = { line: innerStartLine, character: innerStartColumn }
-				const endPosition = { line: endLine, character: innerEndColumn }
-
 				if (element.type === "styleSyntax") {
+					let { innerStartLine, endLine, innerStartColumn, innerEndColumn } = element;
+					// Zero-index base
+					innerStartLine -= 1
+					endLine -= 1
+					innerStartColumn -= 1
+					innerEndColumn -= 1
+
+					const startPosition = { line: innerStartLine, character: innerStartColumn }
+					const endPosition = { line: endLine, character: innerEndColumn }
 					regions.push({ languageId: 'css', start: document.offsetAt(startPosition), end: document.offsetAt(endPosition) })
 				}
 				continue;

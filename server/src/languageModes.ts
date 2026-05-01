@@ -13,6 +13,7 @@ import {
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { getCSSMode } from './modes/cssMode';
 import { getDocumentRegions } from './embeddedSupport';
+import { getCSSInlineMode } from './modes/cssInlineMode';
 
 export * from 'vscode-css-languageservice';
 
@@ -60,6 +61,7 @@ export function getLanguageModes(documentSymbol: Record<string, any>, document: 
 
 	let modes = Object.create(null);
 	modes['css'] = getCSSMode(cssLanguageService, documentRegions);
+	modes['css-inline'] = getCSSInlineMode(cssLanguageService, documentRegions);
 
 	return {
 		getModeAtPosition(
