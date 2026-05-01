@@ -9,24 +9,20 @@ import {
 	Diagnostic,
 	InitializeParams,
 	ProposedFeatures,
-	RequestType,
 	TextDocuments,
 	TextDocumentSyncKind
 } from 'vscode-languageserver/node';
 import { getLanguageModes, LanguageModes } from './languageModes';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+const parser = require("../../client/media/parser/core/parser.js");
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
 const connection = createConnection(ProposedFeatures.all);
-export const GetDocumentSymbolFromClientRequest = new RequestType<string, object, void>('namucode/getDocumentSymbol');
 
 // Create a simple text document manager. The text document manager
 // supports full document sync only
 const documents = new TextDocuments(TextDocument);
-
-
-
 let languageModes: LanguageModes | null;
 
 connection.onInitialize(async (_params: InitializeParams) => {
@@ -46,7 +42,10 @@ connection.onInitialize(async (_params: InitializeParams) => {
 			completionProvider: {
 				resolveProvider: false,
 				triggerCharacters: ['.', '#', ':', '@', '\"', ';', ' ']
-			}
+			},
+			// hoverProvider: true,
+			// definitionProvider: true,
+			// documentSymbolProvider: true
 		}
 	};
 });
@@ -64,8 +63,10 @@ documents.onDidChangeContent(async (change) => {
 });
 
 async function fetchDocumentSymbol(document: TextDocument) {
-	const documentSymbol = await connection.sendRequest("namucode/getDocumentSymbol") as Object;
-	languageModes = getLanguageModes(documentSymbol, document);
+	const settings = { editorComment: false, maxParsingDepth: 30, maxCharacter: 1500000 };
+
+	const result = (document.getText().length <= settings.maxCharacter) ? parser(document.getText(), { editorComment: settings.editorComment, maxParsingDepth: settings.maxParsingDepth }) : {};
+	languageModes = getLanguageModes(result, document);
 }
 
 async function validateTextDocument(textDocument: TextDocument) {
