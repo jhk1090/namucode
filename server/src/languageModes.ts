@@ -7,15 +7,17 @@ import { getCSSLanguageService } from 'vscode-css-languageservice';
 import {
 	CompletionList,
 	Diagnostic,
+	getLanguageService as getHTMLLanguageService,
 	Position,
-	Range
-} from 'vscode-css-languageservice';
+	Range,
+} from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { getCSSMode } from './modes/cssMode';
 import { getDocumentRegions } from './embeddedSupport';
 import { getCSSInlineMode } from './modes/cssInlineMode';
+import { getJSMode } from './modes/jsMode';
 
-export * from 'vscode-css-languageservice';
+export * from 'vscode-html-languageservice';
 
 export interface LanguageMode {
 	getId(): string;
@@ -56,12 +58,14 @@ export function getLanguageModes(documentSymbol: Record<string, any>, document: 
 				}
 			]
 	});
+	const htmlLanguageService = getHTMLLanguageService();
 
 	const documentRegions = getDocumentRegions(document, documentSymbol)
 
 	let modes = Object.create(null);
 	modes['css'] = getCSSMode(cssLanguageService, documentRegions);
 	modes['css-inline'] = getCSSInlineMode(cssLanguageService, documentRegions);
+	modes['js'] = getJSMode(htmlLanguageService, documentRegions);
 
 	return {
 		getModeAtPosition(

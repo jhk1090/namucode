@@ -87,6 +87,16 @@ export function getDocumentRegions(document: TextDocument, documentSymbol: Recor
 						break;
 					}
 				}
+				if (element.type === "ifSyntax") {
+					const startOffset = document.offsetAt({ line: tokStartLine, character: 0 })
+					const targetLine = document.getText().substring(startOffset).split(/(\r)?\n/)[0];
+					const syntaxStart = targetLine.indexOf("{{{#!if ")
+					const syntaxEnd = targetLine.length + 1;
+
+					if (syntaxStart < syntaxEnd) {
+						regions.push({ languageId: 'js', start: startOffset + syntaxStart, end: startOffset + syntaxEnd })
+					}
+				}
 				continue;
 			}
 			if (targetFlatTypes.includes(element.type)) {

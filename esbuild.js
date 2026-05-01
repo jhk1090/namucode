@@ -17,6 +17,7 @@ const quickjsPackages = [
 
 const serverExceptionModules = [
   'vscode-css-languageservice',
+  'vscode-html-languageservice',
   '@vscode/l10n',
   'vscode-languageserver-types',
   'vscode-uri'
