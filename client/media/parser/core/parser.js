@@ -762,7 +762,6 @@ class NamumarkParser extends EmbeddedActionsParser {
 
         this.noTopParagraph = false;
         this.rootStartLine = 0;
-        this.rootStartColumn = 0;
 
         $.RULE('document', () => {
             const result = [];
@@ -945,18 +944,11 @@ class NamumarkParser extends EmbeddedActionsParser {
 
                     const { tokens } = tableRowLexer.tokenize(sliced);
                     const items = [];
-
                     $.ACTION(() => {
                         let lastIdx = 0;
                         let lastTableSplit = null;
-
-                        let prevStartColumn = this.rootStartColumn;
-                        let offsetHead = `|${caption}|`.length - 1;
-
                         for(let t of tokens) {
-                            if(t.tokenType !== TableSplit) {
-                                continue;
-                            };
+                            if(t.tokenType !== TableSplit) continue;
                             const str = sliced.slice(lastIdx, t.startOffset);
                             // const testStr = str.replace(/^(<(.*?)>)*/, '');
                             // let align;
@@ -981,18 +973,14 @@ class NamumarkParser extends EmbeddedActionsParser {
 
                             let endLine = tok.startLine + t.endLine - 1
                             endLine = getOriginalLine(Store.commentLines, this.rootStartLine + endLine - 1) + 1
-
                             items.push({
                                 // align,
-                                value: parseBlock(str, 'table', false, true, startLine - 1 - left, prevStartColumn + offsetHead),
+                                value: parseBlock(str, 'table', false, true, startLine - 1 - left),
                                 startLine,
                                 endLine
                             });
                             lastIdx = t.endOffset + 1;
                             lastTableSplit = t
-
-                            prevStartColumn = this.rootStartColumn + t.startColumn;
-                            offsetHead = "||".length - 1;
                         }
                     });
                     rows.push(items);
@@ -1261,13 +1249,9 @@ class NamumarkParser extends EmbeddedActionsParser {
             startLine += 1
             endLine += 1
 
-            let startColumn = this.rootStartColumn + tok.startColumn
-            let endColumn = tok.endColumn
-            let offsetHead = ("{{{" + (isSizeUp ? "+" : "-") + size).length + 1
-
             let content = tok.image.slice(6, -3);
             $.ACTION(() => {
-                content = parseBlock(content, 'scaleText', true, undefined, (tok.image[5] === "\n" ? startLine : startLine - 1) - startLeft, (tok.image[5] === "\n" ? 0 : startColumn + offsetHead));
+                content = parseBlock(content, 'scaleText', true, undefined, (tok.image[5] === "\n" ? startLine : startLine - 1) - startLeft);
             });
 
             return {
@@ -1276,9 +1260,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                 size,
                 content,
                 startLine,
-                endLine,
-                startColumn,
-                endColumn
+                endLine
             }
         });
 
@@ -1296,11 +1278,8 @@ class NamumarkParser extends EmbeddedActionsParser {
             startLine += 1
             endLine += 1
 
-            let startColumn = this.rootStartColumn + tok.startColumn
-            let endColumn = tok.endColumn
-
             $.ACTION(() => {
-                content = parseBlock(content, 'wikiSyntax', true, undefined, startLine - startLeft, 0);
+                content = parseBlock(content, 'wikiSyntax', true, undefined, startLine - startLeft);
             });
 
             return {
@@ -1310,9 +1289,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                 wikiParamsStr,
                 content,
                 startLine,
-                endLine,
-                startColumn,
-                endColumn
+                endLine
             }
         });
 
@@ -1328,9 +1305,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                 lang,
                 content,
                 startLine: getOriginalLine(Store.commentLines, this.rootStartLine + tok.startLine - 1) + 1,
-                endLine: getOriginalLine(Store.commentLines, this.rootStartLine + tok.endLine - 1) + 1,
-                startColumn: this.rootStartColumn + tok.startColumn,
-                endColumn: tok.endColumn
+                endLine: getOriginalLine(Store.commentLines, this.rootStartLine + tok.endLine - 1) + 1
             }
         });
 
@@ -1342,9 +1317,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                 type: 'htmlSyntax',
                 text,
                 startLine: getOriginalLine(Store.commentLines, this.rootStartLine + tok.startLine - 1) + 1,
-                endLine: getOriginalLine(Store.commentLines, this.rootStartLine + tok.endLine - 1) + 1,
-                startColumn: this.rootStartColumn + tok.startColumn,
-                endColumn: tok.endColumn
+                endLine: getOriginalLine(Store.commentLines, this.rootStartLine + tok.endLine - 1) + 1
                 // safeHtml
             }
         });
@@ -1391,11 +1364,8 @@ class NamumarkParser extends EmbeddedActionsParser {
             startLine += 1
             endLine += 1
 
-            let startColumn = this.rootStartColumn + tok.startColumn
-            let endColumn = tok.endColumn
-
             $.ACTION(() => {
-                content = parseBlock(content, 'syntaxSyntax', true, undefined, startLine - startLeft, 0);
+                content = parseBlock(content, 'syntaxSyntax', true, undefined, startLine - startLeft);
             });
 
             return {
@@ -1403,9 +1373,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                 text: text || 'More',
                 content,
                 startLine,
-                endLine,
-                startColumn,
-                endColumn
+                endLine
             }
         });
 
@@ -1423,11 +1391,8 @@ class NamumarkParser extends EmbeddedActionsParser {
             startLine += 1
             endLine += 1
 
-            let startColumn = this.rootStartColumn + tok.startColumn
-            let endColumn = tok.endColumn
-
             $.ACTION(() => {
-                content = parseBlock(content, 'ifSyntax', true, undefined, startLine - startLeft, 0);
+                content = parseBlock(content, 'ifSyntax', true, undefined, startLine - startLeft);
             });
 
             return {
@@ -1435,9 +1400,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                 expression,
                 content,
                 startLine,
-                endLine,
-                startColumn,
-                endColumn
+                endLine
             }
         });
 
@@ -1446,23 +1409,17 @@ class NamumarkParser extends EmbeddedActionsParser {
             const content = tok.image.slice(10, -3).trim();
             
             let startLine = getOriginalLine(Store.commentLines, this.rootStartLine + tok.startLine - 1) + 1 
-            let startColumn = this.rootStartColumn + tok.startColumn
             let endColumn = tok.endColumn
             let offsetTail = -1 * ("}}}").length + 1
-
-            let innerStartColumn = 1
-            let innerEndColumn = endColumn + offsetTail
 
             return {
                 type: 'styleSyntax',
                 content,
                 startLine,
                 endLine: getOriginalLine(Store.commentLines, this.rootStartLine + tok.endLine - 1) + 1,
-                startColumn,
-                endColumn,
                 innerStartLine: startLine + 1,
-                innerStartColumn,
-                innerEndColumn
+                innerStartColumn: 1,
+                innerEndColumn: endColumn + offsetTail
             }
         });
 
@@ -1476,12 +1433,10 @@ class NamumarkParser extends EmbeddedActionsParser {
             startLine += 1
             endLine += 1
 
-            let startColumn = this.rootStartColumn + tok.startColumn
-            let endColumn = tok.endColumn
             let offsetHead = ("{{{" + "#" + color + (darkColor ? ",#" + darkColor : "")).length + 1
 
             $.ACTION(() => {
-                content = parseBlock(content, 'colorText', true, undefined, (tok.image[offsetHead - 1] === "\n" ? startLine : startLine - 1) - startLeft, (tok.image[offsetHead - 1] === "\n" ? 0 : startColumn + offsetHead));
+                content = parseBlock(content, 'colorText', true, undefined, (tok.image[offsetHead - 1] === "\n" ? startLine : startLine - 1) - startLeft);
             });
 
             return {
@@ -1490,9 +1445,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                 darkColor,
                 content,
                 startLine,
-                endLine,
-                startColumn,
-                endColumn
+                endLine
             }
         });
 
@@ -1504,9 +1457,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                 type: 'literal',
                 text,
                 startLine: getOriginalLine(Store.commentLines, this.rootStartLine + tok.startLine - 1) + 1,
-                endLine: getOriginalLine(Store.commentLines, this.rootStartLine + tok.endLine - 1) + 1,
-                startColumn: this.rootStartColumn + tok.startColumn,
-                endColumn: this.rootStartColumn + tok.endColumn
+                endLine: getOriginalLine(Store.commentLines, this.rootStartLine + tok.endLine - 1) + 1
             }
         });
 
@@ -1562,7 +1513,6 @@ class NamumarkParser extends EmbeddedActionsParser {
             let isFile = false;
             let [startLine, startLeft] = getOriginalLine(Store.commentLines, this.rootStartLine + tok.startLine - 1, true)
             startLine += 1
-            let startColumn = this.rootStartColumn + tok.startColumn;
             $.ACTION(() => {
                 if(!parsedUrl && link) {
                     const maybeNamespace = link.split(':')[0];
@@ -1576,7 +1526,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                         }];
                     }
                 }
-                if(!isFile) parsedText &&= parseInline(parsedText, 'link', startLine - 1 - startLeft, startColumn);
+                if(!isFile) parsedText &&= parseInline(parsedText, 'link', startLine - 1 - startLeft);
             });
 
             if(origParsedText && origParsedText.replace(LiteralRegex, '').includes('\n')) {
@@ -1654,10 +1604,9 @@ class NamumarkParser extends EmbeddedActionsParser {
             let value = valueInput;
             let [startLine, startLeft] = getOriginalLine(Store.commentLines, this.rootStartLine + tok.startLine - 1, true)
             startLine += 1
-            let startColumn = this.rootStartColumn + tok.startColumn
 
             $.ACTION(() => {
-                value = parseInline(value, 'footnote', startLine - 1 - startLeft, startColumn);
+                value = parseInline(value, 'footnote', startLine - 1 - startLeft);
             });
 
             // $.ACTION(() => {
@@ -1790,7 +1739,7 @@ class NamumarkParser extends EmbeddedActionsParser {
 
 const getParser = () => (currDepth >= MAXIMUM_DEPTH - 1) ? null : instances[currDepth++];
 
-const parseInline = (text, name, rootStartLine = 0, rootStartColumn = 0) => {
+const parseInline = (text, name, rootStartLine = 0) => {
     if(name) Store.parentTypes.push(name);
     const lexed = inlineLexer.tokenize(text);
     const inlineParser = getParser();
@@ -1800,7 +1749,6 @@ const parseInline = (text, name, rootStartLine = 0, rootStartColumn = 0) => {
     }]);
     inlineParser.noTopParagraph = false;
     inlineParser.rootStartLine = rootStartLine
-    inlineParser.rootStartColumn = rootStartColumn
     inlineParser.input = lexed.tokens;
     const result = inlineParser.inline();
     if(name) Store.parentTypes.pop();
@@ -1811,7 +1759,7 @@ const parseInline = (text, name, rootStartLine = 0, rootStartColumn = 0) => {
     return result;
 }
 
-const parseBlock = (text, name, noTopParagraph = false, noLineStart = false, rootStartLine = 0, rootStartColumn = 0) => {
+const parseBlock = (text, name, noTopParagraph = false, noLineStart = false, rootStartLine = 0) => {
     if(name) Store.parentTypes.push(name);
     noCheckStartAtFirst = noLineStart;
     const lexed = blockLexer.tokenize(text);
@@ -1830,7 +1778,6 @@ const parseBlock = (text, name, noTopParagraph = false, noLineStart = false, roo
     }
     blockParser.noTopParagraph = noTopParagraph;
     blockParser.rootStartLine = rootStartLine;
-    blockParser.rootStartColumn = rootStartColumn;
     blockParser.input = lexed.tokens;
     const result = blockParser.blockDocument();
     if(name) Store.parentTypes.pop();
