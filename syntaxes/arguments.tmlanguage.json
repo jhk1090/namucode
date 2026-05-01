@@ -1,0 +1,17 @@
+{
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "injectionSelector": "L:source.namu",
+    "name": "나무코드 매개변수 처리 부분",
+    "scopeName": "source.namu.arguments",
+    "patterns": [
+        {
+            "include": "#arguments"
+        }
+    ],
+    "repository": {
+        "arguments": {
+            "name": "keyword.control.namu",
+            "match": "@(.+)@"
+        }
+    }
+}

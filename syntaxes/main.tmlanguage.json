@@ -1,0 +1,226 @@
+{
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "injectionSelector": "L:source.namu -meta.embedded",
+    "name": "나무코드",
+    "scopeName": "source.namu",
+    "patterns": [
+        {
+            "include": "#wiki-patterns"
+        }
+    ],
+    "repository": {
+        "wiki-patterns": {
+            "patterns": [
+                {
+                    "include": "#comments"
+                },
+                {
+                    "include": "#links"
+                },
+                {
+                    "include": "#includes"
+                },
+                {
+                    "include": "#rubys"
+                },
+                {
+                    "include": "#anchors"
+                },
+                {
+                    "include": "#math"
+                },
+                {
+                    "include": "#macros"
+                },
+                {
+                    "include": "#titles"
+                },
+                {
+                    "include": "#markups"
+                },
+                {
+                    "include": "#lists"
+                },
+                {
+                    "include": "source.namu.brackets"
+                },
+                {
+                    "include": "#footnotes"
+                },
+                {
+                    "include": "#redirect"
+                },
+                {
+                    "include": "#tables"
+                },
+                {
+                    "include": "source.namu.arguments"
+                }
+            ]
+        },
+        "comments": {
+            "name": "comment.line.double-quote.namu",
+            "match": "#{2,}.*"
+        },
+        "links": {
+            "match": "\\[{2}([^|\\]\\[]*)((\\|)([^|\\]\\[]*))?\\]{2}",
+            "captures": {
+                "1": {
+                    "name": "string.quoted.double.namu"
+                },
+                "4": {
+                    "name": "support.constant.namu"
+                }
+            }
+        },
+        "includes": {
+            "begin": "\\[(include)\\(",
+            "beginCaptures": {
+                "1": { "name": "keyword.control.include.namu" }
+            },
+            "end": "\\)\\]",
+            "patterns": [
+                {
+                    "match": "((?:\\.|[^,=\\)\\]])+)(?:=((?:\\\\.|[^,\\)\\]])+))?(?:,(?![^\\\\]))?",
+                    "captures": {
+                        "1": { "name": "variable.parameter.key.namu" },
+                        "2": { "name": "string.unquoted.argument.namu" }
+                    }
+                }
+            ]
+        },
+        "rubys": {
+            "begin": "\\[(?=ruby)",
+            "end": "\\]",
+            "patterns": [
+                {
+                    "name": "keyword.control.namu",
+                    "match": "ruby(?=\\()"
+                },
+                {
+                    "name": "string.quoted.double.namu",
+                    "match": "(?<=ruby\\().[^\\,]*(\\){1,})?(?=,)"
+                },
+                {
+                    "name": "variable.parameter.namu",
+                    "match": "(?<=\\,)[^\\=]*(?=\\=)"
+                },
+                {
+                    "name": "string.quoted.double.namu",
+                    "match": "(?<=ruby\\=)[^\\)\\]]*(\\){1,})?(?=\\)\\])"
+                }
+            ]
+        },
+        "anchors": {
+            "comment": "두 개의 범위로 나눠놓은 이유는 전자는 매개변수가 꼭 필요하며, 후자는 매개변수가 선택형이기 때문",
+            "match": "\\[((anchor|age|dday|youtube|kakaotv|niconicovideo|vimeo|nicovideo|navertv)\\(([^\\)]*(\\){1,})?)\\)|(pagecount|목차|tableofcontents)(\\(([^\\)]*(\\){1,})?)\\))?)\\]",
+            "captures": {
+                "2": {
+                    "name": "keyword.control.namu"
+                },
+                "3": {
+                    "name": "variable.parameter.namu"
+                },
+                "5": {
+                    "name": "keyword.control.namu"
+                },
+                "7": {
+                    "name": "variable.parameter.namu"
+                }
+            }
+        },
+        "math": {
+            "name": "meta.embedded.block.tex",
+            "begin": "\\[(math)",
+            "beginCaptures": {
+                "1": { "name": "keyword.control.namu" }
+            },
+            "end": "\\]",
+            "patterns": [{ "include": "text.tex.latex" }]
+        },
+        "macros": {
+            "begin": "\\[(?=clearfix|date|datetime|각주|footnote|br)",
+            "end": "\\]",
+            "patterns": [
+                {
+                    "name": "keyword.control.namu",
+                    "match": "clearfix|date|datetime|각주|footnote|br"
+                }
+            ]
+        },
+        "markups": {
+            "patterns": [
+                {
+                    "name": "markup.bold.namu",
+                    "match": "'''[^']*'''"
+                },
+                {
+                    "name": "markup.italic.namu",
+                    "match": "(''[^']*''|__[^_]*__)"
+                },
+                {
+                    "name": "keyword.control.namu",
+                    "match": "-{4,9}"
+                },
+                {
+                    "name": "keyword.operator.namu",
+                    "match": "^(> ?){1,8}"
+                }
+            ]
+        },
+        "lists": {
+            "patterns": [
+                {
+                    "name": "keyword.operator.namu",
+                    "match": "(?<=^(> ?){0,8} ( )*)(\\*|1\\.|a\\.|A\\.|i\\.|I\\.(\\#[0-9][0-9]?)?)"
+                }
+            ]
+        },
+        "footnotes": {
+            "match": "\\[(\\*)",
+            "captures": {
+                "1": {
+                    "name": "keyword.operator.namu"
+                }
+            }
+        },
+        "tables": {
+            "begin": "\\|\\|",
+            "beginCaptures": {
+                "0": { "name": "punctuation.definition.table.namu" }
+            },
+            "end": "(?= |\n|$)",
+            "patterns": [
+                {
+                    "match": "(<)(rowif)=([^>]*)(>)|(<)([^>=|]*(?:\\|[^>=|]+)?)(?:=([^>|]*))?(>)",
+                    "captures": {
+                        "1": {
+                            "name": "punctuation.definition.tag.begin.namu"
+                        },
+                        "2": {
+                            "name": "entity.other.attribute-name.table.namu"
+                        },
+                        "3": {
+                            "name": "string.unquoted.attribute-value.table.namu"
+                        },
+                        "4": {
+                            "name": "punctuation.definition.tag.end.namu"
+                        },
+                        "5": {
+                            "name": "punctuation.definition.tag.begin.namu"
+                        },
+                        "6": {
+                            "name": "entity.other.attribute-name.table.namu"
+                        },
+                        "7": {
+                            "name": "string.unquoted.attribute-value.table.namu"
+                        },
+                        "8": {
+                            "name": "punctuation.definition.tag.end.namu"
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

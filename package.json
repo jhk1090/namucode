@@ -200,10 +200,7 @@
             {
                 "language": "namu",
                 "scopeName": "source.namu",
-                "path": "./syntaxes/key.tmLanguage.json",
-                "injectTo": [
-                    "source.namu"
-                ],
+                "path": "./syntaxes/main.tmLanguage.json",
                 "embeddedLanguages": {
                     "meta.embedded.block.basic": "bas",
                     "meta.embedded.block.cpp": "cpp",
@@ -234,6 +231,20 @@
                     "meta.embedded.line.css": "css",
                     "meta.embedded.block.tex": "tex"
                 }
+            },
+            {
+                "scopeName": "source.namu.arguments",
+                "path": "./syntaxes/arguments.tmLanguage.json",
+                "injectTo": [
+                    "source.namu"
+                ]
+            },
+            {
+                "scopeName": "source.namu.brackets",
+                "path": "./syntaxes/brackets.tmLanguage.json",
+                "injectTo": [
+                    "source.namu"
+                ]
             }
         ],
         "snippets": [
