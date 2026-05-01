@@ -44,10 +44,33 @@ export function getCSSMode(
 			return allDiagnostics;
 		},
 		doComplete(document: TextDocument, position: Position) {
-			// Get virtual CSS document, with all non-CSS code replaced with whitespace
-			const embedded = documentRegions.getEmbeddedDocument('css');
-			const stylesheet = cssLanguageService.parseStylesheet(embedded);
-			return cssLanguageService.doComplete(embedded, position, stylesheet);
+			const offset = document.offsetAt(position);
+			const fullRange = {
+				start: { line: 0, character: 0 },
+				end: document.positionAt(document.getText().length)
+			};
+			
+			const regions = documentRegions.getLanguageRanges(fullRange).filter(r => r.languageId === 'css');
+			const currentRegion = regions.find(r => 
+				offset >= document.offsetAt(r.start) && offset <= document.offsetAt(r.end)
+			);
+
+			if (!currentRegion) return null;
+
+			const originalText = document.getText();
+			const regionStart = document.offsetAt(currentRegion.start);
+			const regionEnd = document.offsetAt(currentRegion.end);
+
+			// 현재 영역 앞 뒤 공백으로 치환해 격리된 텍스트 생성
+			const prefix = originalText.substring(0, regionStart).replace(/[^\r\n]/g, ' ');
+			const content = originalText.substring(regionStart, regionEnd);
+			let isolatedText = prefix + content;
+			isolatedText = isolatedText.replace(/@theseed-dark-mode/g, '@media all and (n)')
+
+			const isolatedDoc = TextDocument.create(document.uri, 'css', document.version, isolatedText);
+  		const stylesheet = cssLanguageService.parseStylesheet(isolatedDoc);
+
+			return cssLanguageService.doComplete(isolatedDoc, position, stylesheet)
 		},
 		onDocumentRemoved() { /* nothing to do */ },
 		dispose() { /* nothing to do */ }
