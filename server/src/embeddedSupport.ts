@@ -92,6 +92,12 @@ export function getDocumentRegions(document: TextDocument, documentSymbol: Recor
 										languageIdPriority = "wiki-class"
 									}
 								}
+								if (match = langPropertyRegex.exec(targetLine)) {
+									if (!matchIndexPriority || matchIndexPriority > match.index) {
+										matchIndexPriority = match.index
+										languageIdPriority = "wiki-lang"
+									}
+								}
 								if (languageIdPriority !== "") {
 									regions.push({ languageId: languageIdPriority, start: startOffset + styleStart, end: startOffset + styleEnd })
 								}
@@ -247,7 +253,7 @@ function getLanguagesInDocument(_document: TextDocument, regions: EmbeddedRegion
 		if (region.languageId && result.indexOf(region.languageId) === -1) {
 			result.push(region.languageId);
 			// modes 개수
-			if (result.length === 4) {
+			if (result.length === 5) {
 				return result;
 			}
 		}
