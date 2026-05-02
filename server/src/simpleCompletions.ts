@@ -20,6 +20,11 @@ export function simpleCompletions(document: TextDocument, position: Position): C
     return getColorTextOptions();
   }
 
+  const colorTextOptionsRegex = new RegExp(`{{{#([a-fA-F0-9]{3,6}|${colorTextOptions.join('|')}),#$`, "gi")
+  if (colorTextOptionsRegex.exec(line)) {
+    return getColorTextOptions(true);
+  }
+
   if (line.endsWith("{{{#!")) {
     return getShebangList();
   }
@@ -268,27 +273,34 @@ const colorTextOptions = [
   "YellowGreen",
 ];
 
-function getColorTextOptions() {
+function getColorTextOptions(noShebang=false) {
+  const items = []
+
+  items.push(
+    ...colorTextOptions.map((color) => ({
+      label: color,
+      kind: CompletionItemKind.EnumMember,
+      sortText: "b",
+    })),
+  );
+
+  if (!noShebang) {
+    items.push({
+      label: "{{{#!",
+      kind: CompletionItemKind.Snippet,
+      insertText: "!",
+      documentation: "#!(shebang)류 문법",
+      command: {
+        title: "suggest",
+        command: "editor.action.triggerSuggest",
+      },
+      sortText: "a",
+    });
+  }
+
   return {
     isIncomplete: false,
-    items: [
-      ...colorTextOptions.map((color) => ({
-        label: color,
-        kind: CompletionItemKind.EnumMember,
-        sortText: "b",
-      })),
-      {
-        label: "{{{#!",
-        kind: CompletionItemKind.Snippet,
-        insertText: "!",
-        documentation: "#!(shebang)류 문법",
-        command: {
-          title: "suggest",
-          command: "editor.action.triggerSuggest",
-        },
-        sortText: "a",
-      },
-    ],
+    items
   };
 }
 
