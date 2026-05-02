@@ -22,7 +22,7 @@ export const CSS_STYLE_RULE = '__';
 interface EmbeddedRegion { languageId: string | undefined; start: number; end: number; attributeValue?: boolean; }
 
 export function getDocumentRegions(document: TextDocument, documentSymbol: Record<string, any>): HTMLDocumentRegions {
-	const regions: EmbeddedRegion[] = [];
+	let regions: EmbeddedRegion[] = [];
 
 	const targetDepthTypes = ["scaleText", "colorText", "wikiSyntax", "folding", "ifSyntax"]
 	const targetFlatTypes = ["syntaxSyntax", "htmlSyntax", "literal", "styleSyntax"]
@@ -189,13 +189,15 @@ export function getDocumentRegions(document: TextDocument, documentSymbol: Recor
 
 	findTargetTypes(documentSymbol.result ?? [])
 
-	// const argumentRegex = /@([^@\r\n]+)@/g
-	// let match;
-	// while ((match = argumentRegex.exec(document.getText())) !== null) {
-	// 	let start = match.index + 1;
-	// 	let end = (start + match[0].length - 1) - 1;
-	// 	regions.push({ languageId: "argument", start, end })
-	// }
+	const argumentRegex = /@([a-zA-Z_$][a-zA-Z0-9_$]*)@/g
+	let match;
+	while ((match = argumentRegex.exec(document.getText())) !== null) {
+		let start = match.index;
+		let end = (start + match[0].length - 1);
+		regions.push({ languageId: "argument-in-used", start, end })
+	}
+
+	regions = regions.sort((a, b) => a.start - b.start)
 
 	return {
 		getLanguageRanges: (range: Range) => getLanguageRanges(document, regions, range),
@@ -253,7 +255,7 @@ function getLanguagesInDocument(_document: TextDocument, regions: EmbeddedRegion
 		if (region.languageId && result.indexOf(region.languageId) === -1) {
 			result.push(region.languageId);
 			// modes 개수
-			if (result.length === 5) {
+			if (result.length === 7) {
 				return result;
 			}
 		}

@@ -18,7 +18,7 @@ import { getCSSInlineMode } from './modes/cssInlineMode';
 import { getJSMode } from './modes/jsMode';
 import { getWikiClassMode } from './modes/wikiClassMode';
 import { getWikiLangMode } from './modes/wikiLangMode';
-// import { getArgumentMode } from './modes/argumentMode';
+import { getArgumentMode } from './modes/argumentMode';
 
 export * from 'vscode-html-languageservice';
 
@@ -71,7 +71,10 @@ export function getLanguageModes(documentSymbol: Record<string, any>, document: 
 	modes['js'] = getJSMode(htmlLanguageService, documentRegions);
 	modes['wiki-class'] = getWikiClassMode(cssLanguageService, documentRegions);
 	modes['wiki-lang'] = getWikiLangMode();
-	// modes['argument'] = getArgumentMode(htmlLanguageService, documentRegions);
+	modes['argument'] = getArgumentMode(htmlLanguageService, documentRegions);
+	modes['argument-in-used'] = {
+		getId: () => 'argument-in-used'
+	}
 
 
 	return {

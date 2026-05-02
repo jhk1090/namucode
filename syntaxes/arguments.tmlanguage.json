@@ -11,7 +11,7 @@
     "repository": {
         "arguments": {
             "name": "keyword.control.namu",
-            "match": "@(.+)@"
+            "match": "(?<!@)@([a-zA-Z_$][a-zA-Z0-9_$]*)@(?!@)"
         }
     }
 }

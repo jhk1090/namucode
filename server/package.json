@@ -12,6 +12,7 @@
     "url": "https://github.com/jhk1090/namucode.git"
   },
   "dependencies": {
+    "typescript": "^6.0.3",
     "vscode-css-languageservice": "^6.3.10",
     "vscode-html-languageservice": "^5.6.2",
     "vscode-languageserver": "^9.0.1",

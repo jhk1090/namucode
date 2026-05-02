@@ -110,6 +110,12 @@ connection.onCompletion(async (textDocumentPosition, _token) => {
 
 	if (!languageModes) return null;
 
+	const line = document.getText({ start: { line: textDocumentPosition.position.line, character: 0 }, end: textDocumentPosition.position });
+
+	if (/(?<!@[a-zA-Z_$][a-zA-Z0-9_$]*)@$/g.exec(line)) {
+		return languageModes.getMode("argument").doComplete(document, textDocumentPosition.position)
+	}
+
 	const mode = languageModes.getModeAtPosition(textDocumentPosition.position);
 	if (!mode || !mode.doComplete) {
 		return CompletionList.create();
