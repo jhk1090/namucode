@@ -71,7 +71,7 @@ export function getLanguageModes(documentSymbol: Record<string, any>, document: 
 	modes['js'] = getJSMode(htmlLanguageService, documentRegions);
 	modes['wiki-class'] = getWikiClassMode(cssLanguageService, documentRegions);
 	modes['wiki-lang'] = getWikiLangMode();
-	modes['argument'] = getArgumentMode(htmlLanguageService, documentRegions);
+	modes['argument'] = getArgumentMode(documentRegions);
 	modes['argument-in-used'] = {
 		getId: () => 'argument-in-used'
 	}

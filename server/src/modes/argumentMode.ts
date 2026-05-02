@@ -9,7 +9,6 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as ts from "typescript";
 
 export function getArgumentMode(
-	htmlLanguageService: HTMLLanguageService,
 	documentRegions: HTMLDocumentRegions
 ): LanguageMode {
 	return {
