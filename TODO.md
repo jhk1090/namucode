@@ -10,9 +10,17 @@
   - 문단/리스트 상하 관계가 이상한 경우 경고
 - 단축키 폭넓게 추가
 
-### Intelligence 구현
-- wiki class의 class autocompletion (style에 등록된 클래스에서 가져오기)
-- wiki style (inline)
+### v1.9.x 계열
+- rowif 변수 자동완성
+- rowclass 클래스 자동완성
+- jsMode에서 validation
+- 테이블 매개변수 자동완성
+- 링크 매개변수 자동완성
+- 클라이언트 설정 서버 파서에 적용하기
+- colorText에 colorPicker 띄우기
+- tablebgcolor 등 매개변수에 colorPicker 띄우기
+- wiki property 계열 오류 수정
+- bracket 이스케이프 시 highlighting 중단하기
 
 ## Soon
 
