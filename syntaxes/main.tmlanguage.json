@@ -60,7 +60,7 @@
         },
         "comments": {
             "name": "comment.line.double-quote.namu",
-            "match": "#{2,}.*"
+            "match": "^#{2,}.*"
         },
         "links": {
             "match": "\\[{2}([^|\\]\\[]*)((\\|)([^|\\]\\[]*))?\\]{2}",
