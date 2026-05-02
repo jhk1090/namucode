@@ -14,6 +14,7 @@ import {
 } from 'vscode-languageserver/node';
 import { getLanguageModes, LanguageModes } from './languageModes';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import { simpleCompletions } from './simpleCompletions';
 const parser = require("../../client/media/parser/core/parser.js");
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
@@ -41,7 +42,7 @@ connection.onInitialize(async (_params: InitializeParams) => {
 			// Tell the client that the server supports code completion
 			completionProvider: {
 				resolveProvider: false,
-				triggerCharacters: ['.', '#', ':', '@', '\"', ';', ' ']
+				triggerCharacters: ['.', '#', ':', '@', '\"', ';', ' ', '!', '[', '+', '-']
 			},
 			// hoverProvider: true,
 			// definitionProvider: true,
@@ -101,6 +102,12 @@ connection.onCompletion(async (textDocumentPosition, _token) => {
 	if (!document) {
 		return null;
 	}
+
+	const simpleCompletionsResult = simpleCompletions(document, textDocumentPosition.position);
+	if (simpleCompletionsResult) {
+		return simpleCompletionsResult
+	}
+
 	if (!languageModes) return null;
 
 	const mode = languageModes.getModeAtPosition(textDocumentPosition.position);
