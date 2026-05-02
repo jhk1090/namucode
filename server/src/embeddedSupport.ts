@@ -183,6 +183,14 @@ export function getDocumentRegions(document: TextDocument, documentSymbol: Recor
 
 	findTargetTypes(documentSymbol.result ?? [])
 
+	// const argumentRegex = /@([^@\r\n]+)@/g
+	// let match;
+	// while ((match = argumentRegex.exec(document.getText())) !== null) {
+	// 	let start = match.index + 1;
+	// 	let end = (start + match[0].length - 1) - 1;
+	// 	regions.push({ languageId: "argument", start, end })
+	// }
+
 	return {
 		getLanguageRanges: (range: Range) => getLanguageRanges(document, regions, range),
 		getEmbeddedDocument: (languageId: string, ignoreAttributeValues: boolean) => getEmbeddedDocument(document, regions, languageId, ignoreAttributeValues),
@@ -238,7 +246,8 @@ function getLanguagesInDocument(_document: TextDocument, regions: EmbeddedRegion
 	for (const region of regions) {
 		if (region.languageId && result.indexOf(region.languageId) === -1) {
 			result.push(region.languageId);
-			if (result.length === 3) {
+			// modes 개수
+			if (result.length === 4) {
 				return result;
 			}
 		}
