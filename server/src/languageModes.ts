@@ -18,14 +18,13 @@ import { getCSSInlineMode } from './modes/cssInlineMode';
 import { getJSMode } from './modes/jsMode';
 import { getWikiClassMode } from './modes/wikiClassMode';
 import { getWikiLangMode } from './modes/wikiLangMode';
-import { getArgumentMode } from './modes/argumentMode';
 
 export * from 'vscode-html-languageservice';
 
 export interface LanguageMode {
 	getId(): string;
 	doValidation?: (document: TextDocument) => Diagnostic[];
-	doComplete?: (document: TextDocument, position: Position) => CompletionList | null;
+	doComplete?: (document: TextDocument, position: Position, isArgumentCompletion?: boolean) => CompletionList | null;
 	onDocumentRemoved(): void;
 	dispose(): void;
 }
@@ -71,9 +70,8 @@ export function getLanguageModes(documentSymbol: Record<string, any>, document: 
 	modes['js'] = getJSMode(htmlLanguageService, documentRegions);
 	modes['wiki-class'] = getWikiClassMode(cssLanguageService, documentRegions);
 	modes['wiki-lang'] = getWikiLangMode();
-	modes['argument'] = getArgumentMode(documentRegions);
-	modes['argument-in-used'] = {
-		getId: () => 'argument-in-used'
+	modes['argument'] = {
+		getId: () => 'argument'
 	}
 
 

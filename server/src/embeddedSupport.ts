@@ -194,7 +194,7 @@ export function getDocumentRegions(document: TextDocument, documentSymbol: Recor
 	while ((match = argumentRegex.exec(document.getText())) !== null) {
 		let start = match.index;
 		let end = (start + match[0].length - 1);
-		regions.push({ languageId: "argument-in-used", start, end })
+		regions.push({ languageId: "argument", start, end })
 	}
 
 	regions = regions.sort((a, b) => a.start - b.start)
@@ -215,11 +215,11 @@ function getLanguageRanges(document: TextDocument, regions: EmbeddedRegion[], ra
 	const endOffset = range ? document.offsetAt(range.end) : document.getText().length;
 	for (const region of regions) {
 		// 매개변수는 범위 상관 없음
-		if (region.languageId === "argument-in-used") {
+		if (region.languageId === "argument") {
 			result.push({
 				start: document.positionAt(region.start),
 				end: document.positionAt(region.end),
-				languageId: 'argument-in-used'
+				languageId: 'argument'
 			})
 			continue;
 		}
@@ -264,7 +264,7 @@ function getLanguagesInDocument(_document: TextDocument, regions: EmbeddedRegion
 		if (region.languageId && result.indexOf(region.languageId) === -1) {
 			result.push(region.languageId);
 			// modes 개수
-			if (result.length === 7) {
+			if (result.length === 6) {
 				return result;
 			}
 		}
