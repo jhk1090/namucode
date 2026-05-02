@@ -15,7 +15,6 @@
 - rowclass 클래스 자동완성
 - jsMode에서 validation
 - 테이블 매개변수 자동완성
-- 링크 매개변수 자동완성
 - colorText에 colorPicker 띄우기
 - tablebgcolor 등 매개변수에 colorPicker 띄우기
 - wiki property 계열 오류 수정

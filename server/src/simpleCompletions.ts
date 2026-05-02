@@ -8,6 +8,22 @@ export function simpleCompletions(document: TextDocument, position: Position): C
 		return getSquareBracketSyntaxes();
 	}
 
+  const fileLinkPropertiesRegex = /\[\[파일:([^\|\]\[]*)\|(([a-zA-Z\-]+=([a-zA-Z\-]+)?)(&[a-zA-Z\-]+=([a-zA-Z\-]+)?)*&)?$/g;
+  if (fileLinkPropertiesRegex.exec(line)) {
+    return getFileLinkProperties();
+  }
+
+  const fileLinkHeadRegex = /\[\[파일:([^\|\]\[]*)\|/g;
+  let fileLinkHeadMatch;
+  if (fileLinkHeadMatch = fileLinkHeadRegex.exec(line)) {
+    const fileLinkPropertyRegex = new RegExp(`(${fileLinkProperties.join("|")})=$`, "g")
+    fileLinkPropertyRegex.lastIndex = fileLinkHeadMatch.index + 1
+    let fileLinkPropertyMatch;
+    if (fileLinkPropertyMatch = fileLinkPropertyRegex.exec(line)) {
+      return getFileLinkPropertyValue(fileLinkPropertyMatch[1]);
+    }
+  }
+
 	if (line.endsWith("{{{+")) {
 		return getScaleTextOptions("+");
 	}
@@ -95,25 +111,6 @@ function getSquareBracketSyntaxes() {
 		kind: CompletionItemKind.Snippet,
 		insertText: "* ${1:각주}",
 		insertTextFormat: InsertTextFormat.Snippet
-	})
-
-  return {
-    isIncomplete: false,
-    items
-  };
-}
-
-function getScaleTextOptions(prefix: "+" | "-") {
-	const items: CompletionItem[] = []
-
-	const scaleList = ["1", "2", "3", "4", "5"];
-	scaleList.forEach(scale => {
-		items.push({
-			label: `{{{${prefix}${scale} `,
-			kind: CompletionItemKind.Snippet,
-			insertText: scale,
-			insertTextFormat: InsertTextFormat.Snippet
-		})	
 	})
 
   return {
@@ -272,6 +269,63 @@ const colorTextOptions = [
   "Yellow",
   "YellowGreen",
 ];
+
+const fileLinkProperties = ["align", "bgcolor", "border-radius", "height", "object-fit", "rendering", "theme", "width"] as const
+function getFileLinkProperties() {
+  return {
+    isIncomplete: false,
+    items: fileLinkProperties.map(property => ({
+      label: property,
+      kind: CompletionItemKind.Property,
+      insertText: `${property}=`,
+      command: {
+        title: "suggest",
+        command: "editor.action.triggerSuggest",
+      }
+    }))
+  };
+}
+
+const fileLinkPropertyPair = {
+  align: ["bottom", "center", "left", "middle", "normal", "right", "top"],
+  bgcolor: colorTextOptions,
+  "border-radius": [],
+  height: [],
+  "object-fit": ["fill", "contain", "cover", "none", "scale-down"],
+  rendering: ["auto", "smooth", "high-quality", "pixelated", "crisp-edges"],
+  theme: ["light", "dark"],
+  width: [],
+};
+
+function getFileLinkPropertyValue(key: string) {
+  const valueList = fileLinkPropertyPair[key]
+  return {
+    isIncomplete: false,
+    items: valueList.map(value => ({
+      label: value,
+      kind: CompletionItemKind.Value
+    }))
+  };
+}
+
+function getScaleTextOptions(prefix: "+" | "-") {
+	const items: CompletionItem[] = []
+
+	const scaleList = ["1", "2", "3", "4", "5"];
+	scaleList.forEach(scale => {
+		items.push({
+			label: `{{{${prefix}${scale} `,
+			kind: CompletionItemKind.Snippet,
+			insertText: scale,
+			insertTextFormat: InsertTextFormat.Snippet
+		})	
+	})
+
+  return {
+    isIncomplete: false,
+    items
+  };
+}
 
 function getColorTextOptions(noShebang=false) {
   const items = []
