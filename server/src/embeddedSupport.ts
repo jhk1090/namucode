@@ -214,6 +214,15 @@ function getLanguageRanges(document: TextDocument, regions: EmbeddedRegion[], ra
 	let currentOffset = range ? document.offsetAt(range.start) : 0;
 	const endOffset = range ? document.offsetAt(range.end) : document.getText().length;
 	for (const region of regions) {
+		// 매개변수는 범위 상관 없음
+		if (region.languageId === "argument-in-used") {
+			result.push({
+				start: document.positionAt(region.start),
+				end: document.positionAt(region.end),
+				languageId: 'argument-in-used'
+			})
+			continue;
+		}
 		if (region.end > currentOffset && region.start < endOffset) {
 			const start = Math.max(region.start, currentOffset);
 			const startPos = document.positionAt(start);
