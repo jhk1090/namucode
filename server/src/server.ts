@@ -7,6 +7,7 @@ import {
 	CompletionList,
 	createConnection,
 	Diagnostic,
+	DidChangeConfigurationNotification,
 	InitializeParams,
 	ProposedFeatures,
 	TextDocuments,
@@ -26,7 +27,19 @@ const connection = createConnection(ProposedFeatures.all);
 const documents = new TextDocuments(TextDocument);
 let languageModes: LanguageModes | null;
 
+let hasConfigurationCapability = false;
+let resolveInitialization: () => void;
+const initializationPromise = new Promise<void>((resolve) => {
+	resolveInitialization = resolve;
+})
+
 connection.onInitialize(async (_params: InitializeParams) => {
+	const capabilities = _params.capabilities;
+
+	hasConfigurationCapability = !!(
+		capabilities.workspace && !!capabilities.workspace.configuration
+	);
+
 	documents.onDidClose(e => {
 		if (!languageModes) return
 		languageModes.onDocumentRemoved();
@@ -51,20 +64,51 @@ connection.onInitialize(async (_params: InitializeParams) => {
 	};
 });
 
-connection.onDidChangeConfiguration(_change => {
+connection.onInitialized(async () => {
+	if (hasConfigurationCapability) {
+		// Register for all configuration changes.
+		connection.client.register(DidChangeConfigurationNotification.type, undefined);
+		const result = await connection.workspace.getConfiguration("namucode")
+		globalSettings = result.parser
+	}
+
+	resolveInitialization()
+});
+
+interface ParserSettings {
+	maxParsingDepth: number;
+	maxCharacter: number;
+}
+
+const defaultSettings: ParserSettings = { maxParsingDepth: 30, maxCharacter: 1500000 };
+let globalSettings: ParserSettings = defaultSettings;
+
+connection.onDidChangeConfiguration(async (_change) => {
+	if (hasConfigurationCapability) {
+		globalSettings = (await connection.workspace.getConfiguration("namucode")).parser
+	} else {
+		globalSettings = (
+			_change.settings.namucode.parser || defaultSettings
+		)
+	}
+
 	// Revalidate all open text documents
-	documents.all().forEach(validateTextDocument);
+	documents.all().forEach(async (document) => {
+		await fetchDocumentSymbol(document)
+		await validateTextDocument(document)
+	});
 });
 
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
 documents.onDidChangeContent(async (change) => {
+	await initializationPromise;
 	await fetchDocumentSymbol(change.document);
 	await validateTextDocument(change.document);
 });
 
 async function fetchDocumentSymbol(document: TextDocument) {
-	const settings = { editorComment: false, maxParsingDepth: 30, maxCharacter: 1500000 };
+	const settings = { editorComment: false, ...globalSettings };
 
 	const result = (document.getText().length <= settings.maxCharacter) ? parser(document.getText(), { editorComment: settings.editorComment, maxParsingDepth: settings.maxParsingDepth }) : {};
 	languageModes = getLanguageModes(result, document);
