@@ -77,10 +77,10 @@ connection.onInitialized(async () => {
 
 interface ParserSettings {
 	maxParsingDepth: number;
-	maxCharacter: number;
+	maxParsingCharacter: number;
 }
 
-const defaultSettings: ParserSettings = { maxParsingDepth: 30, maxCharacter: 1500000 };
+const defaultSettings: ParserSettings = { maxParsingDepth: 30, maxParsingCharacter: 1500000 };
 let globalSettings: ParserSettings = defaultSettings;
 
 connection.onDidChangeConfiguration(async (_change) => {
@@ -110,7 +110,7 @@ documents.onDidChangeContent(async (change) => {
 async function fetchDocumentSymbol(document: TextDocument) {
 	const settings = { editorComment: false, ...globalSettings };
 
-	const result = (document.getText().length <= settings.maxCharacter) ? parser(document.getText(), { editorComment: settings.editorComment, maxParsingDepth: settings.maxParsingDepth }) : {};
+	const result = (document.getText().length <= settings.maxParsingCharacter) ? parser(document.getText(), { editorComment: settings.editorComment, maxParsingDepth: settings.maxParsingDepth }) : {};
 	languageModes = getLanguageModes(result, document);
 }
 
