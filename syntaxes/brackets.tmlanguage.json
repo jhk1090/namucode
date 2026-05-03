@@ -5,42 +5,61 @@
   "scopeName": "source.namu.brackets",
   "patterns": [
     {
-      "include": "#brackets"
+      "include": "#brackets-scaleText"
+    },
+    {
+      "include": "#brackets-colorText"
+    },
+    {
+      "include": "#brackets-folding"
+    },
+    {
+      "include": "#brackets-wikiSyntax"
+    },
+    {
+      "include": "#brackets-htmlSyntax"
+    },
+    {
+      "include": "#brackets-ifSyntax"
+    },
+    {
+      "include": "#brackets-styleSyntax"
+    },
+    {
+      "include": "#brackets-syntaxSyntax"
     }
   ],
   "repository": {
-    "brackets": {
-      "name": "meta.block.special.namu",
-      "begin": "(\\{\\{\\{)",
+    "brackets-scaleText": {
+      "begin": "\\{\\{\\{((?:\\+|\\-)[1-5]) ",
       "beginCaptures": {
-        "1": { "name": "punctuation.section.block.begin.namu" }
+        "1": { "name": "support.constant.color.namu" }
       },
-      "end": "(\\}\\}\\})",
-      "endCaptures": {
-        "1": { "name": "punctuation.section.block.end.namu" }
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "source.namu" }]
+    },
+    "brackets-colorText": {
+      "begin": "\\{\\{\\{(#(?:AliceBlue|AntiqueWhite|Aqua|Aquamarine|Azure|Beige|Bisque|Black|BlanchedAlmond|Blue|BlueViolet|Brown|BurlyWood|CadetBlue|Chartreuse|Chocolate|Coral|CornflowerBlue|Cornsilk|Crimson|Cyan|DarkBlue|DarkCyan|DarkGoldenRod|DarkGray|DarkGrey|DarkGreen|DarkKhaki|DarkMagenta|DarkOliveGreen|DarkOrange|DarkOrchid|DarkRed|DarkSalmon|DarkSeaGreen|DarkSlateBlue|DarkSlateGray|DarkSlateGrey|DarkTurquoise|DarkViolet|DeepPink|DeepSkyBlue|DimGray|DimGrey|DodgerBlue|FireBrick|FloralWhite|ForestGreen|Fuchsia|Gainsboro|GhostWhite|Gold|GoldenRod|Gray|Grey|Green|GreenYellow|HoneyDew|HotPink|IndianRed|Indigo|Ivory|Khaki|Lavender|LavenderBlush|LawnGreen|LemonChiffon|LightBlue|LightCoral|LightCyan|LightGoldenRodYellow|LightGray|LightGrey|LightGreen|LightPink|LightSalmon|LightSeaGreen|LightSkyBlue|LightSlateGray|LightSlateGrey|LightSteelBlue|LightYellow|Lime|LimeGreen|Linen|Magenta|Maroon|MediumAquaMarine|MediumBlue|MediumOrchid|MediumPurple|MediumSeaGreen|MediumSlateBlue|MediumSpringGreen|MediumTurquoise|MediumVioletRed|MidnightBlue|MintCream|MistyRose|Moccasin|NavajoWhite|Navy|OldLace|Olive|OliveDrab|Orange|OrangeRed|Orchid|PaleGoldenRod|PaleGreen|PaleTurquoise|PaleVioletRed|PapayaWhip|PeachPuff|Peru|Pink|Plum|PowderBlue|Purple|RebeccaPurple|Red|RosyBrown|RoyalBlue|SaddleBrown|Salmon|SandyBrown|SeaGreen|SeaShell|Sienna|Silver|SkyBlue|SlateBlue|SlateGray|SlateGrey|Snow|SpringGreen|SteelBlue|Tan|Teal|Thistle|Tomato|Turquoise|Violet|Wheat|White|WhiteSmoke|Yellow|YellowGreen|[A-Fa-f0-9]{3,6})(?:,#(?:AliceBlue|AntiqueWhite|Aqua|Aquamarine|Azure|Beige|Bisque|Black|BlanchedAlmond|Blue|BlueViolet|Brown|BurlyWood|CadetBlue|Chartreuse|Chocolate|Coral|CornflowerBlue|Cornsilk|Crimson|Cyan|DarkBlue|DarkCyan|DarkGoldenRod|DarkGray|DarkGrey|DarkGreen|DarkKhaki|DarkMagenta|DarkOliveGreen|DarkOrange|DarkOrchid|DarkRed|DarkSalmon|DarkSeaGreen|DarkSlateBlue|DarkSlateGray|DarkSlateGrey|DarkTurquoise|DarkViolet|DeepPink|DeepSkyBlue|DimGray|DimGrey|DodgerBlue|FireBrick|FloralWhite|ForestGreen|Fuchsia|Gainsboro|GhostWhite|Gold|GoldenRod|Gray|Grey|Green|GreenYellow|HoneyDew|HotPink|IndianRed|Indigo|Ivory|Khaki|Lavender|LavenderBlush|LawnGreen|LemonChiffon|LightBlue|LightCoral|LightCyan|LightGoldenRodYellow|LightGray|LightGrey|LightGreen|LightPink|LightSalmon|LightSeaGreen|LightSkyBlue|LightSlateGray|LightSlateGrey|LightSteelBlue|LightYellow|Lime|LimeGreen|Linen|Magenta|Maroon|MediumAquaMarine|MediumBlue|MediumOrchid|MediumPurple|MediumSeaGreen|MediumSlateBlue|MediumSpringGreen|MediumTurquoise|MediumVioletRed|MidnightBlue|MintCream|MistyRose|Moccasin|NavajoWhite|Navy|OldLace|Olive|OliveDrab|Orange|OrangeRed|Orchid|PaleGoldenRod|PaleGreen|PaleTurquoise|PaleVioletRed|PapayaWhip|PeachPuff|Peru|Pink|Plum|PowderBlue|Purple|RebeccaPurple|Red|RosyBrown|RoyalBlue|SaddleBrown|Salmon|SandyBrown|SeaGreen|SeaShell|Sienna|Silver|SkyBlue|SlateBlue|SlateGray|SlateGrey|Snow|SpringGreen|SteelBlue|Tan|Teal|Thistle|Tomato|Turquoise|Violet|Wheat|White|WhiteSmoke|Yellow|YellowGreen|[A-Fa-f0-9]{3,6}))?) ",
+      "beginCaptures": {
+        "1": { "name": "support.constant.color.namu" }
       },
-      "patterns": [
-        {
-          "match": "(?<!^\\s*)((?:\\+|\\-)[1-5])(?=\\s|$)",
-          "captures": { "1": { "name": "support.constant.color.namu" } }
-        },
-        {
-          "match": "(?i)(?<!^\\s*)(#(?:AliceBlue|AntiqueWhite|Aqua|Aquamarine|Azure|Beige|Bisque|Black|BlanchedAlmond|Blue|BlueViolet|Brown|BurlyWood|CadetBlue|Chartreuse|Chocolate|Coral|CornflowerBlue|Cornsilk|Crimson|Cyan|DarkBlue|DarkCyan|DarkGoldenRod|DarkGray|DarkGrey|DarkGreen|DarkKhaki|DarkMagenta|DarkOliveGreen|DarkOrange|DarkOrchid|DarkRed|DarkSalmon|DarkSeaGreen|DarkSlateBlue|DarkSlateGray|DarkSlateGrey|DarkTurquoise|DarkViolet|DeepPink|DeepSkyBlue|DimGray|DimGrey|DodgerBlue|FireBrick|FloralWhite|ForestGreen|Fuchsia|Gainsboro|GhostWhite|Gold|GoldenRod|Gray|Grey|Green|GreenYellow|HoneyDew|HotPink|IndianRed|Indigo|Ivory|Khaki|Lavender|LavenderBlush|LawnGreen|LemonChiffon|LightBlue|LightCoral|LightCyan|LightGoldenRodYellow|LightGray|LightGrey|LightGreen|LightPink|LightSalmon|LightSeaGreen|LightSkyBlue|LightSlateGray|LightSlateGrey|LightSteelBlue|LightYellow|Lime|LimeGreen|Linen|Magenta|Maroon|MediumAquaMarine|MediumBlue|MediumOrchid|MediumPurple|MediumSeaGreen|MediumSlateBlue|MediumSpringGreen|MediumTurquoise|MediumVioletRed|MidnightBlue|MintCream|MistyRose|Moccasin|NavajoWhite|Navy|OldLace|Olive|OliveDrab|Orange|OrangeRed|Orchid|PaleGoldenRod|PaleGreen|PaleTurquoise|PaleVioletRed|PapayaWhip|PeachPuff|Peru|Pink|Plum|PowderBlue|Purple|RebeccaPurple|Red|RosyBrown|RoyalBlue|SaddleBrown|Salmon|SandyBrown|SeaGreen|SeaShell|Sienna|Silver|SkyBlue|SlateBlue|SlateGray|SlateGrey|Snow|SpringGreen|SteelBlue|Tan|Teal|Thistle|Tomato|Turquoise|Violet|Wheat|White|WhiteSmoke|Yellow|YellowGreen|[A-Fa-f0-9]{3,6})(?:,#(?:AliceBlue|AntiqueWhite|Aqua|Aquamarine|Azure|Beige|Bisque|Black|BlanchedAlmond|Blue|BlueViolet|Brown|BurlyWood|CadetBlue|Chartreuse|Chocolate|Coral|CornflowerBlue|Cornsilk|Crimson|Cyan|DarkBlue|DarkCyan|DarkGoldenRod|DarkGray|DarkGrey|DarkGreen|DarkKhaki|DarkMagenta|DarkOliveGreen|DarkOrange|DarkOrchid|DarkRed|DarkSalmon|DarkSeaGreen|DarkSlateBlue|DarkSlateGray|DarkSlateGrey|DarkTurquoise|DarkViolet|DeepPink|DeepSkyBlue|DimGray|DimGrey|DodgerBlue|FireBrick|FloralWhite|ForestGreen|Fuchsia|Gainsboro|GhostWhite|Gold|GoldenRod|Gray|Grey|Green|GreenYellow|HoneyDew|HotPink|IndianRed|Indigo|Ivory|Khaki|Lavender|LavenderBlush|LawnGreen|LemonChiffon|LightBlue|LightCoral|LightCyan|LightGoldenRodYellow|LightGray|LightGrey|LightGreen|LightPink|LightSalmon|LightSeaGreen|LightSkyBlue|LightSlateGray|LightSlateGrey|LightSteelBlue|LightYellow|Lime|LimeGreen|Linen|Magenta|Maroon|MediumAquaMarine|MediumBlue|MediumOrchid|MediumPurple|MediumSeaGreen|MediumSlateBlue|MediumSpringGreen|MediumTurquoise|MediumVioletRed|MidnightBlue|MintCream|MistyRose|Moccasin|NavajoWhite|Navy|OldLace|Olive|OliveDrab|Orange|OrangeRed|Orchid|PaleGoldenRod|PaleGreen|PaleTurquoise|PaleVioletRed|PapayaWhip|PeachPuff|Peru|Pink|Plum|PowderBlue|Purple|RebeccaPurple|Red|RosyBrown|RoyalBlue|SaddleBrown|Salmon|SandyBrown|SeaGreen|SeaShell|Sienna|Silver|SkyBlue|SlateBlue|SlateGray|SlateGrey|Snow|SpringGreen|SteelBlue|Tan|Teal|Thistle|Tomato|Turquoise|Violet|Wheat|White|WhiteSmoke|Yellow|YellowGreen|[A-Fa-f0-9]{3,6}))?)(?=\\s|$)",
-          "captures": { "1": { "name": "support.constant.color.namu" } }
-        },
-        {
-          "match": "(#!folding\\s*)(.*)",
-          "captures": {
-            "1": { "name": "keyword.control.bracket.namu" },
-            "2": { "name": "string.quoted.other.namu" }
-          }
-        },
-        {
-          "begin": "(#!wiki)",
-          "beginCaptures": {
-            "1": { "name": "keyword.control.bracket.namu" }
-          },
-          "end": "(?=$)",
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "source.namu" }]
+    },
+    "brackets-folding": {
+      "begin": "\\{\\{\\{(#!folding)(.*)$",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" },
+        "2": { "name": "string.quoted.other.namu" }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "source.namu" }]
+    },
+    "brackets-wikiSyntax": {
+      "begin": "\\{\\{\\{(#!wiki)(.*)$",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" },
+        "2": {
           "patterns": [
             {
               "match": "(style|dark-style)=\\\"([^\"]*)(\\\")?",
@@ -66,307 +85,309 @@
               }
             }
           ]
-        },
-        {
-          "name": "meta.embedded.block.html",
-          "begin": "(#!html)",
-          "beginCaptures": {
-            "1": { "name": "keyword.control.bracket.namu" }
-          },
-          "end": "(?=\\})",
-          "patterns": [{ "include": "text.html.derivative" }]
-        },
-        {
-          "name": "meta.embedded.block.javascript",
-          "begin": "(#!if)",
-          "beginCaptures": {
-            "1": { "name": "keyword.control.bracket.namu" }
-          },
-          "end": "(?=\\n)",
-          "patterns": [
-            {
-              "include": "source.js"
-            }
-          ]
-        },
-        {
-          "name": "meta.embedded.block.css",
-          "begin": "(#!style)\n",
-          "beginCaptures": {
-            "1": { "name": "keyword.control.bracket.namu" }
-          },
-          "while": "^(?!.*\\}\\}\\})",
-          "end": "(\\}\\}\\})",
-          "patterns": [{ "include": "source.css" }]
-        },
-        {
-          "name": "meta.embedded.block.basic",
-          "begin": "(#!syntax)\\s+(basic)",
-          "beginCaptures": {
-            "1": { "name": "keyword.control.bracket.namu" },
-            "2": { "name": "support.function.language-name.namu" }
-          },
-          "end": "(?=\\}\\}\\})",
-          "patterns": [{ "include": "source.asp.vb.net" }]
-        },
-        {
-          "name": "meta.embedded.block.cpp",
-          "begin": "(#!syntax)\\s+(cpp)",
-          "beginCaptures": {
-            "1": { "name": "keyword.control.bracket.namu" },
-            "2": { "name": "support.function.language-name.namu" }
-          },
-          "end": "(?=\\}\\}\\})",
-          "patterns": [{ "include": "source.cpp" }]
-        },
-        {
-          "name": "meta.embedded.block.csharp",
-          "begin": "(#!syntax)\\s+(csharp)",
-          "beginCaptures": {
-            "1": { "name": "keyword.control.bracket.namu" },
-            "2": { "name": "support.function.language-name.namu" }
-          },
-          "end": "(?=\\}\\}\\})",
-          "patterns": [{ "include": "source.cs" }]
-        },
-        {
-          "name": "meta.embedded.block.css",
-          "begin": "(#!syntax)\\s+(css)",
-          "beginCaptures": {
-            "1": { "name": "keyword.control.bracket.namu" },
-            "2": { "name": "support.function.language-name.namu" }
-          },
-          "end": "(?=\\}\\}\\})",
-          "patterns": [{ "include": "source.css" }]
-        },
-        {
-          "name": "meta.embedded.block.erlang",
-          "begin": "(#!syntax)\\s+(erlang)",
-          "beginCaptures": {
-            "1": { "name": "keyword.control.bracket.namu" },
-            "2": { "name": "support.function.language-name.namu" }
-          },
-          "end": "(?=\\}\\}\\})",
-          "patterns": [{ "include": "source.erlang" }]
-        },
-        {
-          "name": "meta.embedded.block.go",
-          "begin": "(#!syntax)\\s+(go)",
-          "beginCaptures": {
-            "1": { "name": "keyword.control.bracket.namu" },
-            "2": { "name": "support.function.language-name.namu" }
-          },
-          "end": "(?=\\}\\}\\})",
-          "patterns": [{ "include": "source.go" }]
-        },
-        {
-          "name": "meta.embedded.block.html",
-          "begin": "(#!syntax)\\s+(html)",
-          "beginCaptures": {
-            "1": { "name": "keyword.control.bracket.namu" },
-            "2": { "name": "support.function.language-name.namu" }
-          },
-          "end": "(?=\\}\\}\\})",
-          "patterns": [{ "include": "text.html.derivative" }]
-        },
-        {
-          "name": "meta.embedded.block.javascript",
-          "begin": "(#!syntax)\\s+(javascript)",
-          "beginCaptures": {
-            "1": { "name": "keyword.control.bracket.namu" },
-            "2": { "name": "support.function.language-name.namu" }
-          },
-          "end": "(?=\\}\\}\\})",
-          "patterns": [{ "include": "source.js" }]
-        },
-        {
-          "name": "meta.embedded.block.java",
-          "begin": "(#!syntax)\\s+(java)",
-          "beginCaptures": {
-            "1": { "name": "keyword.control.bracket.namu" },
-            "2": { "name": "support.function.language-name.namu" }
-          },
-          "end": "(?=\\}\\}\\})",
-          "patterns": [{ "include": "source.java" }]
-        },
-        {
-          "name": "meta.embedded.block.json",
-          "begin": "(#!syntax)\\s+(json)",
-          "beginCaptures": {
-            "1": { "name": "keyword.control.bracket.namu" },
-            "2": { "name": "support.function.language-name.namu" }
-          },
-          "end": "(?=\\}\\}\\})",
-          "patterns": [{ "include": "source.json" }]
-        },
-        {
-          "name": "meta.embedded.block.kotlin",
-          "begin": "(#!syntax)\\s+(kotlin)",
-          "beginCaptures": {
-            "1": { "name": "keyword.control.bracket.namu" },
-            "2": { "name": "support.function.language-name.namu" }
-          },
-          "end": "(?=\\}\\}\\})",
-          "patterns": [{ "include": "source.kotlin" }]
-        },
-        {
-          "name": "meta.embedded.block.lisp",
-          "begin": "(#!syntax)\\s+(lisp)",
-          "beginCaptures": {
-            "1": { "name": "keyword.control.bracket.namu" },
-            "2": { "name": "support.function.language-name.namu" }
-          },
-          "end": "(?=\\}\\}\\})",
-          "patterns": [{ "include": "source.lisp" }]
-        },
-        {
-          "name": "meta.embedded.block.lua",
-          "begin": "(#!syntax)\\s+(lua)",
-          "beginCaptures": {
-            "1": { "name": "keyword.control.bracket.namu" },
-            "2": { "name": "support.function.language-name.namu" }
-          },
-          "end": "(?=\\}\\}\\})",
-          "patterns": [{ "include": "source.lua" }]
-        },
-        {
-          "name": "meta.embedded.block.markdown",
-          "begin": "(#!syntax)\\s+(markdown)",
-          "beginCaptures": {
-            "1": { "name": "keyword.control.bracket.namu" },
-            "2": { "name": "support.function.language-name.namu" }
-          },
-          "end": "(?=\\}\\}\\})",
-          "patterns": [{ "include": "text.html.markdown" }]
-        },
-        {
-          "name": "meta.embedded.block.objectivec",
-          "begin": "(#!syntax)\\s+(objectivec)",
-          "beginCaptures": {
-            "1": { "name": "keyword.control.bracket.namu" },
-            "2": { "name": "support.function.language-name.namu" }
-          },
-          "end": "(?=\\}\\}\\})",
-          "patterns": [{ "include": "source.objc" }]
-        },
-        {
-          "name": "meta.embedded.block.perl",
-          "begin": "(#!syntax)\\s+(perl)",
-          "beginCaptures": {
-            "1": { "name": "keyword.control.bracket.namu" },
-            "2": { "name": "support.function.language-name.namu" }
-          },
-          "end": "(?=\\}\\}\\})",
-          "patterns": [{ "include": "source.perl" }]
-        },
-        {
-          "name": "meta.embedded.block.php",
-          "begin": "(#!syntax)\\s+(php)",
-          "beginCaptures": {
-            "1": { "name": "keyword.control.bracket.namu" },
-            "2": { "name": "support.function.language-name.namu" }
-          },
-          "end": "(?=\\}\\}\\})",
-          "patterns": [{ "include": "source.php" }]
-        },
-        {
-          "name": "meta.embedded.block.powershell",
-          "begin": "(#!syntax)\\s+(powershell)",
-          "beginCaptures": {
-            "1": { "name": "keyword.control.bracket.namu" },
-            "2": { "name": "support.function.language-name.namu" }
-          },
-          "end": "(?=\\}\\}\\})",
-          "patterns": [{ "include": "source.powershell" }]
-        },
-        {
-          "name": "meta.embedded.block.python",
-          "begin": "(#!syntax)\\s+(python)",
-          "beginCaptures": {
-            "1": { "name": "keyword.control.bracket.namu" },
-            "2": { "name": "support.function.language-name.namu" }
-          },
-          "end": "(?=\\}\\}\\})",
-          "patterns": [{ "include": "source.python" }]
-        },
-        {
-          "name": "meta.embedded.block.ruby",
-          "begin": "(#!syntax)\\s+(ruby)",
-          "beginCaptures": {
-            "1": { "name": "keyword.control.bracket.namu" },
-            "2": { "name": "support.function.language-name.namu" }
-          },
-          "end": "(?=\\}\\}\\})",
-          "patterns": [{ "include": "source.ruby" }]
-        },
-        {
-          "name": "meta.embedded.block.rust",
-          "begin": "(#!syntax)\\s+(rust)",
-          "beginCaptures": {
-            "1": { "name": "keyword.control.bracket.namu" },
-            "2": { "name": "support.function.language-name.namu" }
-          },
-          "end": "(?=\\}\\}\\})",
-          "patterns": [{ "include": "source.rust" }]
-        },
-        {
-          "name": "meta.embedded.block.sh",
-          "begin": "(#!syntax)\\s+(sh)",
-          "beginCaptures": {
-            "1": { "name": "keyword.control.bracket.namu" },
-            "2": { "name": "support.function.language-name.namu" }
-          },
-          "end": "(?=\\}\\}\\})",
-          "patterns": [{ "include": "source.shell" }]
-        },
-        {
-          "name": "meta.embedded.block.sql",
-          "begin": "(#!syntax)\\s+(sql)",
-          "beginCaptures": {
-            "1": { "name": "keyword.control.bracket.namu" },
-            "2": { "name": "support.function.language-name.namu" }
-          },
-          "end": "(?=\\}\\}\\})",
-          "patterns": [{ "include": "source.sql" }]
-        },
-        {
-          "name": "meta.embedded.block.swift",
-          "begin": "(#!syntax)\\s+(swift)",
-          "beginCaptures": {
-            "1": { "name": "keyword.control.bracket.namu" },
-            "2": { "name": "support.function.language-name.namu" }
-          },
-          "end": "(?=\\}\\}\\})",
-          "patterns": [{ "include": "source.swift" }]
-        },
-        {
-          "name": "meta.embedded.block.typescript",
-          "begin": "(#!syntax)\\s+(typescript)",
-          "beginCaptures": {
-            "1": { "name": "keyword.control.bracket.namu" },
-            "2": { "name": "support.function.language-name.namu" }
-          },
-          "end": "(?=\\}\\}\\})",
-          "patterns": [{ "include": "source.ts" }]
-        },
-        {
-          "name": "meta.embedded.block.xml",
-          "begin": "(#!syntax)\\s+(xml)",
-          "beginCaptures": {
-            "1": { "name": "keyword.control.bracket.namu" },
-            "2": { "name": "support.function.language-name.namu" }
-          },
-          "end": "(?=\\}\\}\\})",
-          "patterns": [{ "include": "text.xml" }]
-        },
-        {
-          "match": "(#!syntax)\\s+(erlang|kotlin|lisp)",
-          "captures": {
-            "1": { "name": "keyword.control.bracket.namu" },
-            "2": { "name": "support.function.language-name.namu" }
-          }
         }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "source.namu" }]
+    },
+    "brackets-htmlSyntax": {
+      "begin": "\\{\\{\\{(#!html)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "name": "meta.embedded.block.html", "include": "text.html.derivative" }]
+    },
+    "brackets-ifSyntax": {
+      "begin": "\\{\\{\\{(#!if) (.*)$",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" },
+        "2": { "patterns": [{ "name": "meta.embedded.block.javascript", "include": "source.js" }] }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "source.namu" }]
+    },
+    "brackets-styleSyntax": {
+      "begin": "\\{\\{\\{(#!style)$",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "name": "meta.embedded.block.css", "include": "source.css" }]
+    },
+    "brackets-syntaxSyntax": {
+      "patterns": [
+        { "include": "#brackets-syntaxSyntax-basic" },
+        { "include": "#brackets-syntaxSyntax-cpp" },
+        { "include": "#brackets-syntaxSyntax-csharp" },
+        { "include": "#brackets-syntaxSyntax-css" },
+        { "include": "#brackets-syntaxSyntax-erlang" },
+        { "include": "#brackets-syntaxSyntax-go" },
+        { "include": "#brackets-syntaxSyntax-html" },
+        { "include": "#brackets-syntaxSyntax-javascript" },
+        { "include": "#brackets-syntaxSyntax-java" },
+        { "include": "#brackets-syntaxSyntax-json" },
+        { "include": "#brackets-syntaxSyntax-kotlin" },
+        { "include": "#brackets-syntaxSyntax-lisp" },
+        { "include": "#brackets-syntaxSyntax-lua" },
+        { "include": "#brackets-syntaxSyntax-markdown" },
+        { "include": "#brackets-syntaxSyntax-objectivec" },
+        { "include": "#brackets-syntaxSyntax-perl" },
+        { "include": "#brackets-syntaxSyntax-php" },
+        { "include": "#brackets-syntaxSyntax-powershell" },
+        { "include": "#brackets-syntaxSyntax-python" },
+        { "include": "#brackets-syntaxSyntax-ruby" },
+        { "include": "#brackets-syntaxSyntax-rust" },
+        { "include": "#brackets-syntaxSyntax-sh" },
+        { "include": "#brackets-syntaxSyntax-sql" },
+        { "include": "#brackets-syntaxSyntax-swift" },
+        { "include": "#brackets-syntaxSyntax-typescript" },
+        { "include": "#brackets-syntaxSyntax-xml" },
+        { "include": "#brackets-syntaxSyntax-fallback" }
       ]
+    },
+    "brackets-syntaxSyntax-basic": {
+      "begin": "\\{\\{\\{(#!syntax) (basic)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" },
+        "2": { "name": "support.function.language-name.namu" }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "source.asp.vb.net", "name": "meta.embedded.block.basic" }]
+    },
+    "brackets-syntaxSyntax-cpp": {
+      "begin": "\\{\\{\\{(#!syntax) (cpp)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" },
+        "2": { "name": "support.function.language-name.namu" }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "source.cpp", "name": "meta.embedded.block.cpp" }]
+    },
+    "brackets-syntaxSyntax-csharp": {
+      "begin": "\\{\\{\\{(#!syntax) (csharp)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" },
+        "2": { "name": "support.function.language-name.namu" }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "source.cs", "name": "meta.embedded.block.csharp" }]
+    },
+    "brackets-syntaxSyntax-css": {
+      "begin": "\\{\\{\\{(#!syntax) (css)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" },
+        "2": { "name": "support.function.language-name.namu" }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "source.css", "name": "meta.embedded.block.css" }]
+    },
+    "brackets-syntaxSyntax-erlang": {
+      "begin": "\\{\\{\\{(#!syntax) (erlang)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" },
+        "2": { "name": "support.function.language-name.namu" }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "source.erlang", "name": "meta.embedded.block.erlang" }]
+    },
+    "brackets-syntaxSyntax-go": {
+      "begin": "\\{\\{\\{(#!syntax) (go)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" },
+        "2": { "name": "support.function.language-name.namu" }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "source.go", "name": "meta.embedded.block.go" }]
+    },
+    "brackets-syntaxSyntax-html": {
+      "begin": "\\{\\{\\{(#!syntax) (html)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" },
+        "2": { "name": "support.function.language-name.namu" }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "text.html.derivative", "name": "meta.embedded.block.html" }]
+    },
+    "brackets-syntaxSyntax-javascript": {
+      "begin": "\\{\\{\\{(#!syntax) (javascript)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" },
+        "2": { "name": "support.function.language-name.namu" }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "source.js", "name": "meta.embedded.block.javascript" }]
+    },
+    "brackets-syntaxSyntax-java": {
+      "begin": "\\{\\{\\{(#!syntax) (java)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" },
+        "2": { "name": "support.function.language-name.namu" }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "source.java", "name": "meta.embedded.block.java" }]
+    },
+    "brackets-syntaxSyntax-json": {
+      "begin": "\\{\\{\\{(#!syntax) (json)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" },
+        "2": { "name": "support.function.language-name.namu" }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "source.json", "name": "meta.embedded.block.json" }]
+    },
+    "brackets-syntaxSyntax-kotlin": {
+      "begin": "\\{\\{\\{(#!syntax) (kotlin)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" },
+        "2": { "name": "support.function.language-name.namu" }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "source.kotlin", "name": "meta.embedded.block.kotlin" }]
+    },
+    "brackets-syntaxSyntax-lisp": {
+      "begin": "\\{\\{\\{(#!syntax) (lisp)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" },
+        "2": { "name": "support.function.language-name.namu" }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "source.lisp", "name": "meta.embedded.block.lisp" }]
+    },
+    "brackets-syntaxSyntax-lua": {
+      "begin": "\\{\\{\\{(#!syntax) (lua)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" },
+        "2": { "name": "support.function.language-name.namu" }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "source.lua", "name": "meta.embedded.block.lua" }]
+    },
+    "brackets-syntaxSyntax-markdown": {
+      "begin": "\\{\\{\\{(#!syntax) (markdown)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" },
+        "2": { "name": "support.function.language-name.namu" }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "text.html.markdown", "name": "meta.embedded.block.markdown" }]
+    },
+    "brackets-syntaxSyntax-objectivec": {
+      "begin": "\\{\\{\\{(#!syntax) (objectivec)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" },
+        "2": { "name": "support.function.language-name.namu" }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "source.objc", "name": "meta.embedded.block.objectivec" }]
+    },
+    "brackets-syntaxSyntax-perl": {
+      "begin": "\\{\\{\\{(#!syntax) (perl)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" },
+        "2": { "name": "support.function.language-name.namu" }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "source.perl", "name": "meta.embedded.block.perl" }]
+    },
+    "brackets-syntaxSyntax-php": {
+      "begin": "\\{\\{\\{(#!syntax) (php)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" },
+        "2": { "name": "support.function.language-name.namu" }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "source.php", "name": "meta.embedded.block.php" }]
+    },
+    "brackets-syntaxSyntax-powershell": {
+      "begin": "\\{\\{\\{(#!syntax) (powershell)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" },
+        "2": { "name": "support.function.language-name.namu" }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "source.powershell", "name": "meta.embedded.block.powershell" }]
+    },
+    "brackets-syntaxSyntax-python": {
+      "begin": "\\{\\{\\{(#!syntax) (python)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" },
+        "2": { "name": "support.function.language-name.namu" }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "source.python", "name": "meta.embedded.block.python" }]
+    },
+    "brackets-syntaxSyntax-ruby": {
+      "begin": "\\{\\{\\{(#!syntax) (ruby)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" },
+        "2": { "name": "support.function.language-name.namu" }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "source.ruby", "name": "meta.embedded.block.ruby" }]
+    },
+    "brackets-syntaxSyntax-rust": {
+      "begin": "\\{\\{\\{(#!syntax) (rust)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" },
+        "2": { "name": "support.function.language-name.namu" }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "source.rust", "name": "meta.embedded.block.rust" }]
+    },
+    "brackets-syntaxSyntax-sh": {
+      "begin": "\\{\\{\\{(#!syntax) (sh)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" },
+        "2": { "name": "support.function.language-name.namu" }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "source.shell", "name": "meta.embedded.block.sh" }]
+    },
+    "brackets-syntaxSyntax-sql": {
+      "begin": "\\{\\{\\{(#!syntax) (sql)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" },
+        "2": { "name": "support.function.language-name.namu" }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "source.sql", "name": "meta.embedded.block.sql" }]
+    },
+    "brackets-syntaxSyntax-swift": {
+      "begin": "\\{\\{\\{(#!syntax) (swift)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" },
+        "2": { "name": "support.function.language-name.namu" }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "source.swift", "name": "meta.embedded.block.swift" }]
+    },
+    "brackets-syntaxSyntax-typescript": {
+      "begin": "\\{\\{\\{(#!syntax) (typescript)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" },
+        "2": { "name": "support.function.language-name.namu" }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "source.ts", "name": "meta.embedded.block.typescript" }]
+    },
+    "brackets-syntaxSyntax-xml": {
+      "begin": "\\{\\{\\{(#!syntax) (xml)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" },
+        "2": { "name": "support.function.language-name.namu" }
+      },
+      "end": "\\}\\}\\}",
+      "patterns": [{ "include": "text.xml", "name": "meta.embedded.block.xml" }]
+    },
+    "brackets-syntaxSyntax-fallback": {
+      "comment": "VS Code 공식 지원 언어가 아님.",
+      "begin": "\\{\\{\\{(#!syntax) (erlang|kotlin|lisp)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" },
+        "2": { "name": "support.function.language-name.namu" }
+      },
+      "end": "\\}\\}\\}"
     }
   }
 }
