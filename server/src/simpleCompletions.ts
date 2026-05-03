@@ -440,10 +440,7 @@ const syntaxSyntaxLangs = [
   "sql",
   "swift",
   "typescript",
-  "xml",
-  "erlang",
-  "kotlin",
-  "lisp",
+  "xml"
 ];
 function getSyntaxSyntaxLanguages() {
   return {
