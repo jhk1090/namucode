@@ -71,7 +71,11 @@ export function getLanguageModes(documentSymbol: Record<string, any>, document: 
 	modes['wiki-class'] = getWikiClassMode(cssLanguageService, documentRegions);
 	modes['wiki-lang'] = getWikiLangMode();
 	modes['argument'] = {
-		getId: () => 'argument'
+		getId: () => 'argument',
+		doValidation: () => [],
+		doComplete: () => null,
+		onDocumentRemoved: () => {},
+		dispose: () => {}
 	}
 
 
