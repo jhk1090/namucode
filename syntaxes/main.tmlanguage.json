@@ -12,6 +12,9 @@
         "wiki-patterns": {
             "patterns": [
                 {
+                    "include": "#comments-forEditor"
+                },
+                {
                     "include": "#comments"
                 },
                 {
@@ -60,6 +63,13 @@
                     "include": "source.namu.arguments"
                 }
             ]
+        },
+        "comments-forEditor": {
+            "match": "^(##@)(.*)",
+            "captures": {
+                "1": { "name": "comment.line.double-quote.namu" },
+                "2": { "patterns": [ { "include": "source.namu" } ] }
+            }
         },
         "comments": {
             "name": "comment.line.double-quote.namu",
