@@ -8,17 +8,20 @@ export function simpleCompletions(document: TextDocument, position: Position): C
 		return getSquareBracketSyntaxes();
 	}
 
-  const fileLinkPropertiesRegex = /\[\[파일:([^\|\]\[]*)\|(([a-zA-Z\-]+=([a-zA-Z\-]+)?)(&[a-zA-Z\-]+=([a-zA-Z\-]+)?)*&)?$/g;
-  if (fileLinkPropertiesRegex.exec(line)) {
-    return getFileLinkProperties();
-  }
-
   const fileLinkHeadRegex = /\[\[파일:([^\|\]\[]*)\|/g;
   let fileLinkHeadMatch;
   if (fileLinkHeadMatch = fileLinkHeadRegex.exec(line)) {
+    const fileLinkHeadEndRegex = new RegExp(fileLinkHeadRegex.source + "$", "g");
+    const fileLinkPropertySplitRegex = /&$/g;
     const fileLinkPropertyRegex = new RegExp(`(${fileLinkProperties.join("|")})=$`, "g")
+    fileLinkPropertySplitRegex.lastIndex = fileLinkHeadMatch.index + 1
     fileLinkPropertyRegex.lastIndex = fileLinkHeadMatch.index + 1
+
     let fileLinkPropertyMatch;
+    if (fileLinkHeadEndRegex.exec(line) || fileLinkPropertySplitRegex.exec(line)) {
+      return getFileLinkProperties();
+    }
+
     if (fileLinkPropertyMatch = fileLinkPropertyRegex.exec(line)) {
       return getFileLinkPropertyValue(fileLinkPropertyMatch[1]);
     }
