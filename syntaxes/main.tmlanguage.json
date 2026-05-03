@@ -106,24 +106,27 @@
         },
         "links": {
             "begin": "\\[\\[",
+            "beginCaptures": {
+                "0": { "name": "punctuation.definition.link.begin.namu" }
+            },
             "end": "\\]\\]",
+            "endCaptures": {
+                "0": { "name": "punctuation.definition.link.end.namu" }
+            },
             "patterns": [
                 {
-                    "begin": "(?<=(\\[\\[))([^|\\n\\r\\]\\[]+)",
-                    "beginCaptures": {
-                        "2": { "name": "string.quoted.double.namu" }
-                    },
-                    "end": "(?=\\]\\])|(\\|)",
-                    "patterns": [
-                        { "match": "[^|\\n\\r\\]\\[]+", "name": "string.quoted.double.namu" }
-                    ]
+                    "comment": "링크 경로",
+                    "contentName": "string.quoted.double.namu",
+                    "begin": "(?<=\\[\\[)",
+                    "end": "(?=\\]\\]|\\|)"
                 },
                 {
-                    "begin": "(?<=\\|)",
+                    "comment": "구분자(|) 이후 설명 구간",
+                    "begin": "\\|",
                     "end": "(?=\\]\\])",
                     "contentName": "meta.description.namu",
                     "patterns": [
-                        { "include": "#wiki-patterns" },
+                        { "include": "source.namu" },
                         { "include": "$self" }
                     ]
                 }
