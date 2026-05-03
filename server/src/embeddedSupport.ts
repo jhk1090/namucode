@@ -189,7 +189,7 @@ export function getDocumentRegions(document: TextDocument, documentSymbol: Recor
 
 	findTargetTypes(documentSymbol.result ?? [])
 
-	const argumentRegex = /@([a-zA-Z_$][a-zA-Z0-9_$]*)@/g
+	const argumentRegex = /@([\p{L}_$][\p{L}\p{N}_$]*)(=[^\n\r@]+)?@/gu
 	let match;
 	while ((match = argumentRegex.exec(document.getText())) !== null) {
 		let start = match.index;

@@ -73,7 +73,7 @@ export function getJSMode(htmlLanguageService: HTMLLanguageService, documentRegi
 				.filter(r => r.languageId === 'argument');
 			
 			argumentRegions.forEach(region => {
-				const name = document.getText().substring(document.offsetAt(region.start), document.offsetAt(region.end)).split("@")[1]
+				const name = document.getText().substring(document.offsetAt(region.start), document.offsetAt(region.end)).split("@")[1].split("=")[0]
 				allSymbols.set(name, {
 					label: name,
 					kind: CompletionItemKind.Variable,
