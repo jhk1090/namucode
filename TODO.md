@@ -17,7 +17,6 @@
 - 테이블 매개변수 자동완성
 - colorText에 colorPicker 띄우기
 - tablebgcolor 등 매개변수에 colorPicker 띄우기
-- wiki property 계열 오류 수정
 - bracket 이스케이프 시 highlighting 중단하기
 
 ## Soon
