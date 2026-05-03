@@ -14,6 +14,9 @@
       "include": "#brackets-folding"
     },
     {
+      "include": "#brackets-folding-forCompletion"
+    },
+    {
       "include": "#brackets-wikiSyntax"
     },
     {
@@ -23,7 +26,13 @@
       "include": "#brackets-ifSyntax"
     },
     {
+      "include": "#brackets-ifSyntax-forCompletion"
+    },
+    {
       "include": "#brackets-styleSyntax"
+    },
+    {
+      "include": "#brackets-styleSyntax-forCompletion"
     },
     {
       "include": "#brackets-syntaxSyntax"
@@ -47,13 +56,21 @@
       "patterns": [{ "include": "source.namu" }]
     },
     "brackets-folding": {
-      "begin": "\\{\\{\\{(#!folding)(.*)$",
+      "begin": "\\{\\{\\{(#!folding)([^\\}]*)$",
       "beginCaptures": {
         "1": { "name": "keyword.control.bracket.namu" },
         "2": { "name": "string.quoted.other.namu" }
       },
       "end": "\\}\\}\\}",
       "patterns": [{ "include": "source.namu" }]
+    },
+    "brackets-folding-forCompletion": {
+      "comment": "자연스러운 구문 완성을 위한 지원",
+      "begin": "\\{\\{\\{(#!folding)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" }
+      },
+      "end": "\\}\\}\\}"
     },
     "brackets-wikiSyntax": {
       "begin": "\\{\\{\\{(#!wiki)(.*)$",
@@ -107,6 +124,14 @@
       "end": "\\}\\}\\}",
       "patterns": [{ "include": "source.namu" }]
     },
+    "brackets-ifSyntax-forCompletion": {
+      "comment": "자연스러운 구문 완성을 위한 지원",
+      "begin": "\\{\\{\\{(#!if)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" }
+      },
+      "end": "\\}\\}\\}"
+    },
     "brackets-styleSyntax": {
       "begin": "\\{\\{\\{(#!style)$",
       "beginCaptures": {
@@ -114,6 +139,14 @@
       },
       "end": "\\}\\}\\}",
       "patterns": [{ "name": "meta.embedded.block.css", "include": "source.css" }]
+    },
+    "brackets-styleSyntax-forCompletion": {
+      "comment": "자연스러운 구문 완성을 위한 지원",
+      "begin": "\\{\\{\\{(#!style)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" }
+      },
+      "end": "\\}\\}\\}"
     },
     "brackets-syntaxSyntax": {
       "patterns": [
@@ -143,8 +176,17 @@
         { "include": "#brackets-syntaxSyntax-swift" },
         { "include": "#brackets-syntaxSyntax-typescript" },
         { "include": "#brackets-syntaxSyntax-xml" },
-        { "include": "#brackets-syntaxSyntax-fallback" }
+        { "include": "#brackets-syntaxSyntax-fallback" },
+        { "include": "#brackets-syntaxSyntax-forCompletion" }
       ]
+    },
+    "brackets-syntaxSyntax-forCompletion": {
+      "comment": "자연스러운 구문 완성을 위한 지원",
+      "begin": "\\{\\{\\{(#!syntax)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" }
+      },
+      "end": "\\}\\}\\}"
     },
     "brackets-syntaxSyntax-basic": {
       "begin": "\\{\\{\\{(#!syntax) (basic)",
