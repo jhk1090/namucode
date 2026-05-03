@@ -411,7 +411,7 @@ const ScaleText = createToken({
 });
 const WikiSyntax = createToken({
     name: 'WikiSyntax',
-    ...nestedRegex(/{{{#!wiki(\s)+?/, /}}}/, {
+    ...nestedRegex(/{{{#!wiki[^\r\n]*\n/, /}}}/, {
         allowNewline: true,
         openCheckRegex: /{{{/
     }),
@@ -426,7 +426,7 @@ const SyntaxSyntax = createToken({
     }),
     start_chars_hint: ['{']
 });
-const HtmlRegex = /{{{#!html([\s\S]*?)}}}/y;
+const HtmlRegex = /{{{#!html(?:(?!{{{#!html)[\s\S])*?}}}/y;
 const HtmlSyntax = createToken({
     name: 'HtmlSyntax',
     pattern: (text, startOffset) => {
@@ -463,7 +463,7 @@ const CommentMention = createToken({
 });
 const Folding = createToken({
     name: 'Folding',
-    ...nestedRegex(/{{{#!folding+?/, /}}}/, {
+    ...nestedRegex(/{{{#!folding[^\r\n]*\n/, /}}}/, {
         allowNewline: true,
         openCheckRegex: /{{{/
     }),
@@ -471,7 +471,7 @@ const Folding = createToken({
 });
 const IfSyntax = createToken({
     name: 'IfSyntax',
-    ...nestedRegex(/{{{#!if(\s)+?/, /}}}/, {
+    ...nestedRegex(/{{{#!if[^\r\n]*\n/, /}}}/, {
         allowNewline: true,
         openCheckRegex: /{{{/
     }),
