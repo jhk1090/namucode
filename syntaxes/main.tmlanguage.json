@@ -12,6 +12,9 @@
         "wiki-patterns": {
             "patterns": [
                 {
+                    "include": "#escape"
+                },
+                {
                     "include": "#comments-forEditor"
                 },
                 {
@@ -63,6 +66,10 @@
                     "include": "source.namu.arguments"
                 }
             ]
+        },
+        "escape": {
+            "match": "\\\\.",
+            "name": "string.quoted.double.namu"
         },
         "comments-forEditor": {
             "match": "^(##@)(.*)",
@@ -116,9 +123,10 @@
             "patterns": [
                 {
                     "comment": "링크 경로",
-                    "contentName": "string.quoted.double.namu",
-                    "begin": "(?<=\\[\\[)",
-                    "end": "(?=\\]\\]|\\|)"
+                    "match": "[^|\\]]+",
+                    "captures": {
+                        "0": { "name": "string.quoted.double.namu" }
+                    }
                 },
                 {
                     "comment": "구분자(|) 이후 설명 구간",
@@ -248,35 +256,41 @@
             "beginCaptures": {
                 "0": { "name": "punctuation.definition.table.namu" }
             },
-            "end": "(?= |\n|$)",
+            "end": "(?=\\|\\||[\\r\\n]|$)",
             "patterns": [
                 {
-                    "match": "(<)(rowif)=([^>]*)(>)|(<)([^>=|]*(?:\\|[^>=|]+)?)(?:=([^>|]*))?(>)",
-                    "captures": {
-                        "1": {
-                            "name": "punctuation.definition.tag.begin.namu"
+                    "comment": "속성 블록: 태그 직후에 <가 오지 않으면 즉시 종료",
+                    "begin": "(?<=^|\\|\\|)(?=<)",
+                    "end": "(?=[^<])", 
+                    "patterns": [
+                        {
+                            "comment": "rowif 특수 태그",
+                            "match": "(<)(rowif)(=)([^>]*)(>)",
+                            "captures": {
+                                "1": { "name": "punctuation.definition.tag.begin.namu" },
+                                "2": { "name": "entity.other.attribute-name.table.namu" },
+                                "3": { "name": "punctuation.separator.key-value.namu" },
+                                "4": { "patterns": [ { "include": "source.js", "name": "meta.embedded.block.javascript" } ] },
+                                "5": { "name": "punctuation.definition.tag.end.namu" }
+                            }
                         },
-                        "2": {
-                            "name": "entity.other.attribute-name.table.namu"
-                        },
-                        "3": {
-                            "name": "string.unquoted.attribute-value.table.namu"
-                        },
-                        "4": {
-                            "name": "punctuation.definition.tag.end.namu"
-                        },
-                        "5": {
-                            "name": "punctuation.definition.tag.begin.namu"
-                        },
-                        "6": {
-                            "name": "entity.other.attribute-name.table.namu"
-                        },
-                        "7": {
-                            "name": "string.unquoted.attribute-value.table.namu"
-                        },
-                        "8": {
-                            "name": "punctuation.definition.tag.end.namu"
+                        {
+                            "comment": "일반 속성 태그",
+                            "match": "(<)([^>=|]*(?:\\|[^>=|]+)?)(?:=([^>|]*))?(>)",
+                            "captures": {
+                                "1": { "name": "punctuation.definition.tag.begin.namu" },
+                                "2": { "name": "entity.other.attribute-name.table.namu" },
+                                "3": { "name": "string.unquoted.attribute-value.table.namu" },
+                                "4": { "name": "punctuation.definition.tag.end.namu" }
+                            }
                         }
+                    ]
+                },
+                {
+                    "comment": "일반 텍스트",
+                    "match": "(?:[^\\n\\r|\\\\]|\\|(?!\\|)|\\\\.)*",
+                    "captures": {
+                        "0": { "patterns": [ { "include": "source.namu" } ] }
                     }
                 }
             ]
