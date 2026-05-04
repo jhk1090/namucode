@@ -546,30 +546,26 @@ export default {
         `
       }
 
-      this.userboxHtml = `<dl class="wiki-folding" :key="userbox.parameterAlertKey">
-        <dt>매개변수 목록 [ 펼치기 · 접기 ]</dt>
-        <dd class="wiki-folding-close-anim">
-          <div class="wiki-table-wrap" style="width:100%;">
-            <table class="wiki-table" style="width:100%;background-color:transparent;">
+      this.userboxHtml = `<details class="wiki-folding" :key="userbox.parameterAlertKey">
+        <summary> 매개변수 목록 [ 펼치기 · 접기 ]</summary>
+        <div>
+          <div class="wiki-table-wrap" style="width: 100%">
+            <table class="wiki-table"  style="width: 100%; background-color: transparent">
               <tbody>
                 <tr style="background-color:#ccc;" data-dark-style="background-color:#333;">
                   <td style="width:50%;text-align:center;">
-                    <div class="wiki-paragraph">
-                      <strong>매개변수</strong>
-                    </div>
+                    <div class="wiki-paragraph"><strong>매개변수</strong></div>
                   </td>
                   <td style="text-align:center;">
-                    <div class="wiki-paragraph">
-                      <strong>값</strong>
-                    </div>
+                    <div class="wiki-paragraph"><strong>값</strong></div>
                   </td>
                 </tr>
                 ${pairHtml}
               </tbody>
             </table>
-          </div>
-        </dd>
-      </dl>`
+          </div><br>
+        </div>
+      </details>`
     }
   }
 }
