@@ -67,7 +67,7 @@ export function getLanguageModes(documentSymbol: Record<string, any>, document: 
 	let modes = Object.create(null);
 	modes['css'] = getCSSMode(cssLanguageService, documentRegions);
 	modes['css-inline'] = getCSSInlineMode(cssLanguageService, documentRegions);
-	modes['js'] = getJSMode(htmlLanguageService, documentRegions);
+	modes['js'] = getJSMode(documentRegions);
 	modes['wiki-class'] = getWikiClassMode(cssLanguageService, documentRegions);
 	modes['wiki-lang'] = getWikiLangMode();
 	modes['argument'] = {

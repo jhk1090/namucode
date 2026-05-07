@@ -119,7 +119,7 @@ export function getDocumentRegions(document: TextDocument, documentSymbol: Recor
 				if (element.type === "ifSyntax") {
 					const startOffset = document.offsetAt({ line: tokStartLine, character: 0 })
 					const targetLine = document.getText().substring(startOffset).split(/(\r)?\n/)[0];
-					const syntaxStart = targetLine.indexOf("{{{#!if ")
+					const syntaxStart = targetLine.indexOf("{{{#!if ") + "{{{#!if ".length;
 					const syntaxEnd = targetLine.length + 1;
 
 					if (syntaxStart < syntaxEnd) {
