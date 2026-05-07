@@ -41,6 +41,7 @@ connection.onInitialize(async (_params: InitializeParams) => {
 	);
 
 	documents.onDidClose(e => {
+		connection.sendDiagnostics({ uri: e.document.uri, diagnostics: [] });
 		if (!languageModes) return
 		languageModes.onDocumentRemoved();
 	});
