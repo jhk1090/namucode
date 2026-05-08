@@ -25,7 +25,7 @@ const connection = createConnection(ProposedFeatures.all);
 // Create a simple text document manager. The text document manager
 // supports full document sync only
 const documents = new TextDocuments(TextDocument);
-let languageModes: LanguageModes | null;
+export let languageModes: LanguageModes | null;
 
 let hasConfigurationCapability = false;
 let resolveInitialization: () => void;
@@ -56,7 +56,7 @@ connection.onInitialize(async (_params: InitializeParams) => {
 			// Tell the client that the server supports code completion
 			completionProvider: {
 				resolveProvider: false,
-				triggerCharacters: ['.', '#', ':', '@', '\"', ';', ' ', '!', '[', '+', '-', '|', '=', '&']
+				triggerCharacters: ['.', '#', ':', '@', '\"', ';', ' ', '!', '[', '+', '-', '|', '=', '&', '<', ',']
 			},
 			// hoverProvider: true,
 			// definitionProvider: true,

@@ -1,5 +1,6 @@
 import { CompletionItem, CompletionItemKind, CompletionList, InsertTextFormat, Position } from "vscode-html-languageservice";
 import { TextDocument } from "vscode-languageserver-textdocument";
+import { languageModes } from './server';
 
 export function simpleCompletions(document: TextDocument, position: Position): CompletionList | null {
   const line = document.getText({ start: { line: position.line, character: 0 }, end: position });
@@ -60,6 +61,27 @@ export function simpleCompletions(document: TextDocument, position: Position): C
     if (quoteCount % 2 === 0) {
       return getWikiSyntaxProperties();
     }
+  }
+
+  const tableArgumentsRegex = /\|\|((<)([^>=|]*(?:\|[^>=|]+)?)(?:=([^>|]*))?(>)){0,}<$/g
+  if (tableArgumentsRegex.exec(line)) {
+    return getTableArguments();
+  }
+
+  const tableArgumentColorValueRegex = new RegExp(`\\|\\|((<)([^>=|]*(?:\\|[^>=|]+)?)(?:=([^>|]*))?(>)){0,}<(${argumentsColorValueRequired.join("|")})=([^,]+,)?$`, "g")
+  if (tableArgumentColorValueRegex.exec(line)) {
+    return getTableArgumentColorValue();
+  }
+
+  const tableArgumentClassValueRegex = new RegExp(`\\|\\|((<)([^>=|]*(?:\\|[^>=|]+)?)(?:=([^>|]*))?(>)){0,}<(${argumentsClassValueRequired.join("|")})=([^>]+ )?$`, "g")
+  if (tableArgumentClassValueRegex.exec(line)) {
+    return getTableArgumentClassValue(document, position);
+  }
+
+  const tableArgumentCommonValueRegex = new RegExp(`\\|\\|((<)([^>=|]*(?:\\|[^>=|]+)?)(?:=([^>|]*))?(>)){0,}<(?<argumentType>${argumentsCommonValueRequired.join("|")})=$`, "g")
+  let tableArgumentCommonValueMatch;
+  if (tableArgumentCommonValueMatch = tableArgumentCommonValueRegex.exec(line)) {
+    return getTableArgumentCommonValue(tableArgumentCommonValueMatch?.groups?.argumentType);
   }
 
 	return null;
@@ -507,5 +529,125 @@ function getWikiSyntaxProperties() {
         },
       },
     ],
+  };
+}
+
+const argumentsColorValueRequired = [
+  "tablecolor",
+  "tablebgcolor",
+  "tablebordercolor",
+  "bgcolor",
+  "colbgcolor",
+  "rowbgcolor",
+  "color",
+  "colcolor",
+  "rowcolor",
+]
+const argumentsClassValueRequired = [
+  "class",
+  "rowclass",
+]
+
+const argumentsCommonValueRequired = [
+  "tablealign",
+  "width",
+  "height",
+  "rowif",
+] as const
+
+const argumentsValueRequired = [
+  ...argumentsColorValueRequired,
+  ...argumentsClassValueRequired,
+  ...argumentsCommonValueRequired
+]
+const argumentsValueOptional = [
+  "thead",
+  "sortable",
+  "keepall",
+  "rowkeepall",
+  "colkeepall",
+  "nopad",
+]
+
+function getTableArguments() {
+  const items = [];
+
+  argumentsValueRequired.forEach(argument => {
+    items.push({
+        label: argument,
+        kind: CompletionItemKind.Property,
+        insertText: argument + "=${1}>",
+        insertTextFormat: InsertTextFormat.Snippet,
+        command: {
+          title: "suggest",
+          command: "editor.action.triggerSuggest",
+        },
+      })
+  })
+  argumentsValueOptional.forEach(argument => {
+    items.push({
+        label: argument,
+        kind: CompletionItemKind.Property,
+        insertText: `${argument}>`,
+        insertTextFormat: InsertTextFormat.Snippet,
+        command: {
+          title: "suggest",
+          command: "editor.action.triggerSuggest",
+        },
+      })
+  })
+
+  return {
+    isIncomplete: false,
+    items
+  };
+}
+
+function getTableArgumentColorValue() {
+  const items = [];
+
+  items.push(
+    ...colorTextOptions.map((color) => ({
+      label: color,
+      kind: CompletionItemKind.EnumMember,
+      insertText: color
+    })),
+  );
+
+  return {
+    isIncomplete: false,
+    items
+  };
+}
+
+function getTableArgumentClassValue(document, position) {
+  const items = [];
+
+  items.push(
+    ...languageModes.getMode("wiki-class").doComplete(document, position).items
+  )
+
+  return {
+    isIncomplete: false,
+    items
+  };
+}
+
+function getTableArgumentCommonValue(argumentType) {
+  const items = [];
+
+  if (argumentType === "tablealign") {
+    items.push(
+      ...["left", "center", "right"].map((color) => ({
+      label: color,
+      kind: CompletionItemKind.EnumMember,
+      insertText: color
+    })),
+    )
+  }
+
+  return {
+    isIncomplete: false,
+    items
   };
 }
