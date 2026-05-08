@@ -34,7 +34,7 @@ export function getCSSMode(
 				const prefix = document.getText().substring(0, document.offsetAt(region.start)).replace(/[^\r\n]/g, ' ');
 
 				let virtualText = prefix + content
-				virtualText = virtualText.replace(/@(.+)@/g, "  $1");
+				virtualText = virtualText.replace(/@([^@]+)@/g, "  $1");
 
 				const virtualDoc = TextDocument.create(document.uri, 'css', document.version, virtualText);
 				
