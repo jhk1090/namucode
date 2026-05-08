@@ -2,10 +2,14 @@ import { CompletionItem, CompletionItemKind, CompletionList, InsertTextFormat, P
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { languageModes } from './server';
 
-export function simpleCompletions(document: TextDocument, position: Position): CompletionList | null {
+export function simpleCompletions(document: TextDocument, position: Position, triggerCharacter: string): CompletionList | null {
   const line = document.getText({ start: { line: position.line, character: 0 }, end: position });
 
-	if (line.startsWith("[") && !line.startsWith("[[")) {
+  if (['.', ':', '@', '\"', ';'].includes(triggerCharacter)) {
+    return null;
+  }
+
+	if (triggerCharacter === "[" && line.startsWith("[") && !line.startsWith("[[")) {
 		return getSquareBracketSyntaxes();
 	}
 
@@ -28,15 +32,15 @@ export function simpleCompletions(document: TextDocument, position: Position): C
     }
   }
 
-	if (line.endsWith("{{{+")) {
+	if (triggerCharacter === "+" && line.endsWith("{{{+")) {
 		return getScaleTextOptions("+");
 	}
 
-	if (line.endsWith("{{{-")) {
+	if (triggerCharacter === "-" && line.endsWith("{{{-")) {
 		return getScaleTextOptions("-");
 	}
 
-  if (line.endsWith("{{{#")) {
+  if (triggerCharacter === "#" && line.endsWith("{{{#")) {
     return getColorTextOptions();
   }
 
@@ -45,17 +49,17 @@ export function simpleCompletions(document: TextDocument, position: Position): C
     return getColorTextOptions(true);
   }
 
-  if (line.endsWith("{{{#!")) {
+  if (triggerCharacter === "!" && line.endsWith("{{{#!")) {
     return getShebangList();
   }
 
-  if (line.endsWith("{{{#!syntax ")) {
+  if (triggerCharacter === " " && line.endsWith("{{{#!syntax ")) {
     return getSyntaxSyntaxLanguages();
   }
 
   const wikiSyntaxStartIndex = line.indexOf("{{{#!wiki ");
   const wikiSyntaxQuoteRegex = /"/g;
-  if (wikiSyntaxStartIndex !== -1) {
+  if (triggerCharacter === " " && wikiSyntaxStartIndex !== -1) {
     wikiSyntaxQuoteRegex.lastIndex = wikiSyntaxStartIndex;
     const quoteCount = (line.match(wikiSyntaxQuoteRegex) || []).length;
     if (quoteCount % 2 === 0) {
@@ -64,7 +68,7 @@ export function simpleCompletions(document: TextDocument, position: Position): C
   }
 
   const tableArgumentsRegex = /\|\|((<)([^>=|]*(?:\|[^>=|]+)?)(?:=([^>|]*))?(>)){0,}<$/g
-  if (tableArgumentsRegex.exec(line)) {
+  if (triggerCharacter === "<" && tableArgumentsRegex.exec(line)) {
     return getTableArguments();
   }
 
