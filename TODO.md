@@ -11,13 +11,8 @@
 - 단축키 폭넓게 추가
 
 ### v1.9.x 계열
-- rowif 변수 자동완성
-- rowclass 클래스 자동완성
-- jsMode에서 validation
-- 테이블 매개변수 자동완성
 - colorText에 colorPicker 띄우기
 - tablebgcolor 등 매개변수에 colorPicker 띄우기
-- bracket 이스케이프 시 highlighting 중단하기
 
 ## Soon
 
