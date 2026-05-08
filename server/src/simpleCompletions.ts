@@ -82,6 +82,11 @@ export function simpleCompletions(document: TextDocument, position: Position, tr
     return getTableArgumentClassValue(document, position);
   }
 
+  const tableArgumentIfValueRegex = new RegExp(`\\|\\|((<)([^>=|]*(?:\\|[^>=|]+)?)(?:=([^>|]*))?(>)){0,}<(${argumentsIfValueRequired.join("|")})=([^>]+ )?$`, "g")
+  if (tableArgumentIfValueRegex.exec(line)) {
+    return getTableArgumentIfValue(document, position);
+  }
+
   const tableArgumentCommonValueRegex = new RegExp(`\\|\\|((<)([^>=|]*(?:\\|[^>=|]+)?)(?:=([^>|]*))?(>)){0,}<(?<argumentType>${argumentsCommonValueRequired.join("|")})=$`, "g")
   let tableArgumentCommonValueMatch;
   if (tableArgumentCommonValueMatch = tableArgumentCommonValueRegex.exec(line)) {
@@ -551,17 +556,19 @@ const argumentsClassValueRequired = [
   "class",
   "rowclass",
 ]
-
+const argumentsIfValueRequired = [
+  "rowif",
+]
 const argumentsCommonValueRequired = [
   "tablealign",
   "width",
   "height",
-  "rowif",
-] as const
+]
 
 const argumentsValueRequired = [
   ...argumentsColorValueRequired,
   ...argumentsClassValueRequired,
+  ...argumentsIfValueRequired,
   ...argumentsCommonValueRequired
 ]
 const argumentsValueOptional = [
@@ -625,16 +632,11 @@ function getTableArgumentColorValue() {
 }
 
 function getTableArgumentClassValue(document, position) {
-  const items = [];
+  return languageModes.getMode("wiki-class").doComplete(document, position);
+}
 
-  items.push(
-    ...languageModes.getMode("wiki-class").doComplete(document, position).items
-  )
-
-  return {
-    isIncomplete: false,
-    items
-  };
+function getTableArgumentIfValue(document, position) {
+  return languageModes.getMode("js").doComplete(document, position)
 }
 
 function getTableArgumentCommonValue(argumentType) {
