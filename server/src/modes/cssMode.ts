@@ -34,7 +34,7 @@ export function getCSSMode(
 				const prefix = document.getText().substring(0, document.offsetAt(region.start)).replace(/[^\r\n]/g, ' ');
 
 				let virtualText = prefix + content
-				virtualText = virtualText.replace(/@([^@]+)@/g, "  $1");
+				virtualText = virtualText.replace(/@([^@]+)@/g, "$1  ");
 
 				const virtualDoc = TextDocument.create(document.uri, 'css', document.version, virtualText);
 				
@@ -70,7 +70,7 @@ export function getCSSMode(
 			const content = originalText.substring(regionStart, regionEnd);
 			let isolatedText = prefix + content;
 			isolatedText = isolatedText.replace(/@theseed-dark-mode/g, '@media all and (n)')
-			isolatedText = isolatedText.replace(/@(.+)@/g, "  $1");
+			isolatedText = isolatedText.replace(/@([^@]+)@/g, "$1  ");
 
 			const isolatedDoc = TextDocument.create(document.uri, 'css', document.version, isolatedText);
   		const stylesheet = cssLanguageService.parseStylesheet(isolatedDoc);

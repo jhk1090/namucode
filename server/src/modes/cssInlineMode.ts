@@ -41,7 +41,7 @@ export function getCSSInlineMode(
 				const adjustedPrefix = prefix.slice(0, -wrapperStart.length) + wrapperStart;
 
 				let virtualText = adjustedPrefix + content + wrapperEnd;
-				virtualText = virtualText.replace(/@([^@]+)@/g, "  $1");
+				virtualText = virtualText.replace(/@([^@]+)@/g, "$1  ");
 
 				const virtualDoc = TextDocument.create(document.uri, 'css', document.version, virtualText);
 				
@@ -91,7 +91,7 @@ export function getCSSInlineMode(
 			const content = originalText.substring(regionStart, regionEnd);
 
 			let isolatedText = adjustedPrefix + content + wrapperEnd;
-			isolatedText = isolatedText.replace(/@(.+)@/g, "  $1");
+			isolatedText = isolatedText.replace(/@([^@]+)@/g, "$1  ");
 
 			const isolatedDoc = TextDocument.create(document.uri, 'css', document.version, isolatedText);
   		const stylesheet = cssLanguageService.parseStylesheet(isolatedDoc);
