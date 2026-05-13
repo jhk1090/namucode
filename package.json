@@ -403,7 +403,14 @@
                         {
                             "scope": "comment.line.double-quote.namu",
                             "settings": {
-                                "foreground": "#6d6d6d",
+                                "foreground": "#6A9955",
+                                "fontStyle": "italic"
+                            }
+                        },
+                        {
+                            "scope": "markup.raw.block.namu",
+                            "settings": {
+                                "foreground": "#6A9955",
                                 "fontStyle": "italic"
                             }
                         },
@@ -488,6 +495,13 @@
                             "scope": "string.unquoted.argument.namu",
                             "settings": {
                                 "foreground": "#CE9178",
+                                "fontStyle": ""
+                            }
+                        },
+                        {
+                            "scope": "support.variable.namu",
+                            "settings": {
+                                "foreground": "#7cbef0",
                                 "fontStyle": ""
                             }
                         }

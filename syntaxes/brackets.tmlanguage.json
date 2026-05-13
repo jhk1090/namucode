@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-  "injectionSelector": "L:source.namu -meta.embedded",
+  "injectionSelector": "L:source.namu -meta.embedded -markup.raw.block",
   "name": "나무코드 중괄호 처리 부분",
   "scopeName": "source.namu.brackets",
   "patterns": [
@@ -36,6 +36,9 @@
     },
     {
       "include": "#brackets-syntaxSyntax"
+    },
+    {
+      "include": "#brackets-raw"
     }
   ],
   "repository": {
@@ -458,6 +461,11 @@
         "2": { "name": "support.function.language-name.namu" }
       },
       "end": "\\}\\}\\}"
+    },
+    "brackets-raw": {
+      "begin": "\\{\\{\\{",
+      "end": "\\}\\}\\}",
+      "contentName": "markup.raw.block.namu"
     }
   }
 }

@@ -1,6 +1,6 @@
 {
     "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-    "injectionSelector": "L:source.namu -meta.embedded",
+    "injectionSelector": "L:source.namu -meta.embedded -markup.raw.block",
     "name": "나무코드",
     "scopeName": "source.namu",
     "patterns": [
