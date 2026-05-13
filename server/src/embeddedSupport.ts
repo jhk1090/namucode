@@ -72,7 +72,7 @@ export function getDocumentRegions(document: TextDocument, documentSymbol: Recor
 							styleEndRegex.lastIndex = styleStart;
 
 							const styleEndMatch = styleEndRegex.exec(targetLine);
-							let styleEnd = styleEndMatch ? styleEndMatch.index : targetLine.length + 1;
+							let styleEnd = styleEndMatch ? styleEndMatch.index + 1 : targetLine.length + 1;
 
 							if (styleStart < styleEnd) {
 								// 가장 낮은 걸 채택
