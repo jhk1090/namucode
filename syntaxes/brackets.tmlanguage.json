@@ -119,7 +119,7 @@
       "begin": "\\{\\{\\{(#!if) (.*)$",
       "beginCaptures": {
         "1": { "name": "keyword.control.bracket.namu" },
-        "2": { "patterns": [{ "name": "meta.embedded.block.javascript", "include": "source.js" }] }
+        "2": { "name": "meta.embedded.inline.javascript", "patterns": [{ "include": "source.js" }] }
       },
       "end": "\\}\\}\\}",
       "patterns": [{ "include": "source.namu" }]
