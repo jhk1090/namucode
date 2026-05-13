@@ -97,11 +97,13 @@ export function getJSMode(documentRegions: HTMLDocumentRegions): LanguageMode {
         ? (getTypeScriptCompletion(embeddedJSSourceFile, position, allSymbols) as CompletionList)
         : {
             isIncomplete: false,
-            items: Array.from(allSymbols).map((symbol) => ({
-              label: symbol,
-              kind: 6,
-              insertText: symbol + "@",
-            })),
+            items: Array.from(allSymbols)
+              .filter((symbol) => !/^\$/.exec(symbol))
+              .map((symbol) => ({
+                label: symbol,
+                kind: 6,
+                insertText: symbol + "@",
+              })),
           };
     },
     onDocumentRemoved() {
@@ -154,8 +156,11 @@ function validateSingleFile(document) {
 function getTypeScriptCompletion(document, position, allSymbols: Set<string>) {
   const fileName = "virtual.js";
 
+  const startsWithNumberRegex = /^\d/;
   const virtualDeclarations = Array.from(allSymbols)
-      .map(v => `var ${v};`)
+      .map(symbol => {
+        return startsWithNumberRegex.exec(symbol) ? `this["${symbol}"]="";` : `var ${symbol};`
+      })
       .join(' ');
 
   const content = virtualDeclarations + document.getText();
@@ -192,11 +197,19 @@ function getTypeScriptCompletion(document, position, allSymbols: Set<string>) {
 
   return {
     isIncomplete: false,
-    items: completions.entries.map(entry => ({
-      label: entry.name,
-      kind: convertKind(entry.kind),
-      sortText: entry.sortText
-    }))
+    items: completions.entries.map(entry => {
+      const kind = convertKind(entry.kind)
+      return (kind === 6 && startsWithNumberRegex.exec(entry.name)) ? {
+        label: entry.name,
+        kind,
+        sortText: entry.sortText,
+        insertText: `this["${entry.name}"]`
+      } : {
+        label: entry.name,
+        kind,
+        sortText: entry.sortText
+      }
+    })
   };
 }
 

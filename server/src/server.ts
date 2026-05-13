@@ -157,7 +157,7 @@ connection.onCompletion(async (textDocumentPosition, _token) => {
 
 	const line = document.getText({ start: { line: textDocumentPosition.position.line, character: 0 }, end: textDocumentPosition.position });
 
-	if (textDocumentPosition.context.triggerCharacter === "@" && /(?<!@[\p{L}_$][\p{L}\p{N}_$]*(=[^\n\r@]+)?)@$/gu.exec(line)) {
+	if (textDocumentPosition.context.triggerCharacter === "@" && /(?<!@[\p{L}\p{N}_]*(=[^\n\r@]+)?)@$/gu.exec(line)) {
 		return languageModes.getMode("js").doComplete(document, textDocumentPosition.position, true)
 	}
 
