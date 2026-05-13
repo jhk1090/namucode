@@ -24,16 +24,25 @@ export function getCSSInlineMode(
 
 			const cssRegions = documentRegions.getLanguageRanges(fullRange)
 				.filter(r => r.languageId === 'css-inline');
+			const argumentRegions = documentRegions.getLanguageRanges(fullRange)
+				.filter(r => r.languageId === 'argument');				
 
 			const allDiagnostics: Diagnostic[] = [];
 
 			cssRegions.forEach(region => {
 				const regionStartOffset = document.offsetAt(region.start);
 				const regionEndOffset = document.offsetAt(region.end);
+				const hasArgumentInRegion =
+          argumentRegions.filter((argumentRegion) => {
+            return regionStartOffset <= document.offsetAt(argumentRegion.start) && document.offsetAt(argumentRegion.end) <= regionEndOffset;
+          }).length > 0;
+
+				if (hasArgumentInRegion) return
+
 				const content = document.getText().substring(regionStartOffset, regionEndOffset);
 				
 				// 좌표 유지를 위해 앞부분을 줄바꿈(\n)으로 채운 가상 문서 생성
-				const prefix = document.getText().substring(0, document.offsetAt(region.start)).replace(/[^\r\n]/g, ' ');
+				const prefix = document.getText().substring(0, regionStartOffset).replace(/[^\r\n]/g, ' ');
 
 				const wrapperStart = ".i{"
 				const wrapperEnd = "}";
