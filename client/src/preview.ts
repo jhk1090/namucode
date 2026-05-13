@@ -308,10 +308,8 @@ export class MarkPreview {
 
                 workspaceDocuments.push(...await Promise.all(
                     namuFiles.map(async (file) => {
-                        const document = await vscode.workspace.openTextDocument(file);
                         const { namespace, title } = await getNamespaceAndTitle(currentFolder.uri.fsPath, file.fsPath)
-
-                        const content = document.getText();
+                        const content = await vscode.workspace.fs.readFile(file);
     
                         return {
                             namespace,
