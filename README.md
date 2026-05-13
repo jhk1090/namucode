@@ -87,9 +87,9 @@
 - `{{{+1 ...}}} {{{#red ...}}} {{{}}}` 접기
 
 ### 코드 분석 기능
-| ![내용 접기 기능](./images/namucode_code_analysis.png) |
+| ![코드 분석 기능](./images/namucode_code_analysis.png) |
 | :---: |
-| 인텔리센스 자동완성 사용례 |
+| 코드 분석 기능 사용례 |
 
 나무코드는 코드 분석 기능을 지원합니다. 코드를 분석해 오류나 경고를 표시합니다.
 현재 코드 분석을 지원하는 구문은 다음과 같습니다.
@@ -99,7 +99,7 @@
 
 ### 자동완성 기능
 #### 인텔리센스 (Intellisense, 맥락 고려형 자동완성)
-| ![내용 접기 기능](./images/namucode_code_completion_intellisense.png) |
+| ![인텔리센스 자동완성 기능](./images/namucode_code_completion_intellisense.png) |
 | :---: |
 | 인텔리센스 자동완성 사용례 |
 
@@ -122,7 +122,7 @@
 - **표 매개변수 값 자동완성** - `||<매개변수=값>...<매개변수=` 입력시, 매개변수에 맞는 값 목록을 자동완성으로 띄워줍니다. 예를 들어, `tablebgcolor`와 같은 색상 지정 매개변수는 사용할 수 있는 색상 키워드 목록을, `rowclass`와 같은 클래스 지정 매개변수는 사용할 수 있는 클래스 목록을 띄워줍니다.
 
 #### 스니펫 (Snippet, 단순 편의성 자동완성)
-| ![내용 접기 기능](./images/namucode_code_completion_snippet.png) |
+| ![스니펫 자동완성 기능](./images/namucode_code_completion_snippet.png) |
 | :---: |
 | 스니펫 자동완성 사용례 |
 
