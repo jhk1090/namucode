@@ -113,7 +113,8 @@
         "1": { "name": "keyword.control.bracket.namu" }
       },
       "end": "\\}\\}\\}",
-      "patterns": [{ "name": "meta.embedded.block.html", "include": "text.html.derivative" }]
+      "contentName": "meta.embedded.block.html",
+      "patterns": [{ "include": "text.html.derivative" }]
     },
     "brackets-ifSyntax": {
       "begin": "\\{\\{\\{(#!if) (.*)$",
@@ -138,7 +139,8 @@
         "1": { "name": "keyword.control.bracket.namu" }
       },
       "end": "\\}\\}\\}",
-      "patterns": [{ "name": "meta.embedded.block.css", "include": "source.css" }]
+      "contentName": "meta.embedded.block.css",
+      "patterns": [{ "include": "source.css" }]
     },
     "brackets-styleSyntax-forCompletion": {
       "comment": "자연스러운 구문 완성을 위한 지원",
@@ -195,7 +197,8 @@
         "2": { "name": "support.function.language-name.namu" }
       },
       "end": "\\}\\}\\}",
-      "patterns": [{ "include": "source.asp.vb.net", "name": "meta.embedded.block.basic" }]
+      "contentName": "meta.embedded.block.basic",
+      "patterns": [{ "include": "source.asp.vb.net" }]
     },
     "brackets-syntaxSyntax-cpp": {
       "begin": "\\{\\{\\{(#!syntax) (cpp)",
@@ -204,7 +207,8 @@
         "2": { "name": "support.function.language-name.namu" }
       },
       "end": "\\}\\}\\}",
-      "patterns": [{ "include": "source.cpp", "name": "meta.embedded.block.cpp" }]
+      "contentName": "meta.embedded.block.cpp",
+      "patterns": [{ "include": "source.cpp" }]
     },
     "brackets-syntaxSyntax-csharp": {
       "begin": "\\{\\{\\{(#!syntax) (csharp)",
@@ -213,7 +217,8 @@
         "2": { "name": "support.function.language-name.namu" }
       },
       "end": "\\}\\}\\}",
-      "patterns": [{ "include": "source.cs", "name": "meta.embedded.block.csharp" }]
+      "contentName": "meta.embedded.block.csharp",
+      "patterns": [{ "include": "source.cs" }]
     },
     "brackets-syntaxSyntax-css": {
       "begin": "\\{\\{\\{(#!syntax) (css)",
@@ -222,7 +227,8 @@
         "2": { "name": "support.function.language-name.namu" }
       },
       "end": "\\}\\}\\}",
-      "patterns": [{ "include": "source.css", "name": "meta.embedded.block.css" }]
+      "contentName": "meta.embedded.block.css",
+      "patterns": [{ "include": "source.css" }]
     },
     "brackets-syntaxSyntax-erlang": {
       "begin": "\\{\\{\\{(#!syntax) (erlang)",
@@ -231,7 +237,8 @@
         "2": { "name": "support.function.language-name.namu" }
       },
       "end": "\\}\\}\\}",
-      "patterns": [{ "include": "source.erlang", "name": "meta.embedded.block.erlang" }]
+      "contentName": "meta.embedded.block.erlang",
+      "patterns": [{ "include": "source.erlang" }]
     },
     "brackets-syntaxSyntax-go": {
       "begin": "\\{\\{\\{(#!syntax) (go)",
@@ -240,7 +247,8 @@
         "2": { "name": "support.function.language-name.namu" }
       },
       "end": "\\}\\}\\}",
-      "patterns": [{ "include": "source.go", "name": "meta.embedded.block.go" }]
+      "contentName": "meta.embedded.block.go",
+      "patterns": [{ "include": "source.go" }]
     },
     "brackets-syntaxSyntax-html": {
       "begin": "\\{\\{\\{(#!syntax) (html)",
@@ -249,7 +257,8 @@
         "2": { "name": "support.function.language-name.namu" }
       },
       "end": "\\}\\}\\}",
-      "patterns": [{ "include": "text.html.derivative", "name": "meta.embedded.block.html" }]
+      "contentName": "meta.embedded.block.html",
+      "patterns": [{ "include": "text.html.derivative" }]
     },
     "brackets-syntaxSyntax-javascript": {
       "begin": "\\{\\{\\{(#!syntax) (javascript)",
@@ -258,7 +267,8 @@
         "2": { "name": "support.function.language-name.namu" }
       },
       "end": "\\}\\}\\}",
-      "patterns": [{ "include": "source.js", "name": "meta.embedded.block.javascript" }]
+      "contentName": "meta.embedded.block.javascript",
+      "patterns": [{ "include": "source.js" }]
     },
     "brackets-syntaxSyntax-java": {
       "begin": "\\{\\{\\{(#!syntax) (java)",
@@ -267,7 +277,8 @@
         "2": { "name": "support.function.language-name.namu" }
       },
       "end": "\\}\\}\\}",
-      "patterns": [{ "include": "source.java", "name": "meta.embedded.block.java" }]
+      "contentName": "meta.embedded.block.java",
+      "patterns": [{ "include": "source.java" }]
     },
     "brackets-syntaxSyntax-json": {
       "begin": "\\{\\{\\{(#!syntax) (json)",
@@ -276,7 +287,8 @@
         "2": { "name": "support.function.language-name.namu" }
       },
       "end": "\\}\\}\\}",
-      "patterns": [{ "include": "source.json", "name": "meta.embedded.block.json" }]
+      "contentName": "meta.embedded.block.json",
+      "patterns": [{ "include": "source.json" }]
     },
     "brackets-syntaxSyntax-kotlin": {
       "begin": "\\{\\{\\{(#!syntax) (kotlin)",
@@ -285,7 +297,8 @@
         "2": { "name": "support.function.language-name.namu" }
       },
       "end": "\\}\\}\\}",
-      "patterns": [{ "include": "source.kotlin", "name": "meta.embedded.block.kotlin" }]
+      "contentName": "meta.embedded.block.kotlin",
+      "patterns": [{ "include": "source.kotlin" }]
     },
     "brackets-syntaxSyntax-lisp": {
       "begin": "\\{\\{\\{(#!syntax) (lisp)",
@@ -294,7 +307,8 @@
         "2": { "name": "support.function.language-name.namu" }
       },
       "end": "\\}\\}\\}",
-      "patterns": [{ "include": "source.lisp", "name": "meta.embedded.block.lisp" }]
+      "contentName": "meta.embedded.block.lisp",
+      "patterns": [{ "include": "source.lisp" }]
     },
     "brackets-syntaxSyntax-lua": {
       "begin": "\\{\\{\\{(#!syntax) (lua)",
@@ -303,7 +317,8 @@
         "2": { "name": "support.function.language-name.namu" }
       },
       "end": "\\}\\}\\}",
-      "patterns": [{ "include": "source.lua", "name": "meta.embedded.block.lua" }]
+      "contentName": "meta.embedded.block.lua",
+      "patterns": [{ "include": "source.lua" }]
     },
     "brackets-syntaxSyntax-markdown": {
       "begin": "\\{\\{\\{(#!syntax) (markdown)",
@@ -312,7 +327,8 @@
         "2": { "name": "support.function.language-name.namu" }
       },
       "end": "\\}\\}\\}",
-      "patterns": [{ "include": "text.html.markdown", "name": "meta.embedded.block.markdown" }]
+      "contentName": "meta.embedded.block.markdown",
+      "patterns": [{ "include": "text.html.markdown" }]
     },
     "brackets-syntaxSyntax-objectivec": {
       "begin": "\\{\\{\\{(#!syntax) (objectivec)",
@@ -321,7 +337,8 @@
         "2": { "name": "support.function.language-name.namu" }
       },
       "end": "\\}\\}\\}",
-      "patterns": [{ "include": "source.objc", "name": "meta.embedded.block.objectivec" }]
+      "contentName": "meta.embedded.block.objectivec",
+      "patterns": [{ "include": "source.objc" }]
     },
     "brackets-syntaxSyntax-perl": {
       "begin": "\\{\\{\\{(#!syntax) (perl)",
@@ -330,7 +347,8 @@
         "2": { "name": "support.function.language-name.namu" }
       },
       "end": "\\}\\}\\}",
-      "patterns": [{ "include": "source.perl", "name": "meta.embedded.block.perl" }]
+      "contentName": "meta.embedded.block.perl",
+      "patterns": [{ "include": "source.perl" }]
     },
     "brackets-syntaxSyntax-php": {
       "begin": "\\{\\{\\{(#!syntax) (php)",
@@ -339,7 +357,8 @@
         "2": { "name": "support.function.language-name.namu" }
       },
       "end": "\\}\\}\\}",
-      "patterns": [{ "include": "source.php", "name": "meta.embedded.block.php" }]
+      "contentName": "meta.embedded.block.php",
+      "patterns": [{ "include": "source.php" }]
     },
     "brackets-syntaxSyntax-powershell": {
       "begin": "\\{\\{\\{(#!syntax) (powershell)",
@@ -348,7 +367,8 @@
         "2": { "name": "support.function.language-name.namu" }
       },
       "end": "\\}\\}\\}",
-      "patterns": [{ "include": "source.powershell", "name": "meta.embedded.block.powershell" }]
+      "contentName": "meta.embedded.block.powershell",
+      "patterns": [{ "include": "source.powershell" }]
     },
     "brackets-syntaxSyntax-python": {
       "begin": "\\{\\{\\{(#!syntax) (python)",
@@ -357,7 +377,8 @@
         "2": { "name": "support.function.language-name.namu" }
       },
       "end": "\\}\\}\\}",
-      "patterns": [{ "include": "source.python", "name": "meta.embedded.block.python" }]
+      "contentName": "meta.embedded.block.python",
+      "patterns": [{ "include": "source.python" }]
     },
     "brackets-syntaxSyntax-ruby": {
       "begin": "\\{\\{\\{(#!syntax) (ruby)",
@@ -366,7 +387,8 @@
         "2": { "name": "support.function.language-name.namu" }
       },
       "end": "\\}\\}\\}",
-      "patterns": [{ "include": "source.ruby", "name": "meta.embedded.block.ruby" }]
+      "contentName": "meta.embedded.block.ruby",
+      "patterns": [{ "include": "source.ruby" }]
     },
     "brackets-syntaxSyntax-rust": {
       "begin": "\\{\\{\\{(#!syntax) (rust)",
@@ -375,7 +397,8 @@
         "2": { "name": "support.function.language-name.namu" }
       },
       "end": "\\}\\}\\}",
-      "patterns": [{ "include": "source.rust", "name": "meta.embedded.block.rust" }]
+      "contentName": "meta.embedded.block.rust",
+      "patterns": [{ "include": "source.rust" }]
     },
     "brackets-syntaxSyntax-sh": {
       "begin": "\\{\\{\\{(#!syntax) (sh)",
@@ -384,7 +407,8 @@
         "2": { "name": "support.function.language-name.namu" }
       },
       "end": "\\}\\}\\}",
-      "patterns": [{ "include": "source.shell", "name": "meta.embedded.block.sh" }]
+      "contentName": "meta.embedded.block.sh",
+      "patterns": [{ "include": "source.shell" }]
     },
     "brackets-syntaxSyntax-sql": {
       "begin": "\\{\\{\\{(#!syntax) (sql)",
@@ -393,7 +417,8 @@
         "2": { "name": "support.function.language-name.namu" }
       },
       "end": "\\}\\}\\}",
-      "patterns": [{ "include": "source.sql", "name": "meta.embedded.block.sql" }]
+      "contentName": "meta.embedded.block.sql",
+      "patterns": [{ "include": "source.sql" }]
     },
     "brackets-syntaxSyntax-swift": {
       "begin": "\\{\\{\\{(#!syntax) (swift)",
@@ -402,7 +427,8 @@
         "2": { "name": "support.function.language-name.namu" }
       },
       "end": "\\}\\}\\}",
-      "patterns": [{ "include": "source.swift", "name": "meta.embedded.block.swift" }]
+      "contentName": "meta.embedded.block.swift",
+      "patterns": [{ "include": "source.swift" }]
     },
     "brackets-syntaxSyntax-typescript": {
       "begin": "\\{\\{\\{(#!syntax) (typescript)",
@@ -411,7 +437,8 @@
         "2": { "name": "support.function.language-name.namu" }
       },
       "end": "\\}\\}\\}",
-      "patterns": [{ "include": "source.ts", "name": "meta.embedded.block.typescript" }]
+      "contentName": "meta.embedded.block.typescript",
+      "patterns": [{ "include": "source.ts" }]
     },
     "brackets-syntaxSyntax-xml": {
       "begin": "\\{\\{\\{(#!syntax) (xml)",
@@ -420,7 +447,8 @@
         "2": { "name": "support.function.language-name.namu" }
       },
       "end": "\\}\\}\\}",
-      "patterns": [{ "include": "text.xml", "name": "meta.embedded.block.xml" }]
+      "contentName": "meta.embedded.block.xml",
+      "patterns": [{ "include": "text.xml" }]
     },
     "brackets-syntaxSyntax-fallback": {
       "comment": "VS Code 공식 지원 언어가 아님.",
