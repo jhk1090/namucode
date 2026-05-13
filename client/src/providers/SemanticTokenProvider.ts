@@ -14,7 +14,7 @@ export class SemanticTokenProvider implements vscode.DocumentSemanticTokensProvi
 		const maxParsingDepth = rootConfig.get<number>("parser.maxParsingDepth", 30);
 		const maxCharacter = rootConfig.get<number>("parser.maxParsingCharacter", 1500000);
 
-		const result = await DocumentSymbolProvider.createParserPromise(document, { editorComment: false, maxParsingDepth, maxCharacter })
+		const result = DocumentSymbolProvider.getParserResult(document, { editorComment: false, maxParsingDepth, maxCharacter })
 		const headings = result.data.headings
 
     const tokensBuilder = new vscode.SemanticTokensBuilder(SemanticTokenLegend);

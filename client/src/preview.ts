@@ -288,10 +288,10 @@ export class MarkPreview {
             }
         }
 
-        const runParsing = async () => {
+        const runParsing = () => {
             const config = getConfig()
 
-            const result = await DocumentSymbolProvider.createParserPromise(document, { editorComment: config.isEditorComment, maxParsingDepth: config.maxParsingDepth, maxCharacter: config.maxParsingCharacter })
+            const result = DocumentSymbolProvider.getParserResult(document, { editorComment: config.isEditorComment, maxParsingDepth: config.maxParsingDepth, maxCharacter: config.maxParsingCharacter })
 
             return result;
         }
@@ -396,7 +396,7 @@ export class MarkPreview {
 
         (async () => {
             try {
-                const parsedResult = await runParsing();
+                const parsedResult = runParsing();
                 if (parsedResult.errorCode) {
                     this.dispose(this.panelId);
                     const msg = await vscode.window.showErrorMessage(`파싱 허용 문서 최대 글자 수인 ${getConfig().maxParsingCharacter}자가 넘어가 미리보기 기능을 사용할 수 없습니다. 글자 수를 줄이거나 설정에서 "파싱 허용 문서 최대 글자 수"를 늘릴 수 있습니다.`, "설정")

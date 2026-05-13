@@ -31,7 +31,7 @@ interface IHeading {
 }
 
 export class DocumentSymbolProvider implements vscode.DocumentSymbolProvider {
-  static cache = new Map<string, { version: number; config: { editorComment: boolean; maxParsingDepth: number; }; promise: Promise<any>; isMaxCharacterAlerted: boolean; }>();
+  static cache = new Map<string, { version: number; config: { editorComment: boolean; maxParsingDepth: number; }; result: any; isMaxCharacterAlerted: boolean; }>();
   private context: vscode.ExtensionContext;
   constructor(context: vscode.ExtensionContext) {
     this.context = context;
@@ -43,9 +43,7 @@ export class DocumentSymbolProvider implements vscode.DocumentSymbolProvider {
     const maxCharacter = rootConfig.get<number>("parser.maxParsingCharacter", 1500000);
 
     const config = { editorComment: false, maxParsingDepth, maxCharacter };
-    const promise = DocumentSymbolProvider.createParserPromise(document, config);
-
-    const result = await promise;
+    const result = DocumentSymbolProvider.getParserResult(document, config);
 
     const key = document.uri.toString();
     const cached = DocumentSymbolProvider.cache.get(key);
@@ -62,7 +60,7 @@ export class DocumentSymbolProvider implements vscode.DocumentSymbolProvider {
     return this.createSymbol(document, result);
   }
 
-  static async createParserPromise(document: vscode.TextDocument, { editorComment = false, maxParsingDepth = null, maxCharacter = 1500000 }): Promise<any> {
+  static getParserResult(document: vscode.TextDocument, { editorComment = false, maxParsingDepth = null, maxCharacter = 1500000 }) {
     const key = document.uri.toString();
     const version = document.version;
 
@@ -75,22 +73,17 @@ export class DocumentSymbolProvider implements vscode.DocumentSymbolProvider {
     }
 
     if (cached && cached.version === version && cached.config.editorComment === editorComment && cached.config.maxParsingDepth === maxParsingDepth) {
-      // console.log("[Parser] ♻️ Promise 재활용: ");
-      return cached.promise;
+      return cached.result;
     }
 
-    const promise = new Promise(async (resolve, reject) => {
-      const text = document.getText();
-      // let parseStart = performance.now();
-      const result = parser(text, { editorComment, maxParsingDepth });
-      // let parseEnd = performance.now();
+    const text = document.getText();
+    // let parseStart = performance.now();
+    const result = parser(text, { editorComment, maxParsingDepth });
+    // let parseEnd = performance.now();
       // console.log("[Parser] 📌 파싱 중...", "v", document.version, "(time: ", (parseEnd - parseStart).toFixed(2), "ms)")
-      resolve(result);
-    });
 
-    // console.log("[Parser] ⚙️ Promise 생성: ", "v", version);
-    DocumentSymbolProvider.cache.set(key, { ...cached, version, promise, config: { editorComment, maxParsingDepth } });
-    return promise;
+    DocumentSymbolProvider.cache.set(key, { ...cached, version, result, config: { editorComment, maxParsingDepth } });
+    return result;
   }
 
   private createSymbol(document: vscode.TextDocument, result: any) {
