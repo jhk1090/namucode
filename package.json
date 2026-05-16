@@ -608,7 +608,7 @@
         "build": "yarn run build:client && yarn run build:server && yarn run build:frontend && yarn run build:bundle",
         "build:client": "cd client && yarn install",
         "build:server": "cd server && yarn install",
-        "build:frontend": "cd client/media/frontend && yarn install && yarn run build",
+        "build:frontend": "cd client/media/frontend && yarn install && rm -rf dist node_modules/.vite && yarn run build",
         "build:bundle": "node esbuild.js",
         "build:frontend-bundle": "yarn run build:frontend && yarn run build:bundle",
         "watch": "yarn run build:bundle --watch"

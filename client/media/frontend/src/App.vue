@@ -20,4 +20,6 @@ export default {
 @import '@/assets/css/github.min.css';
 @import '@/assets/css/github-dark-dimmed.min.css';
 @import '@/assets/css/katex.min.css';
+
+@import 'floating-vue/dist/style.css';
 </style>

@@ -1,10 +1,11 @@
 <template>
-  <WikiCategory v-if="categories && categories.length" :categories="categories" />
+  <WikiCategory v-if="categories && categories.length && store.localConfig['wiki.category_position'] !== 'bottom'" :categories="categories" />
   <div ref="userbox" v-if="userbox.parameterAlert && Object.keys(userbox.parameterAlert).length > 0" class="user-box admin-box">
     현재 {{ Object.keys(userbox.parameterAlert).length }}개의 매개변수가 미리보기에 적용되어 있습니다. 매개변수가 적용되면 include 문법을 사용할 수 없습니다.
     <div class="wiki-content" v-html="userboxHtml"></div>
   </div>
   <div ref="div" v-html="content" class="wiki-content" @submit.prevent="formSubmit"></div>
+  <WikiCategory v-if="categories.length && ['bottom', 'both'].includes(store.localConfig['wiki.category_position'])" :categories="categories"/>
   <div ref="popover" v-show="popover.show" id="tooltip" class="popper">
     <div ref="popoverArrow" id="tooltip-arrow" class="popper__arrow"></div>
     <div id="tooltip-content" class="wiki-content" v-html="popover.content"></div>
@@ -14,6 +15,7 @@
 import { computePosition, offset, flip, shift, autoUpdate } from '@floating-ui/vue'
 
 import WikiCategory from "@/components/wiki/wikiCategory"
+import { store } from '@/store.js'
 import Common from '@/mixins/common'
 import { sha256 } from '@/utils'
 
@@ -39,7 +41,8 @@ export default {
       content: "",
       categories: [],
       userbox: {},
-      userboxHtml: ""
+      userboxHtml: "",
+      store
     }
   },
   mounted() {
@@ -571,5 +574,147 @@ export default {
 }
 </script>
 <style scoped>
-@import '@/assets/css/wikiContent.css'
+.popper {
+  background: #fff;
+  border-radius: 3px;
+  box-shadow: 0 0 2px rgba(0,0,0,.5);
+  max-width: 50%;
+  padding: 15px;
+  position: absolute;
+  word-break: break-all;
+  z-index: 1;
+}
+
+.theseed-dark-mode .popper {
+  background: #383b40;
+  box-shadow: 0 0 2px hsla(0,0%,100%,.5);
+}
+
+.popper .popper__arrow {
+  border-color: #ddd;
+  border-style: solid;
+  height: 0;
+  margin: 5px;
+  position: absolute;
+  width: 0;
+}
+
+.theseed-dark-mode .popper .popper__arrow {
+  border-color: #ccc;
+}
+
+.popper[x-placement^=top] {
+  margin-bottom: 5px;
+}
+
+.popper[x-placement^=top] .popper__arrow {
+  border-bottom-color: transparent;
+  border-left-color: transparent;
+  border-right-color: transparent;
+  border-width: 5px 5px 0;
+  bottom: -5px;
+  left: calc(50% - 10px);
+  margin-bottom: 0;
+  margin-top: 0;
+}
+
+.popper[x-placement^=bottom] {
+  margin-top: 5px
+}
+
+.popper[x-placement^=bottom] .popper__arrow {
+  border-left-color: transparent;
+  border-right-color: transparent;
+  border-top-color: transparent;
+  border-width: 0 5px 5px;
+  left: calc(50% - 10px);
+  margin-bottom: 0;
+  margin-top: 0;
+  top: -5px;
+}
+
+.popper[x-placement^=right] {
+  margin-left: 5px
+}
+
+.popper[x-placement^=right] .popper__arrow {
+  border-bottom-color: transparent;
+  border-left-color: transparent;
+  border-top-color: transparent;
+  border-width: 5px 5px 5px 0;
+  left: -5px;
+  margin-left: 0;
+  margin-right: 0;
+  top: calc(50% - 10px);
+}
+
+.popper[x-placement^=left] {
+  margin-right: 5px;
+}
+
+.popper[x-placement^=left] .popper__arrow {
+  border-bottom-color: transparent;
+  border-right-color: transparent;
+  border-top-color: transparent;
+  border-width: 5px 0 5px 5px;
+  margin-left: 0;
+  margin-right: 0;
+  right: -5px;
+  top: calc(50% - 10px);
+}
+
+:deep(.thetree-modal-container) {
+  padding-top: 10rem;
+}
+
+:deep(.thetree-modal-container):focus {
+  outline: 0 !important;
+}
+
+.thetree-modal-content .wiki-content {
+  padding: 1rem;
+}
+
+.thetree-modal-content button {
+  background-color: #fafafa;
+  border: 0;
+  border-top: 1px solid #eee;
+  color: inherit;
+  cursor: pointer;
+  font-size: 12px !important;
+  font: inherit;
+  margin: 2px 0 0;
+  outline: none;
+  padding: 10px;
+  width: 100%;
+}
+
+.theseed-dark-mode .thetree-modal-content button {
+  background-color: #383b40;
+  border-top: 1px solid #111;
+}
+
+ .user-box {
+   border-width: 5px 1px 1px;
+   border-style: solid;
+   border-image: initial;
+   padding: 10px;
+   margin-bottom: 10px;
+ }
+
+.admin-box {
+  border-color: orange gray gray;
+}
+
+.admin-box:hover {
+  border-color: red gray gray;
+}
+
+.banned-box {
+  border-color: red gray gray;
+}
+
+.banned-box:hover {
+  border-color: blue gray gray;
+}
 </style>

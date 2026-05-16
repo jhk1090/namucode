@@ -61,12 +61,12 @@
 }
 
 .button--hover:not(.button--disabled), .button:not(.button--unreactive):not(.button--disabled):hover {
-    --button-background-color: #f3f3f3;
+    --button-background-color: var(--button-background-hover-color, #f3f3f3);
     text-decoration: none;
 }
 
 :global(.theseed-dark-mode) .button--hover:not(.button--disabled), :global(.theseed-dark-mode) .button:not(.button--unreactive):not(.button--disabled):hover {
-    --button-background-color: #2d2e2f;
+    --button-background-color: var(--button-background-dark-hover-color, #2d2e2f);
 }
 
 .button--focus:not(.button--unreactive):not(.button--disabled), .button:not(.button--unreactive):not(.button--disabled):focus-visible {

@@ -214,17 +214,18 @@ export class MarkPreview {
             const resetStyleUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "dist/media/reset.css"));
             const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "dist/media/script.js"));
 
-            const vueAppUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "dist/frontend/namucode-client-frontend.mjs"));
+            const vueAppUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "dist/frontend/assets/main.js"));
+            // const vueAppStyleUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "dist/frontend/namucode-client-frontend.css"));
 
-            const styleUriList = [];
-            for (const css of ["default.css", "github-dark-dimmed.min.css", "github.min.css", "ionicons.min.css", "katex.min.css", "wiki.css", "wikiContent.css", "wikiCategory.css", /* "button.css" */]) {
-                styleUriList.push(webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "dist/frontend/assets/css/" + css)));
-            }
+            // const styleUriList = [];
+            // for (const css of ["default.css", "github-dark-dimmed.min.css", "github.min.css", "ionicons.min.css", "katex.min.css", "wiki.css", "wikiContent.css", "wikiCategory.css", "modal.css", "selectMenu.css", "setting.css", "settingItem.css", "settingItemCheckbox.css", "settingItemSelect.css", /* "button.css" */]) {
+            //     styleUriList.push(webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "dist/frontend/assets/css/" + css)));
+            // }
 
-            const stylesheetFlatten = styleUriList
-                .map((v) => `<link href="${v}" rel="stylesheet" />`)
-                .map((v) => v.toString())
-                .join("\n");
+            // const stylesheetFlatten = styleUriList
+            //     .map((v) => `<link href="${v}" rel="stylesheet" />`)
+            //     .map((v) => v.toString())
+            //     .join("\n");
 
             // Use a nonce to only allow specific scripts to be run
             const nonce = getNonce();
@@ -238,16 +239,14 @@ export class MarkPreview {
                     <meta http-equiv="Content-Security-Policy" content="default-src 'none';
                             style-src ${webview.cspSource} 'unsafe-inline';
                             img-src ${webview.cspSource} https://i.ytimg.com data: 'unsafe-inline';
-                            font-src ${webview.cspSource} 'unsafe-inline';
+                            font-src ${webview.cspSource} data:;
                             frame-src https://www.youtube.com https://*.nicovideo.jp https://tv.naver.com;
                             script-src 'nonce-${nonce}';">
-    
                     <meta http-equiv="Permissions-Policy"
                             content="fullscreen=(self), accelerometer=*, gyroscope=*, encrypted-media=*">
     
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <link href="${resetStyleUri}" rel="stylesheet" />
-                    ${stylesheetFlatten}
                     <title>Namucode Preview</title>
             </head>
             <body>
@@ -389,6 +388,7 @@ export class MarkPreview {
                 }
             }
 
+            webview.postMessage({ type: "updateTitle", title: path.basename(document.fileName) })
             webview.postMessage({ type: "updateContent", newContent: html, newCategories: categories, newUserbox: { parameterAlert: includeData } });
         }
 

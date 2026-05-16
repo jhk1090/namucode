@@ -1,11 +1,17 @@
 <template>
+  <a href="#" class="dropdown-item" @click.prevent="openSettingModal">설정</a>
   <div ref="wikiContentContainer">
+    <div class="title">
+      <h1 ref="title" />
+    </div>
     <WikiContent ref="wikiContent" />
+    <ModalsContainer/>
   </div>
 </template>
 <script>
 import Common from '@/mixins/common'
 import WikiContent from '@/components/wiki/wikiContent';
+import SettingModal from "@/components/setting";
 
 export default {
   mixins: [Common],
@@ -20,6 +26,9 @@ export default {
   },
   methods: {
     handleMessage(e) {
+      if (e.data.type === 'updateTitle') {
+        this.$refs.title.innerText = e.data.title
+      }
       if (e.data.type === 'updateContent') {
         if (e.data.newContent !== undefined) this.$refs.wikiContent.updateContent(e.data.newContent)
         if (e.data.newCategories !== undefined) this.$refs.wikiContent.updateCategories(e.data.newCategories)
@@ -35,6 +44,9 @@ export default {
           this.$refs.wikiContentContainer.classList.remove("theseed-dark-mode")
         }
       }
+    },
+    openSettingModal() {
+      this.$vfm.show({ component: SettingModal });
     }
   }
 }

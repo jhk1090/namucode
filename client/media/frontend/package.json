@@ -3,6 +3,7 @@
     "version": "0.0.0",
     "description": "나무코드 클라이언트 프론트엔드 부분",
     "author": "jhk1090 & hyonsu",
+    "type": "module",
     "scripts": {
         "dev": "vite",
         "build": "vite build",
@@ -10,15 +11,17 @@
     },
     "dependencies": {
         "@floating-ui/vue": "^1.1.6",
+        "@justinribeiro/lite-youtube": "^1.8.2",
         "@msgpack/msgpack": "^3.1.1",
         "floating-vue": "^5.2.2",
         "vite-plugin-static-copy": "^3.1.4",
         "vue": "^3.5.17",
-        "vue-final-modal": "^3.4.11",
-        "@justinribeiro/lite-youtube": "^1.8.2"
+        "vue-final-modal": "^3.4.11"
     },
     "devDependencies": {
         "@vitejs/plugin-vue": "^5.2.3",
-        "vite": "^6.2.4"
+        "vite": "^6.2.4",
+        "vite-plugin-css-injected-by-js": "^5.0.1",
+        "vite-plugin-singlefile": "^2.3.3"
     }
 }
