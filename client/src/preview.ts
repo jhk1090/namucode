@@ -304,11 +304,12 @@ export class MarkPreview {
             let workspaceDocuments = []
             if (workspaceReference && currentFolder) {
                 const namuFiles = await vscode.workspace.findFiles("**/*.namu")  
+                const decoder = new TextDecoder('utf-8');
 
                 workspaceDocuments.push(...await Promise.all(
                     namuFiles.map(async (file) => {
                         const { namespace, title } = await getNamespaceAndTitle(currentFolder.uri.fsPath, file.fsPath)
-                        const content = await vscode.workspace.fs.readFile(file);
+                        const content = decoder.decode(await vscode.workspace.fs.readFile(file))
     
                         return {
                             namespace,
