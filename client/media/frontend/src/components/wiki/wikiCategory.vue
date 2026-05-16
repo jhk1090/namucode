@@ -32,7 +32,9 @@ export default {
   data() {
     return {
       isFold: true,
-      showCurtain: false
+      showCurtain: false,
+      windowWidth: window.innerWidth,
+      resizeTimeout: null
     }
   },
   methods: {
@@ -48,10 +50,20 @@ export default {
       if(!el) return
 
       this.showCurtain = el.scrollHeight > el.clientHeight
+    },
+    handleResize() {
+      clearTimeout(this.resizeTimeout);
+      this.resizeTimeout = setTimeout(async () => {
+        await this.recalculate()
+      }, 200);
     }
   },
   mounted() {
     this.recalculate()
+    window.addEventListener('resize', this.handleResize);
+  },
+  unmounted() {
+    window.removeEventListener('resize', this.handleResize);
   },
   watch: {
     categories() {
