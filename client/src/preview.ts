@@ -388,7 +388,10 @@ export class MarkPreview {
                 }
             }
 
+            const referencedTitles = workspaceDocuments.map(document => document.title)
+
             webview.postMessage({ type: "updateTitle", title: path.basename(document.fileName) })
+            webview.postMessage({ type: "updateReferenced", referenced: referencedTitles })
             webview.postMessage({ type: "updateContent", newContent: html, newCategories: categories, newUserbox: { parameterAlert: includeData }, newKey: Date.now() });
         }
 
