@@ -1,5 +1,5 @@
 <template>
-  <SettingItemSelect label="테마" ckey="wiki.theme" default="auto">
+  <SettingItemSelect label="테마" ckey="wiki.theme" default="auto" @change="changeTheme">
     <option value="auto">자동 (시스템 설정)</option>
     <option value="light">라이트</option>
     <option value="dark">다크</option>
@@ -36,6 +36,19 @@ export default {
   components: {
     SettingItemCheckbox,
     SettingItemSelect
+  },
+  inject: ["triggerHandleMessage"],
+  methods: {
+    changeTheme(e) {
+      const selectedValue = e.target ? e.target.value : e;
+      
+      this.triggerHandleMessage({
+        data: {
+          type: 'updateTheme',
+          themeKind: selectedValue
+        }
+      }); 
+    }
   }
 }
 </script>
