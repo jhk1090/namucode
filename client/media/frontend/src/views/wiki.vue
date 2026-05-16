@@ -4,7 +4,7 @@
     <div class="title">
       <h1 ref="title" />
     </div>
-    <WikiContent ref="wikiContent" />
+    <WikiContent ref="wikiContent" :key="currentKey" />
     <ModalsContainer/>
   </div>
 </template>
@@ -18,6 +18,14 @@ export default {
   components: {
     WikiContent
   },
+  data() {
+    return {
+      currentContent: '',
+      currentCategories: [],
+      currentUserbox: { parameterAlert: {} },
+      currentKey: 0
+    }
+  },
   mounted() {
     window.addEventListener("message", this.handleMessage)
   },
@@ -30,9 +38,18 @@ export default {
         this.$refs.title.innerText = e.data.title
       }
       if (e.data.type === 'updateContent') {
-        if (e.data.newContent !== undefined) this.$refs.wikiContent.updateContent(e.data.newContent)
-        if (e.data.newCategories !== undefined) this.$refs.wikiContent.updateCategories(e.data.newCategories)
-        if (e.data.newUserbox !== undefined) this.$refs.wikiContent.updateUserbox(e.data.newUserbox)
+        this.currentContent = e.data.newContent ?? this.currentContent
+        this.currentCategories = e.data.newCategories ?? this.currentCategories
+        this.currentUserbox = e.data.newUserbox ?? this.currentUserbox
+        this.currentKey = e.data.newKey ?? this.currentKey
+
+        this.$nextTick(() => {
+          if (this.$refs.wikiContent) {
+            this.$refs.wikiContent.updateContent(this.currentContent)
+            this.$refs.wikiContent.updateCategories(this.currentCategories)
+            this.$refs.wikiContent.updateUserbox(this.currentUserbox)
+          }
+        })
       }
       if (e.data.type === 'updateTheme') {
         let finalTheme = e.data.themeKind;

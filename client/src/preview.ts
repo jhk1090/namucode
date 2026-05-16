@@ -389,7 +389,7 @@ export class MarkPreview {
             }
 
             webview.postMessage({ type: "updateTitle", title: path.basename(document.fileName) })
-            webview.postMessage({ type: "updateContent", newContent: html, newCategories: categories, newUserbox: { parameterAlert: includeData } });
+            webview.postMessage({ type: "updateContent", newContent: html, newCategories: categories, newUserbox: { parameterAlert: includeData }, newKey: Date.now() });
         }
 
         (async () => {
