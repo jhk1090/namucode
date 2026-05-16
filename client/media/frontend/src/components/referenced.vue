@@ -5,7 +5,7 @@
       <h1>참조된 문서 목록</h1>
       <div>
         <div>전체 {{referencedList.length}}개 문서</div>
-        <div :class="{ 'many-wrapper': Object.keys(referenced.referencedPerChar).length >= 3 }">
+        <div :class="{ 'many-wrapper': Object.keys(referenced.referencedPerChar).length >= rowLength }" :style="{ 'column-count': rowLength }">
           <div v-for="(documents, char) in referenced.referencedPerChar">
             <h3>{{char}}</h3>
             <ul>
@@ -31,13 +31,44 @@ export default {
   props: {
     referencedList: Array
   },
+  data() {
+    return {
+      resizeTimeout: null,
+      rowLength: 3
+    }
+  },
   methods: {
     pageProps(name, category) {
       return {
         prev: category.prevItem ? { query: { namespace: name, cuntil: category.prevItem } } : null,
         next: category.nextItem ? { query: { namespace: name, cfrom: category.nextItem } } : null
       }
+    },
+    calculateRow() {
+      const width = window.innerWidth
+
+      if (width >= 500) {
+        this.rowLength = 3;
+      } else if (width >= 300) {
+        this.rowLength = 2;
+      } else {
+        this.rowLength = 1;
+      }
+    },
+    handleResize() {
+      clearTimeout(this.resizeTimeout);
+      
+      this.resizeTimeout = setTimeout(() => {
+        this.calculateRow();  
+      }, 200);
     }
+  },
+  mounted() {
+    this.calculateRow();
+    window.addEventListener('resize', this.handleResize);
+  },
+  unmounted() {
+    window.removeEventListener('resize', this.handleResize);
   },
   computed: {
     referenced() {
@@ -106,9 +137,9 @@ h2, h3 {
   padding-bottom: 5px;
 }
 
-.many-wrapper {
+/* .many-wrapper {
   column-count: 3;
-}
+} */
 
 .many-wrapper>div {
   page-break-inside: avoid;
