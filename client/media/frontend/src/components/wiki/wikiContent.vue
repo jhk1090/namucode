@@ -151,8 +151,8 @@ export default {
             if(img.getAttribute('height'))
               video.setAttribute('height', img.getAttribute('height'))
 
-            // if(!disableImageLazy)
-            //   video.setAttribute('loading', 'lazy')
+            if(!disableImageLazy)
+              video.setAttribute('loading', 'lazy')
 
             parent.insertBefore(video, img)
             addInfoBtn()
