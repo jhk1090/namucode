@@ -368,6 +368,10 @@ export class MarkPreview {
                 includeData[key] = unescape(value)
             }
 
+            if (Object.keys(includeData).length === 0) {
+                includeData = null;
+            }
+
             const timeout = setTimeout(() => {
                 // console.log("Termination")
                 this.workerTerminator.abort()
@@ -517,7 +521,7 @@ interface IRendererParams {
     document: { namespace: string; title: string };
     workspaceDocuments: any[];
     config: { maxParsingDepth: number; extensionPath: string; isEditorComment: boolean; maxLength: number; maxRenderingTimeout: number; internalLinkDomain: string; };
-    includeData: { [key: string]: string };
+    includeData: { [key: string]: string } | null;
     signal: AbortSignal;
 }
 
