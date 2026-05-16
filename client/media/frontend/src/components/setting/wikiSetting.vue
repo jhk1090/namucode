@@ -4,7 +4,7 @@
     <option value="light">라이트</option>
     <option value="dark">다크</option>
   </SettingItemSelect>
-  <SettingItemCheckbox label="내용과 링크가 다른 링크 펼치기" ckey="wiki.unfold_wiki_link" />
+  <SettingItemCheckbox label="내용과 링크가 다른 링크 펼치기" ckey="wiki.unfold_wiki_link" @change="refreshContent" />
   <SettingItemCheckbox label="표 워드랩 사용 안 함" ckey="wiki.nowrap_wiki_table" />
   <SettingItemCheckbox label="문단을 기본으로 접기" ckey="wiki.hide_heading_content" @change="refreshContent" />
   <SettingItemCheckbox label="접기 문법을 기본으로 펼치기" ckey="wiki.show_folding" @change="refreshContent" />

@@ -253,6 +253,38 @@ export default {
 
       if(footnoteType === 'popover') this.setupFootnoteTooltip(element)
 
+      if(store.localConfig['wiki.unfold_wiki_link']) {
+        const links = element.getElementsByClassName('wiki-link-internal')
+        for(let link of links) {
+          if(link.tagName !== 'A') continue
+
+          const title = link.getAttribute('title')
+          if(!title) continue
+          let checkTitle = title
+
+          const anchorPos = title.lastIndexOf('#')
+          if(anchorPos !== -1)
+            checkTitle = title.slice(0, anchorPos)
+
+          if(checkTitle.trim() === link.innerText.trim())
+            continue
+          if(link.getElementsByTagName('img').length)
+            continue
+
+          const unfolded = document.createElement('span')
+          unfolded.classList = 'wiki-link-unfolded'
+          unfolded.innerText = title
+
+          const linkParent = link.parentNode
+          if(linkParent) {
+            if(link.nextSibling)
+              linkParent.insertBefore(unfolded, link.nextSibling)
+            else
+              linkParent.appendChild(unfolded)
+          }
+        }
+      }
+
       const oldDarkStyle = document.getElementById('darkStyle')
       if(oldDarkStyle) oldDarkStyle.remove()
 
