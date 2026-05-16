@@ -1,6 +1,6 @@
 <template>
   <SettingItemSelect label="테마" ckey="wiki.theme" default="auto" @change="changeTheme">
-    <option value="auto">자동 (시스템 설정)</option>
+    <option value="auto">자동 (편집기 테마)</option>
     <option value="light">라이트</option>
     <option value="dark">다크</option>
   </SettingItemSelect>

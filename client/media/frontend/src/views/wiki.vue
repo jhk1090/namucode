@@ -1,6 +1,9 @@
 <template>
   <div ref="wikiContentContainer" class="content-container">
-    <a href="#" class="dropdown-item" @click.prevent="openSettingModal">설정</a>
+    <div class="options">
+      <a href="#" class="options-item" @click.prevent="openSettingModal">설정</a>
+      <a href="#" class="options-item" @click.prevent="toggleTheme">{{ currentTheme === "light" ? "다크" : "라이트" }} 테마로 변경</a>
+    </div>
     <div class="title">
       <h1 ref="title" />
     </div>
@@ -12,6 +15,7 @@
 import Common from '@/mixins/common'
 import WikiContent from '@/components/wiki/wikiContent';
 import SettingModal from "@/components/setting";
+import { store } from '@/store.js'
 
 export default {
   mixins: [Common],
@@ -23,7 +27,8 @@ export default {
       currentContent: '',
       currentCategories: [],
       currentUserbox: { parameterAlert: {} },
-      currentKey: 0
+      currentKey: 0,
+      currentTheme: "auto"
     }
   },
   mounted() {
@@ -53,11 +58,14 @@ export default {
       }
       if (e.data.type === 'updateTheme') {
         let finalTheme = e.data.themeKind;
+        store.localConfigSetValue("wiki.theme", finalTheme)
 
         if (finalTheme === 'auto') {
-          const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          finalTheme = isSystemDark ? 'dark' : 'light';
+          const isBodyDark = document.body.classList.contains("vscode-dark");
+          finalTheme = isBodyDark ? 'dark' : 'light';
         }
+
+        this.currentTheme = finalTheme
 
         if (finalTheme === 'dark') {
           this.$refs.wikiContentContainer.classList.remove("theseed-light-mode");
@@ -70,6 +78,14 @@ export default {
     },
     openSettingModal() {
       this.$vfm.show({ component: SettingModal });
+    },
+    toggleTheme() {
+      this.handleMessage({
+        data: {
+          type: "updateTheme",
+          themeKind: this.currentTheme === "light" ? "dark" : "light"
+        }
+      })
     }
   },
   provide() {
@@ -79,3 +95,10 @@ export default {
   }
 }
 </script>
+<style scoped>
+.options {
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+}
+</style>
