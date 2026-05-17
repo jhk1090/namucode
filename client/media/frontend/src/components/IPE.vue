@@ -17,6 +17,7 @@
           <GeneralButton theme="primary" type="submit">추가</GeneralButton>
         </SeedForm>
         <GeneralButton theme="primary" :whenClick="apply">적용</GeneralButton>
+        <GeneralButton theme="danger" :whenClick="reset">초기화</GeneralButton>
       </div>
     </div>
   </Modal>
@@ -129,6 +130,10 @@ export default {
         command: "updateParameterMap",
         value: JSON.stringify(parameterMap)
       })
+    },
+    reset() {
+      this.refinedParameterMap = {};
+      this.apply();
     }
   },
 }
