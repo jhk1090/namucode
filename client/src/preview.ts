@@ -274,15 +274,7 @@ export class MarkPreview {
             webview.postMessage({ type: "updateContent", newContent: "<h2>미리보기를 준비중입니다. 잠시만 기다려주세요...</h2>" });
         }
 
-        switch (vscode.window.activeColorTheme.kind) {
-            case vscode.ColorThemeKind.Dark:
-            case vscode.ColorThemeKind.HighContrast:
-                webview.postMessage({ type: "updateTheme", themeKind: "dark" })
-                break;
-            default:
-                webview.postMessage({ type: "updateTheme", themeKind: "light" })
-                break;
-        }
+        webview.postMessage({ type: "updateTheme", themeKind: "auto" })
 
         const getConfig = () => {
             const rootConfig = vscode.workspace.getConfiguration("namucode");
