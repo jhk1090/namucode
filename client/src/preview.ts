@@ -215,17 +215,6 @@ export class MarkPreview {
             const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "dist/media/script.js"));
 
             const vueAppUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "dist/frontend/assets/main.js"));
-            // const vueAppStyleUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "dist/frontend/namucode-client-frontend.css"));
-
-            // const styleUriList = [];
-            // for (const css of ["default.css", "github-dark-dimmed.min.css", "github.min.css", "ionicons.min.css", "katex.min.css", "wiki.css", "wikiContent.css", "wikiCategory.css", "modal.css", "selectMenu.css", "setting.css", "settingItem.css", "settingItemCheckbox.css", "settingItemSelect.css", /* "button.css" */]) {
-            //     styleUriList.push(webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "dist/frontend/assets/css/" + css)));
-            // }
-
-            // const stylesheetFlatten = styleUriList
-            //     .map((v) => `<link href="${v}" rel="stylesheet" />`)
-            //     .map((v) => v.toString())
-            //     .join("\n");
 
             // Use a nonce to only allow specific scripts to be run
             const nonce = getNonce();
