@@ -391,7 +391,9 @@ export class MarkPreview {
 
             const referencedTitles = workspaceDocuments.map(document => document.title)
 
-            webview.postMessage({ type: "updateTitle", title: path.basename(document.fileName) })
+            const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath
+
+            webview.postMessage({ type: "updateTitle", title: path.relative(rootPath, document.uri.fsPath).replaceAll(/\\/g, "/").split(".").slice(0, -1).join(".") })
             webview.postMessage({ type: "updateReferenced", referenced: referencedTitles })
             webview.postMessage({ type: "updateParameterMap", parameterMap: includeData })
             webview.postMessage({ type: "updateContent", newContent: html, newCategories: categories, newUserbox: { parameterAlert: includeData }, newKey: Date.now() });

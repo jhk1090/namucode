@@ -6,14 +6,14 @@
       <div>
         <template v-if="refinedParameterMap" v-for="entry in Object.entries(refinedParameterMap).toSorted((a, b) => a[1].order - b[1].order)" :key="entry[1]['order']">
           <SeedForm @submit="onDelete">
-            <input name="key" placeholder="매개변수" required :value="entry[0]" :data-key="entry[0]" @input="onKeyInput">
-            <input name="value" placeholder="값" style="width:40%" :value="entry[1]['value']" :data-key="entry[0]" @input="onValueInput">
+            <InputField name="key" placeholder="매개변수" required :value="entry[0]" :data-key="entry[0]" :whenInput="onKeyInput" />
+            <InputField name="value" placeholder="값" :value="entry[1]['value']" :data-key="entry[0]" :whenInput="onValueInput" />
             <GeneralButton theme="danger" type="submit">삭제</GeneralButton>
           </SeedForm>
         </template>
         <SeedForm @submit="onAdd">
-          <input name="key" placeholder="매개변수" required @input="onNewFormKeyInput">
-          <input name="value" placeholder="값" style="width:40%">
+          <InputField name="key" placeholder="매개변수" required :whenInput="onNewFormKeyInput" />
+          <InputField name="value" placeholder="값" />
           <GeneralButton theme="primary" type="submit">추가</GeneralButton>
         </SeedForm>
         <GeneralButton theme="primary" :whenClick="apply">적용</GeneralButton>
@@ -27,13 +27,15 @@ import Common from '@/mixins/common'
 import Modal from '@/components/modal'
 import GeneralButton from '@/components/generalButton'
 import SeedForm from '@/components/form/seedForm'
+import InputField from '@/components/form/inputField'
 
 export default {
   mixins: [Common],
   components: {
     Modal,
     GeneralButton,
-    SeedForm
+    SeedForm,
+    InputField
   },
   props: {
     parameterMap: Object
