@@ -251,11 +251,26 @@ export class MarkPreview {
             </head>
             <body>
                     <div id="app"></div>
+                    <script>
+                        var vscode = acquireVsCodeApi();
+                    </script>
                     <script type="text/javascript" src="${vueAppUri}" nonce="${nonce}"></script>
                     <script type="text/javascript" src="${scriptUri}" nonce="${nonce}"></script>
             </body>
             </html>
         `;
+            webview.onDidReceiveMessage(
+                message => {
+                    switch (message.command) {
+                        case "updateParameterMap":
+                            const data = JSON.parse(message.value)
+                            this.context.workspaceState.update('includeParameterEditorInput', Object.keys(data).length === 0 ? null : data);
+                            vscode.commands.executeCommand("namucode.retryPreview");
+                    }
+                },
+                undefined,
+                this.context.subscriptions
+            )
             webview.postMessage({ type: "updateContent", newContent: "<h2>미리보기를 준비중입니다. 잠시만 기다려주세요...</h2>" });
         }
 
@@ -397,6 +412,7 @@ export class MarkPreview {
 
             webview.postMessage({ type: "updateTitle", title: path.basename(document.fileName) })
             webview.postMessage({ type: "updateReferenced", referenced: referencedTitles })
+            webview.postMessage({ type: "updateParameterMap", parameterMap: includeData })
             webview.postMessage({ type: "updateContent", newContent: html, newCategories: categories, newUserbox: { parameterAlert: includeData }, newKey: Date.now() });
         }
 

@@ -4,6 +4,7 @@
       <a href="#" class="options-item" @click.prevent="openSettingModal">설정</a>
       <a href="#" class="options-item" @click.prevent="toggleTheme">{{ currentTheme === "light" ? "다크" : "라이트" }} 테마로 변경</a>
       <a href="#" class="options-item" @click.prevent="openReferenced">참조된 문서 목록</a>
+      <a href="#" class="options-item" @click.prevent="openIPE">매개변수 편집기</a>
     </div>
     <div class="title">
       <h1 ref="title" />
@@ -18,6 +19,7 @@ import WikiContent from '@/components/wiki/wikiContent';
 import SettingModal from "@/components/setting";
 import { store } from '@/store.js'
 import Referenced from '@/components/referenced.vue';
+import IPE from '@/components/IPE.vue';
 
 export default {
   mixins: [Common],
@@ -31,7 +33,8 @@ export default {
       currentUserbox: { parameterAlert: {} },
       currentKey: 0,
       currentTheme: "auto",
-      currentReferenced: []
+      currentReferenced: [],
+      currentParameterMap: null
     }
   },
   mounted() {
@@ -81,12 +84,18 @@ export default {
       if (e.data.type === "updateReferenced") {
         this.currentReferenced = e.data.referenced
       }
+      if (e.data.type === "updateParameterMap") {
+        this.currentParameterMap = e.data.parameterMap
+      }
     },
     openSettingModal() {
       this.$vfm.show({ component: SettingModal });
     },
     openReferenced() {
       this.$vfm.show({ component: Referenced, bind: { referencedList: this.currentReferenced }});
+    },
+    openIPE() {
+      this.$vfm.show({ component: IPE, bind: { parameterMap: this.currentParameterMap ?? {} }});
     },
     toggleTheme() {
       this.handleMessage({

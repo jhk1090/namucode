@@ -566,7 +566,7 @@ export default {
 
       this.userbox = value;
       let pairHtml = "";
-      for ([key, value] of Object.entries(this.userbox.parameterAlert)) {
+      for ([key, value] of Object.entries(this.userbox?.parameterAlert ?? {})) {
         pairHtml += `
           <tr>
             <td style="text-align:center; word-break: break-all;">
