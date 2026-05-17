@@ -4,10 +4,10 @@
       <button class="setting-close" @click="props.close">×</button>
       <h1>매개변수 편집기</h1>
       <div>
-        <template v-if="parameterMap" v-for="(value, key) in parameterMap" :key="key">
+        <template v-if="refinedParameterMap" v-for="entry in Object.entries(refinedParameterMap).toSorted((a, b) => a[1].order - b[1].order)" :key="entry[1]['order']">
           <SeedForm @submit="onDelete">
-            <input name="key" placeholder="매개변수" required :value="key" :data-key="key" @input="onKeyInput">
-            <input name="value" placeholder="값" style="width:40%" :value="value" :data-key="key" @input="onValueInput">
+            <input name="key" placeholder="매개변수" required :value="entry[0]" :data-key="entry[0]" @input="onKeyInput">
+            <input name="value" placeholder="값" style="width:40%" :value="entry[1]['value']" :data-key="entry[0]" @input="onValueInput">
             <GeneralButton theme="danger" type="submit">삭제</GeneralButton>
           </SeedForm>
         </template>
@@ -39,15 +39,26 @@ export default {
   },
   data() {
     return {
-      oldParameterMap: this.parameterMap
+      currentOrder: 1,
+      refinedParameterMap: {}
     }
+  },
+  mounted() {
+    const tmp = {};
+
+    for (const [key, value] of Object.entries(this.parameterMap)) {
+      tmp[key] = { value, order: this.currentOrder };
+      this.currentOrder++;
+    }
+
+    this.refinedParameterMap = tmp
   },
   methods: {
     onDelete(e) {
       e.preventDefault()
       
       const key = e.target[0].value
-      delete this.parameterMap[key]
+      delete this.refinedParameterMap[key]
     },
     onAdd(e) {
       e.preventDefault()
@@ -62,7 +73,7 @@ export default {
         return
       }
 
-      if (this.parameterMap[key]) {
+      if (this.refinedParameterMap[key]) {
         e.target[0].setCustomValidity("이미 등록된 키입니다.")
         e.target[0].reportValidity()
         return
@@ -71,7 +82,8 @@ export default {
       e.target[0].value = ""
       e.target[1].value = ""
 
-      this.parameterMap[key] = value;
+      this.refinedParameterMap[key] = { value, order: this.currentOrder }
+      this.currentOrder++;
     },
     onNewFormKeyInput(e) {
       e.target.setCustomValidity("")
@@ -95,29 +107,28 @@ export default {
         return
       }
 
-      if (this.parameterMap[key]) {
+      if (this.refinedParameterMap[key]) {
         e.target.setCustomValidity("이미 등록된 키입니다.")
         e.target.reportValidity()
         return
       }
 
-      this.parameterMap[key] = this.parameterMap[oldKey];
-      // e.target.parentElement.children.filter(child => child.tagName === "INPUT").forEach(child => {
-      //   child.dataset.key = key
-      // })
-      delete this.parameterMap[oldKey];
-      console.log(this.parameterMap)
+      this.refinedParameterMap[key] = { value: this.refinedParameterMap[oldKey].value, order: this.refinedParameterMap[oldKey].order }
+      delete this.refinedParameterMap[oldKey];
     },
     onValueInput(e) {
       const key = e.target.dataset.key
-      this.parameterMap[key] = e.target.value
+      this.refinedParameterMap[key].value = e.target.value
     },
     apply() {
+      const parameterMap = Object.entries(this.refinedParameterMap).reduce((acc, [key, item]) => {
+        acc[key] = item.value;
+        return acc;
+      }, {});
       vscode.postMessage({
         command: "updateParameterMap",
-        value: JSON.stringify(this.parameterMap)
+        value: JSON.stringify(parameterMap)
       })
-      this.oldParameterMap = this.parameterMap
     }
   },
 }
