@@ -70,26 +70,28 @@ connection.onInitialized(async () => {
 		// Register for all configuration changes.
 		connection.client.register(DidChangeConfigurationNotification.type, undefined);
 		const result = await connection.workspace.getConfiguration("namucode")
-		globalSettings = result.parser
+		globalSettings = result.codeAnalysisCompletion
 	}
 
 	resolveInitialization()
 });
 
 interface ParserSettings {
-	maxParsingDepth: number;
-	maxParsingCharacter: number;
+	maxCharacter: number;
+	disableCodeAnalysis: boolean;
+	disableCompletion: boolean;
 }
 
-const defaultSettings: ParserSettings = { maxParsingDepth: 30, maxParsingCharacter: 1500000 };
+const defaultSettings: ParserSettings = { maxCharacter: 150000, disableCodeAnalysis: false, disableCompletion: false };
 let globalSettings: ParserSettings = defaultSettings;
+let isMaxCharacterAlerted = false;
 
 connection.onDidChangeConfiguration(async (_change) => {
 	if (hasConfigurationCapability) {
-		globalSettings = (await connection.workspace.getConfiguration("namucode")).parser
+		globalSettings = (await connection.workspace.getConfiguration("namucode")).codeAnalysisCompletion
 	} else {
 		globalSettings = (
-			_change.settings.namucode.parser || defaultSettings
+			_change.settings.namucode.codeAnalysisCompletion || defaultSettings
 		)
 	}
 
@@ -109,13 +111,29 @@ documents.onDidChangeContent(async (change) => {
 });
 
 async function fetchDocumentSymbol(document: TextDocument) {
-	const settings = { editorComment: false, ...globalSettings };
+	const settings = { editorComment: false, maxParsingDepth: 30, ...globalSettings };
+	const isOverMaxCharacter = document.getText().length > settings.maxCharacter
+	const disableAll = settings.disableCodeAnalysis && settings.disableCompletion
 
-	const result = (document.getText().length <= settings.maxParsingCharacter) ? parser(document.getText(), { editorComment: settings.editorComment, maxParsingDepth: settings.maxParsingDepth }) : {};
-	languageModes = getLanguageModes(result, document);
+	if (isOverMaxCharacter && !isMaxCharacterAlerted) {
+		connection.window.showWarningMessage(`코드 분석 및 자동 완성 최대 글자 수인 ${settings.maxCharacter}자가 넘어가 코드 분석과 자동 완성이 중지되었습니다.`);
+		isMaxCharacterAlerted = true;
+	}
+
+	if (!isOverMaxCharacter) {
+		isMaxCharacterAlerted = false;
+	}
+
+	if (isOverMaxCharacter || disableAll) {
+		languageModes = null;
+		return;
+	}
+
+	languageModes = parser(document.getText(), { editorComment: settings.editorComment, maxParsingDepth: settings.maxParsingDepth })
 }
 
 async function validateTextDocument(textDocument: TextDocument) {
+	if (globalSettings.disableCodeAnalysis) return;
 	if (!languageModes) return;
 	try {
 		const version = textDocument.version;
@@ -143,6 +161,10 @@ async function validateTextDocument(textDocument: TextDocument) {
 }
 
 connection.onCompletion(async (textDocumentPosition, _token) => {
+	if (globalSettings.disableCompletion) {
+		return null;
+	}
+
 	const document = documents.get(textDocumentPosition.textDocument.uri);
 	if (!document) {
 		return null;
