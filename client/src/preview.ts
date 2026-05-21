@@ -304,7 +304,7 @@ export class MarkPreview {
 
                 workspaceDocuments.push(...await Promise.all(
                     namuFiles.map(async (file) => {
-                        const { namespace, title } = await getNamespaceAndTitle(currentFolder.uri.fsPath, file.fsPath)
+                        const { namespace, title } = getNamespaceAndTitle(currentFolder.uri.fsPath, file.fsPath)
                         const content = decoder.decode(await vscode.workspace.fs.readFile(file))
     
                         return {
@@ -357,7 +357,7 @@ export class MarkPreview {
 
         const runRendering = async (currentFolder: vscode.WorkspaceFolder, parsedResult, workspaceDocuments) => {
             const config = getConfig()
-            const { namespace, title } = await getNamespaceAndTitle(currentFolder ? currentFolder.uri.fsPath : path.dirname(document.uri.fsPath), document.uri.fsPath)
+            const { namespace, title } = getNamespaceAndTitle(currentFolder ? currentFolder.uri.fsPath : path.dirname(document.uri.fsPath), document.uri.fsPath)
             let includeData = {...this.context.workspaceState.get("includeParameterEditorInput") as { [key: string]: string } ?? {}}
             const unescape = s => s.replace(/\\(.)/g, "$1");
             for (const [key, value] of Object.entries(includeData)) {
@@ -439,8 +439,7 @@ function getNonce() {
     return text;
 }
 
-const allowedNamespace = ["분류", "틀", "사용자"];
-async function getNamespaceAndTitle(parentPath: string, childPath: string) {
+function getNamespaceAndTitle(parentPath: string, childPath: string) {
     let relativePath = path.relative(parentPath, childPath)
     let namespace = "문서";
 
@@ -448,21 +447,6 @@ async function getNamespaceAndTitle(parentPath: string, childPath: string) {
     relativePath = relativePath.replace(/\\/g, "/")
 
     let title = relativePath.slice(0, -extension.length)
-    let namespaceSplitted = title.split(".")
-    let target = namespaceSplitted.at(-1)
-    if (allowedNamespace.includes(target)) {
-        // 분류는 namespace = 분류, title = 문서명
-        if (target === "분류") {
-            namespace = namespaceSplitted.at(-1)
-            namespaceSplitted.splice(-1, 1)
-            title = namespaceSplitted.join(".")
-        // 틀은 namespace = 문서, title = 틀
-        } else {
-            let namespaceTmp = target
-            namespaceSplitted.splice(-1, 1)
-            title = namespaceTmp + ":" + namespaceSplitted.join(".")
-        }
-    }
 
     return { namespace, title }
 }
