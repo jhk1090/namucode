@@ -284,7 +284,7 @@ export class MarkPreview {
                 maxParsingCharacter,
                 internalLinkDomain,
                 extensionPath: this.extensionUri.fsPath,
-                isEditorComment: MarkPreview.currentPanels[this.panelId].isEditorComment
+                isEditorComment: MarkPreview.currentPanels[this.panelId]?.isEditorComment ?? false
             }
         }
 
