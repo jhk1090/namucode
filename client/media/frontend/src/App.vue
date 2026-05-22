@@ -65,7 +65,7 @@ export default {
         this.handleMessage({
           data: {
             type: "updateTheme",
-            themeKind: e.data.setting["wiki.theme"]
+            themeKind: e.data.setting?.["wiki.theme"] ?? "auto"
           }
         })
       }

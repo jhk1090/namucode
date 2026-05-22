@@ -268,7 +268,6 @@ export class MarkPreview {
                 undefined,
                 this.context.subscriptions
             )
-            webview.postMessage({ type: "updateContent", newContent: "<h2>미리보기를 준비중입니다. 잠시만 기다려주세요...</h2>" });
         }
 
         const getConfig = () => {
