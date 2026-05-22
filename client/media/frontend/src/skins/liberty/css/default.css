@@ -108,10 +108,10 @@ del, s, strike {
 /* 백그라운드 색 지정 End*/
 
 /* 컨텐츠 넓이 수정 및 가운대 정렬 */
-.Liberty .nav-wrapper .navbar, .Liberty .content-wrapper {
+/* .Liberty .nav-wrapper .navbar, .Liberty .content-wrapper {
     max-width: 1200px;
     margin: 0 auto;
-}
+} */
 /* 컨텐츠 넓이 수정 및 가운대 정렬 End */
 
 /* 네비 수정 */
@@ -450,7 +450,7 @@ del, s, strike {
 }
 
 .Liberty .content-wrapper .liberty-content {
-    margin-right: 16rem;
+    /* margin-right: 16rem; */
     padding: 0;
     padding-bottom: 1rem;
     word-break: break-all;
