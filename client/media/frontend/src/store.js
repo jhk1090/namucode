@@ -22,12 +22,13 @@ export const store = reactive({
 		"page.parameterMap": null
   },
   localConfigSetValue(key, value) {
+		if (value === undefined || value === null) return;
     this.localConfig[key] = value
     localStorage.setItem('thetree_settings', JSON.stringify(this.localConfig))
   },
 	localConfigMapSetValue(map = {}) {
 		for (const [key, value] of Object.entries(map)) {
-			if (!value) continue;
+			if (value === undefined || value === null) continue;
 			this.localConfig[key] = value
     	localStorage.setItem('thetree_settings', JSON.stringify(this.localConfig))
 		}
