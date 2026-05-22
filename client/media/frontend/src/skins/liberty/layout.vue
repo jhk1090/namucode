@@ -4,14 +4,17 @@
         <div class="nav-wrapper" :class="{ 'navbar-fixed-top': false }">
             <nav class="navbar navbar-dark">
                 <ul class="nav navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link"><span class="fa fa-refresh"></span><span class="hide-title">최근 변경</span></a>
+                    <li class="nav-item" @click="openSettingModal">
+                        <a class="nav-link"><span class="fa fa-gear"></span><span class="hide-title">설정</span></a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link"><span class="fa fa-comments"></span><span class="hide-title">최근 토론</span></a>
+                    <li class="nav-item" @click="toggleTheme">
+                        <a class="nav-link"><span class="fa fa-moon-o"></span><span class="hide-title">테마로 변경</span></a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link"><span class="fa fa-random"></span><span class="hide-title">임의 문서</span></a>
+                    <li class="nav-item" @click="openReferenced">
+                        <a class="nav-link"><span class="fa fa-list"></span><span class="hide-title">참조된 문서 목록</span></a>
+                    </li>
+                    <li class="nav-item" @click="openIPE">
+                        <a class="nav-link"><span class="fa fa-pencil-square-o"></span><span class="hide-title">매개변수 편집기</span></a>
                     </li>
                     <!-- <li class="nav-item">
                         <dropdown>
@@ -115,8 +118,12 @@ import Common from '@/mixins/common';
 import { store } from '@/store.js'
 import Wiki from '@/views/wiki.vue';
 import Dropdown from './components/dropdown';
+import SettingModal from "@/components/setting";
+import Referenced from '@/components/referenced.vue';
+import IPE from '@/components/IPE.vue';
 
 export default {
+    inject: ["triggerHandleMessage"],
     mixins: [Common],
     components: {
         Wiki,
@@ -181,6 +188,23 @@ export default {
         },
         selectByTheme(light, dark) {
             return store.localConfig["wiki.calculatedTheme"] === 'dark' ? dark : light;
+        },
+        openSettingModal() {
+            this.$vfm.show({ component: SettingModal });
+        },
+        openReferenced() {
+            this.$vfm.show({ component: Referenced, bind: { referencedList: store.localConfig["page.referenced"] } });
+        },
+        openIPE() {
+            this.$vfm.show({ component: IPE, bind: { parameterMap: store.localConfig["page.parameterMap"] ?? {} } });
+        },
+        toggleTheme() {
+            this.triggerHandleMessage({
+                data: {
+                    type: "updateTheme",
+                    themeKind: store.localConfig["wiki.calculatedTheme"] === "light" ? "dark" : "light"
+                }
+            })
         }
     }
 }

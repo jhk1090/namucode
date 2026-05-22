@@ -1,7 +1,5 @@
 <template>
-  <div ref="root" class="content-container">
-    <LibertySkin />
-  </div>
+  <LibertySkin />
 </template>
 
 <script>
@@ -49,11 +47,11 @@ export default {
         )
 
         if (finalTheme === 'dark') {
-          this.$refs.root.classList.remove("theseed-light-mode");
-          this.$refs.root.classList.add("theseed-dark-mode");
+          document.body.classList.remove("theseed-light-mode");
+          document.body.classList.add("theseed-dark-mode");
         } else {
-          this.$refs.root.classList.add("theseed-light-mode");
-          this.$refs.root.classList.remove("theseed-dark-mode");
+          document.body.classList.add("theseed-light-mode");
+          document.body.classList.remove("theseed-dark-mode");
         }
       }
       if (e.data.type === "updateReferenced") {

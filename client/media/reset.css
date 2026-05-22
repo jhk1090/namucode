@@ -9,74 +9,74 @@ html, body {
 	min-height: 100vh;
 }
 
-/* div.theseed-dark-mode {
+/* .theseed-dark-mode {
 	background-color: #1c1d1f;
 }
 
-div.theseed-dark-mode {
+.theseed-dark-mode {
 	color: #e0e0e0
 } */
 
-div.theseed-dark-mode a, div.theseed-dark-mode a code {
+.theseed-dark-mode a, .theseed-dark-mode a code {
 	text-decoration: none;
 }
 
-div.theseed-dark-mode p>a {
+.theseed-dark-mode p>a {
 	text-decoration: unset;
 }
 
-div.theseed-dark-mode a:hover {
+.theseed-dark-mode a:hover {
 	text-decoration: underline;
 }
 
-div.theseed-dark-mode code {
+.theseed-dark-mode code {
 	color: unset;
 	background-color: unset;
 	padding: unset;
 	border-radius: unset;
 }
 
-div.theseed-dark-mode pre code {
+.theseed-dark-mode pre code {
 	padding: unset;
 }
 
-div.theseed-dark-mode blockquote {
+.theseed-dark-mode blockquote {
 	background: unset;
 	border-color: unset;
 }
 
-/* div.theseed-light-mode {
+/* .theseed-light-mode {
 	background-color: #fff;
 }
 
-div.theseed-light-mode {
+.theseed-light-mode {
 	color: #212529
 } */
 
-div.theseed-light-mode a, div.theseed-light-mode a code {
+.theseed-light-mode a, .theseed-light-mode a code {
 	text-decoration: none;
 }
 
-div.theseed-light-mode p>a {
+.theseed-light-mode p>a {
 	text-decoration: unset;
 }
 
-div.theseed-light-mode a:hover {
+.theseed-light-mode a:hover {
 	text-decoration: underline;
 }
 
-div.theseed-light-mode code {
+.theseed-light-mode code {
 	color: unset;
 	background-color: unset;
 	padding: unset;
 	border-radius: unset;
 }
 
-div.theseed-light-mode pre code {
+.theseed-light-mode pre code {
 	padding: unset;
 }
 
-div.theseed-light-mode blockquote {
+.theseed-light-mode blockquote {
 	background: unset;
 	border-color: unset;
 }
