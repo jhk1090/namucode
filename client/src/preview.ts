@@ -279,7 +279,7 @@ export class MarkPreview {
                 maxParsingCharacter,
                 internalLinkDomain,
                 extensionPath: this.extensionUri.fsPath,
-                isEditorComment: this.isEditorComment
+                isEditorComment: MarkPreview.currentPanels[this.panelId].isEditorComment
             }
         }
 
@@ -396,7 +396,7 @@ export class MarkPreview {
             webview.postMessage({ type: "updateTitle", title: path.relative(rootPath, document.uri.fsPath).replaceAll(/\\/g, "/").split(".").slice(0, -1).join(".") })
             webview.postMessage({ type: "updateReferenced", referenced: referencedTitles })
             webview.postMessage({ type: "updateParameterMap", parameterMap: includeData })
-            webview.postMessage({ type: "updateContent", newContent: html, newCategories: categories, newUserbox: { parameterAlert: includeData }, newKey: Date.now() });
+            webview.postMessage({ type: "updateContent", newContent: html, newCategories: categories, newUserbox: { parameterAlert: includeData, editorComment: config.isEditorComment }, newKey: Date.now() });
         }
 
         (async () => {

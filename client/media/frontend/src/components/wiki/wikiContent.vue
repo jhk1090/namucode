@@ -1,8 +1,11 @@
 <template>
   <WikiCategory v-if="store.localConfig['page.categories']?.length && store.localConfig['wiki.category_position'] !== 'bottom'" :categories="store.localConfig['page.categories']" />
-  <div ref="userbox" v-if="store.localConfig['page.userbox']?.parameterAlert && Object.keys(store.localConfig['page.userbox'].parameterAlert).length > 0" class="user-box admin-box">
+  <div ref="userboxParameterAlert" v-if="store.localConfig['page.userbox']?.parameterAlert && Object.keys(store.localConfig['page.userbox'].parameterAlert).length > 0" class="user-box admin-box">
     현재 {{ Object.keys(store.localConfig['page.userbox'].parameterAlert).length }}개의 매개변수가 미리보기에 적용되어 있습니다. 매개변수가 적용되면 include 문법을 사용할 수 없습니다.
     <div class="wiki-content" v-html="userboxHtml"></div>
+  </div>
+  <div ref="userboxEditorComment" v-if="store.localConfig['page.userbox']?.editorComment" class="user-box admin-box">
+    고정 주석 미리보기 중입니다. 상단의 미리보기 재시도 버튼을 눌러 중지할 수 있습니다.
   </div>
   <div ref="div" v-html="store.localConfig['page.content']" class="wiki-content" @submit.prevent="formSubmit"></div>
   <WikiCategory v-if="store.localConfig['page.categories']?.length && ['bottom', 'both'].includes(store.localConfig['wiki.category_position'])" :categories="store.localConfig['page.categories']"/>
@@ -94,7 +97,7 @@ export default {
       async handler(newVal) {
         this.updateUserbox(newVal);
         await this.$nextTick();
-        if (this.$refs.userbox) this.setupWikiContent(this.$refs.userbox);
+        if (this.$refs.userboxParameterAlert) this.setupWikiContent(this.$refs.userboxParameterAlert);
       },
       immediate: true
     },

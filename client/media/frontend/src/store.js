@@ -16,7 +16,7 @@ export const store = reactive({
 		"page.title": "",
 		"page.content": "",
 		"page.categories": [],
-		"page.userbox": { parameterAlert: {} },
+		"page.userbox": { parameterAlert: {}, editorComment: false },
 		"page.key": 0,
 		"page.referenced": [],
 		"page.parameterMap": null
