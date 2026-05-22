@@ -4,20 +4,28 @@
       <button class="setting-close" @click="props.close">×</button>
       <h1>매개변수 편집기</h1>
       <div>
-        <template v-if="refinedParameterMap" v-for="entry in Object.entries(refinedParameterMap).toSorted((a, b) => a[1].order - b[1].order)" :key="entry[1]['order']">
-          <SeedForm @submit="onDelete">
-            <InputField name="key" placeholder="매개변수" required :value="entry[0]" :data-key="entry[0]" :whenInput="onKeyInput" />
-            <InputField name="value" placeholder="값" :value="entry[1]['value']" :data-key="entry[0]" :whenInput="onValueInput" />
-            <GeneralButton theme="danger" type="submit">삭제</GeneralButton>
+        <div class="setting-body">
+          <template v-if="refinedParameterMap" v-for="entry in Object.entries(refinedParameterMap).toSorted((a, b) => a[1].order - b[1].order)" :key="entry[1]['order']">
+            <SeedForm @submit="onDelete">
+              <div class="input-group">
+                <InputField name="key" placeholder="매개변수" required :value="entry[0]" :data-key="entry[0]" :whenInput="onKeyInput" />
+                <InputField name="value" placeholder="값" :value="entry[1]['value']" :data-key="entry[0]" :whenInput="onValueInput" />
+              </div>
+              <GeneralButton theme="danger" type="submit">삭제</GeneralButton>
+            </SeedForm>
+          </template>
+          <SeedForm @submit="onAdd">
+            <div class="input-group">
+              <InputField name="key" placeholder="매개변수" required :whenInput="onNewFormKeyInput" />
+              <InputField name="value" placeholder="값" />
+            </div>
+            <GeneralButton theme="primary" type="submit">추가</GeneralButton>
           </SeedForm>
-        </template>
-        <SeedForm @submit="onAdd">
-          <InputField name="key" placeholder="매개변수" required :whenInput="onNewFormKeyInput" />
-          <InputField name="value" placeholder="값" />
-          <GeneralButton theme="primary" type="submit">추가</GeneralButton>
-        </SeedForm>
-        <GeneralButton theme="primary" :whenClick="apply">적용</GeneralButton>
-        <GeneralButton theme="danger" :whenClick="reset">초기화</GeneralButton>
+        </div>
+        <div class="setting-footer">
+          <GeneralButton theme="primary" :whenClick="apply">적용</GeneralButton>
+          <GeneralButton theme="danger" :whenClick="reset">초기화</GeneralButton>
+        </div>
       </div>
     </div>
   </Modal>
@@ -173,6 +181,24 @@ button:focus,button:hover {
 
 div.setting-block {
   padding: 1rem;
+}
+
+div.setting-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+div.setting-body form {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+div.setting-footer {
+  display: flex;
+  gap: 0.3rem;
+  margin-top: 1rem;
 }
 
 h1 {
