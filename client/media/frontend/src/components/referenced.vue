@@ -20,12 +20,10 @@
 <script>
 import Common from '@/mixins/common'
 import Modal from '@/components/modal'
-import PrevNextBtn from '@/components/prevNextBtn'
 
 export default {
   mixins: [Common],
   components: {
-    PrevNextBtn,
     Modal
   },
   props: {

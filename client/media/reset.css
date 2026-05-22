@@ -6,21 +6,18 @@ html, body {
 }
 
 .content-container {
-	padding-left: 20px;
-	padding-right: 20px;
 	min-height: 100vh;
 }
 
-div.theseed-dark-mode {
+/* div.theseed-dark-mode {
 	background-color: #1c1d1f;
 }
 
 div.theseed-dark-mode {
 	color: #e0e0e0
-}
+} */
 
 div.theseed-dark-mode a, div.theseed-dark-mode a code {
-	color: #ec9f19;
 	text-decoration: none;
 }
 
@@ -29,7 +26,6 @@ div.theseed-dark-mode p>a {
 }
 
 div.theseed-dark-mode a:hover {
-	color: #bd7f14;
 	text-decoration: underline;
 }
 
@@ -49,16 +45,15 @@ div.theseed-dark-mode blockquote {
 	border-color: unset;
 }
 
-div.theseed-light-mode {
+/* div.theseed-light-mode {
 	background-color: #fff;
 }
 
 div.theseed-light-mode {
 	color: #212529
-}
+} */
 
 div.theseed-light-mode a, div.theseed-light-mode a code {
-	color: #0275d8;
 	text-decoration: none;
 }
 
@@ -67,7 +62,6 @@ div.theseed-light-mode p>a {
 }
 
 div.theseed-light-mode a:hover {
-	color: #0263b8;
 	text-decoration: underline;
 }
 

@@ -1,11 +1,11 @@
 <template>
-  <WikiCategory v-if="categories && categories.length && store.localConfig['wiki.category_position'] !== 'bottom'" :categories="categories" />
-  <div ref="userbox" v-if="userbox.parameterAlert && Object.keys(userbox.parameterAlert).length > 0" class="user-box admin-box">
-    현재 {{ Object.keys(userbox.parameterAlert).length }}개의 매개변수가 미리보기에 적용되어 있습니다. 매개변수가 적용되면 include 문법을 사용할 수 없습니다.
+  <WikiCategory v-if="store.localConfig['page.categories']?.length && store.localConfig['wiki.category_position'] !== 'bottom'" :categories="store.localConfig['page.categories']" />
+  <div ref="userbox" v-if="store.localConfig['page.userbox']?.parameterAlert && Object.keys(store.localConfig['page.userbox'].parameterAlert).length > 0" class="user-box admin-box">
+    현재 {{ Object.keys(store.localConfig['page.userbox'].parameterAlert).length }}개의 매개변수가 미리보기에 적용되어 있습니다. 매개변수가 적용되면 include 문법을 사용할 수 없습니다.
     <div class="wiki-content" v-html="userboxHtml"></div>
   </div>
-  <div ref="div" v-html="content" class="wiki-content" @submit.prevent="formSubmit"></div>
-  <WikiCategory v-if="categories.length && ['bottom', 'both'].includes(store.localConfig['wiki.category_position'])" :categories="categories"/>
+  <div ref="div" v-html="store.localConfig['page.content']" class="wiki-content" @submit.prevent="formSubmit"></div>
+  <WikiCategory v-if="store.localConfig['page.categories']?.length && ['bottom', 'both'].includes(store.localConfig['wiki.category_position'])" :categories="store.localConfig['page.categories']"/>
   <div ref="popover" v-show="popover.show" id="tooltip" class="popper">
     <div ref="popoverArrow" id="tooltip-arrow" class="popper__arrow"></div>
     <div id="tooltip-content" class="wiki-content" v-html="popover.content"></div>
@@ -26,9 +26,6 @@ export default {
   },
   data() {
     return {
-      content: "",
-      categories: [],
-      userbox: {},
       popover: {
         show: false,
         content: '',
@@ -73,18 +70,33 @@ export default {
       func()
     this.cleanupFunctions.length = 0
   },
+  computed: {
+    pageContent() {
+      return store.localConfig['page.content'];
+    },
+    pageUserbox() {
+      return store.localConfig['page.userbox'];
+    }
+  },
   watch: {
-    async content() {
-      await this.$nextTick()
-      await this.setupWikiContent()
-    },
-    async userboxHtml() {
-      await this.$nextTick()
-      if (this.$refs.userbox) this.setupWikiContent(this.$refs.userbox)
-    },
     'popover.show'(newValue) {
       if(!newValue)
         this.popover.cleanup?.()
+    },
+    pageContent: {
+      async handler() {
+        await this.$nextTick();
+        await this.setupWikiContent();
+      },
+      immediate: true
+    },
+    pageUserbox: {
+      async handler(newVal) {
+        this.updateUserbox(newVal);
+        await this.$nextTick();
+        if (this.$refs.userbox) this.setupWikiContent(this.$refs.userbox);
+      },
+      immediate: true
     },
     $route() {
       this.popover.show = false
@@ -95,6 +107,7 @@ export default {
       return [...element.getElementsByClassName('wiki-fn-content')]
     },
     async setupWikiContent(element = this.$refs.div) {
+      console.log(element)
       {
         const imageHide = store.localConfig['wiki.image_hide']
         const disableImageLazy = store.localConfig['wiki.disable_image_lazy']
@@ -544,13 +557,7 @@ export default {
         input.checked = true
       }
     },
-    updateContent(value) {
-      this.content = value
-    },
-    updateCategories(value) {
-      this.categories = value
-    },
-    updateUserbox(value) {
+    updateUserbox(userbox) {
       function escapeHtml(str) {
         return str.replace(/[&<>"']/g, function(match) {
           switch(match) {
@@ -564,9 +571,8 @@ export default {
         });
       }
 
-      this.userbox = value;
       let pairHtml = "";
-      for ([key, value] of Object.entries(this.userbox?.parameterAlert ?? {})) {
+      for ([key, value] of Object.entries(userbox?.parameterAlert ?? {})) {
         pairHtml += `
           <tr>
             <td style="text-align:center; word-break: break-all;">
