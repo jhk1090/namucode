@@ -254,7 +254,7 @@ export class MarkPreview {
                     switch (message.command) {
                         case "updateParameterMap":
                             data = JSON.parse(message.value)
-                            this.context.workspaceState.update('includeParameterEditorInput', Object.keys(data).length === 0 ? null : data);
+                            this.context.workspaceState.update('includeData', Object.keys(data).length === 0 ? null : data);
                             vscode.commands.executeCommand("namucode.retryPreview");
                             break;
                         case "updatePreviewSetting":
@@ -364,7 +364,7 @@ export class MarkPreview {
         const runRendering = async (currentFolder: vscode.WorkspaceFolder, parsedResult, workspaceDocuments) => {
             const config = getConfig()
             const { namespace, title } = getNamespaceAndTitle(currentFolder ? currentFolder.uri.fsPath : path.dirname(document.uri.fsPath), document.uri.fsPath)
-            let includeData = {...this.context.workspaceState.get("includeParameterEditorInput") as { [key: string]: string } ?? {}}
+            let includeData = {...this.context.workspaceState.get("includeData") as { [key: string]: string } ?? {}}
             const unescape = s => s.replace(/\\(.)/g, "$1");
             for (const [key, value] of Object.entries(includeData)) {
                 includeData[key] = unescape(value)

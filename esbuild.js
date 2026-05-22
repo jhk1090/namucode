@@ -133,9 +133,7 @@ async function copyServerExceptionModules() {
 // 복사할 파일 목록
 const mediaFiles = [
   'script.js',
-  'reset.css',
-  'IPEScript.js',
-  'IPEStyle.css',
+  'reset.css'
 ];
 
 // 원본 경로

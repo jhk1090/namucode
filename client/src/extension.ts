@@ -13,7 +13,6 @@ import { MarkPreview, getWebviewOptions } from './preview';
 import { FoldingRangeProvider } from './providers/FoldingRangeProvider';
 import { DocumentSymbolProvider, TreeSymbol, ParagraphTreeSymbol } from './providers/DocumentSymbolProvider';
 import { SemanticTokenLegend, SemanticTokenProvider } from './providers/SemanticTokenProvider';
-import { IPEProvider } from './providers/IPEProvider';
 
 let client: LanguageClient;
 let activeRules: vscode.Disposable[] = [];
@@ -171,10 +170,6 @@ export async function activate(context: ExtensionContext) {
     vscode.env.openExternal(vscode.Uri.parse("https://github.com/jhk1090/namucode/blob/main/docs/preview.md"));
   });
 
-  vscode.commands.registerCommand("namucode.openIncludeParameterEditorGuideline", () => {
-    vscode.env.openExternal(vscode.Uri.parse("https://github.com/jhk1090/namucode/blob/main/docs/preview.md#틀-매개변수-편집기"));
-  });
-
   const preview = vscode.commands.registerCommand("namucode.preview", async ({ retry = false, editorComment = false }) => {
     const editor = vscode.window.activeTextEditor;
 
@@ -209,14 +204,6 @@ export async function activate(context: ExtensionContext) {
       });
     }
   }
-
-  const includeParameterEditorProvider = new IPEProvider(context.extensionUri, context);
-  context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider(IPEProvider.viewType, includeParameterEditorProvider));
-
-  vscode.commands.registerCommand("namucode.openIncludeParameterEditor", async () => {
-    vscode.commands.executeCommand('namucode-includeParameterEditor.focus');
-  });
 
   const retryPreview = vscode.commands.registerCommand("namucode.retryPreview", () => {
     vscode.commands.executeCommand('namucode.preview', { retry: true });
