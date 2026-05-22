@@ -24,13 +24,27 @@ export const store = reactive({
   localConfigSetValue(key, value) {
 		if (value === undefined || value === null) return;
     this.localConfig[key] = value
-    localStorage.setItem('thetree_settings', JSON.stringify(this.localConfig))
+		
+		const preservableConfig = Object.fromEntries(
+			Object.entries(this.localConfig).filter(([key, value]) => key.startsWith('wiki.'))
+		);
+		vscode.postMessage({
+			command: "updatePreviewSetting",
+			value: JSON.stringify(preservableConfig)
+		})
   },
 	localConfigMapSetValue(map = {}) {
 		for (const [key, value] of Object.entries(map)) {
 			if (value === undefined || value === null) continue;
 			this.localConfig[key] = value
-    	localStorage.setItem('thetree_settings', JSON.stringify(this.localConfig))
 		}
+
+		const preservableConfig = Object.fromEntries(
+			Object.entries(this.localConfig).filter(([key, value]) => key.startsWith('wiki.'))
+		);
+		vscode.postMessage({
+			command: "updatePreviewSetting",
+			value: JSON.stringify(preservableConfig)
+		})
 	}
 })

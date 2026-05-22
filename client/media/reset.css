@@ -5,78 +5,30 @@ html, body {
   height: 100%;
 }
 
-.content-container {
-	min-height: 100vh;
-}
-
-/* .theseed-dark-mode {
-	background-color: #1c1d1f;
-}
-
-.theseed-dark-mode {
-	color: #e0e0e0
-} */
-
-.theseed-dark-mode a, .theseed-dark-mode a code {
+a, a code {
 	text-decoration: none;
 }
 
-.theseed-dark-mode p>a {
+p>a {
 	text-decoration: unset;
 }
 
-.theseed-dark-mode a:hover {
+a:hover {
 	text-decoration: underline;
 }
 
-.theseed-dark-mode code {
+code {
 	color: unset;
 	background-color: unset;
 	padding: unset;
 	border-radius: unset;
 }
 
-.theseed-dark-mode pre code {
+pre code {
 	padding: unset;
 }
 
-.theseed-dark-mode blockquote {
-	background: unset;
-	border-color: unset;
-}
-
-/* .theseed-light-mode {
-	background-color: #fff;
-}
-
-.theseed-light-mode {
-	color: #212529
-} */
-
-.theseed-light-mode a, .theseed-light-mode a code {
-	text-decoration: none;
-}
-
-.theseed-light-mode p>a {
-	text-decoration: unset;
-}
-
-.theseed-light-mode a:hover {
-	text-decoration: underline;
-}
-
-.theseed-light-mode code {
-	color: unset;
-	background-color: unset;
-	padding: unset;
-	border-radius: unset;
-}
-
-.theseed-light-mode pre code {
-	padding: unset;
-}
-
-.theseed-light-mode blockquote {
+blockquote {
 	background: unset;
 	border-color: unset;
 }

@@ -250,11 +250,19 @@ export class MarkPreview {
         `;
             webview.onDidReceiveMessage(
                 message => {
+                    let data;
                     switch (message.command) {
                         case "updateParameterMap":
-                            const data = JSON.parse(message.value)
+                            data = JSON.parse(message.value)
                             this.context.workspaceState.update('includeParameterEditorInput', Object.keys(data).length === 0 ? null : data);
                             vscode.commands.executeCommand("namucode.retryPreview");
+                            break;
+                        case "updatePreviewSetting":
+                            data = JSON.parse(message.value);
+                            this.context.workspaceState.update('previewSetting', data);
+                            break;
+                        default:
+                            break;
                     }
                 },
                 undefined,
@@ -262,8 +270,6 @@ export class MarkPreview {
             )
             webview.postMessage({ type: "updateContent", newContent: "<h2>미리보기를 준비중입니다. 잠시만 기다려주세요...</h2>" });
         }
-
-        webview.postMessage({ type: "updateTheme", themeKind: "auto" })
 
         const getConfig = () => {
             const rootConfig = vscode.workspace.getConfiguration("namucode");
@@ -396,6 +402,7 @@ export class MarkPreview {
             webview.postMessage({ type: "updateTitle", title: path.relative(rootPath, document.uri.fsPath).replaceAll(/\\/g, "/").split(".").slice(0, -1).join(".") })
             webview.postMessage({ type: "updateReferenced", referenced: referencedTitles })
             webview.postMessage({ type: "updateParameterMap", parameterMap: includeData })
+            webview.postMessage({ type: "updateSetting", setting: this.context.workspaceState.get("previewSetting") })
             webview.postMessage({ type: "updateContent", newContent: html, newCategories: categories, newUserbox: { parameterAlert: includeData, editorComment: config.isEditorComment }, newKey: Date.now() });
         }
 

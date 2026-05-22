@@ -60,6 +60,15 @@ export default {
       if (e.data.type === "updateParameterMap") {
         store.localConfigSetValue("page.parameterMap", e.data.parameterMap)
       }
+      if (e.data.type === "updateSetting") {
+        store.localConfigMapSetValue(e.data.setting)
+        this.handleMessage({
+          data: {
+            type: "updateTheme",
+            themeKind: e.data.setting["wiki.theme"]
+          }
+        })
+      }
     }
   },
   provide() {
