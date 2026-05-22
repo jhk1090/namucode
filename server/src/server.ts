@@ -129,7 +129,7 @@ async function fetchDocumentSymbol(document: TextDocument) {
 		return;
 	}
 
-	languageModes = parser(document.getText(), { editorComment: settings.editorComment, maxParsingDepth: settings.maxParsingDepth })
+	languageModes = getLanguageModes(parser(document.getText(), { editorComment: settings.editorComment, maxParsingDepth: settings.maxParsingDepth }), document)
 }
 
 async function validateTextDocument(textDocument: TextDocument) {
