@@ -128,10 +128,6 @@
         margin: 0 0.25rem;
     }
 
-    .Liberty .nav-wrapper .navbar .navbar-nav .nav-item .nav-link .hide-title {
-        display: none;
-    }
-
     .Liberty .content-wrapper .liberty-content .liberty-content-main iframe {
         width: 90%;
         height: 20rem;
@@ -140,8 +136,12 @@
 
 /* Max-width: 520px 테블릿 이하 시작 부분 */
 @media (max-width: 520px) {
-    .Liberty .nav-wrapper .navbar .navbar-nav .nav-item .nav-link {
+    /* .Liberty .nav-wrapper .navbar .navbar-nav .nav-item .nav-link {
         padding: 0.7rem 0.3rem;
+    } */
+
+    .Liberty .nav-wrapper .navbar .navbar-nav .nav-item .nav-link .hide-title {
+        display: none;
     }
 
     .Liberty .nav-wrapper .navbar .navbar-login .view-logout {
@@ -181,9 +181,9 @@
         display: none;
     }
 
-    .Liberty .nav-wrapper .navbar .navbar-nav .nav-item .nav-link {
-        padding: 0.7rem 0.2rem;
-    }
+    /* .Liberty .nav-wrapper .navbar .navbar-nav .nav-item .nav-link {
+        padding: 0.7rem 0.3rem;
+    } */
 
     .Liberty .nav-wrapper .navbar .navbar-login {
         padding-left: 0.4rem;

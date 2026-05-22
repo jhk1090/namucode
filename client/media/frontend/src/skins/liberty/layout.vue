@@ -8,7 +8,11 @@
                         <a class="nav-link"><span class="fa fa-gear"></span><span class="hide-title">설정</span></a>
                     </li>
                     <li class="nav-item" @click="toggleTheme">
-                        <a class="nav-link"><span class="fa fa-moon-o"></span><span class="hide-title">테마로 변경</span></a>
+                        <a class="nav-link">
+                            <span
+                                :class="'fa ' + (store.localConfig['wiki.calculatedTheme'] === 'light' ? 'fa-moon-o' : 'fa-sun-o')"></span>
+                            <span class="hide-title">테마 변경</span>
+                        </a>
                     </li>
                     <li class="nav-item" @click="openReferenced">
                         <a class="nav-link"><span class="fa fa-list"></span><span class="hide-title">참조된 문서 목록</span></a>
