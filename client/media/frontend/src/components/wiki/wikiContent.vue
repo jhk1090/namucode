@@ -107,7 +107,6 @@ export default {
       return [...element.getElementsByClassName('wiki-fn-content')]
     },
     async setupWikiContent(element = this.$refs.div) {
-      console.log(element)
       {
         const imageHide = store.localConfig['wiki.image_hide']
         const disableImageLazy = store.localConfig['wiki.disable_image_lazy']
