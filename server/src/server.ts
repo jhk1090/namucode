@@ -133,7 +133,10 @@ async function fetchDocumentSymbol(document: TextDocument) {
 }
 
 async function validateTextDocument(textDocument: TextDocument) {
-	if (globalSettings.disableCodeAnalysis) return;
+	if (globalSettings.disableCodeAnalysis) {
+		connection.sendDiagnostics({ uri: documents.get(textDocument.uri).uri, diagnostics: [] })
+		return;
+	}
 	if (!languageModes) return;
 	try {
 		const version = textDocument.version;
