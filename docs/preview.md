@@ -1,5 +1,5 @@
 ## 미리보기
-| ![미리보기](../images/namucode_preview_example.png) |
+| ![미리보기](../images/namucode_preview_example_2.png) |
 | :---: |
 | 미리보기 예시 |
 
