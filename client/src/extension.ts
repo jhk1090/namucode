@@ -242,6 +242,51 @@ export async function activate(context: ExtensionContext) {
     )
   );
 
+  class TableSnippetProvider implements vscode.CompletionItemProvider {
+    provideCompletionItems(
+      document: vscode.TextDocument,
+      position: vscode.Position,
+      token: vscode.CancellationToken,
+      context: vscode.CompletionContext
+    ): vscode.ProviderResult<vscode.CompletionItem[] | vscode.CompletionList> {
+      const linePrefix = document.lineAt(position).text.substring(0, position.character);
+      const match = linePrefix.match(/(?:^|\s)table(\d+)\*(\d+)$/);
+
+      if (match) {
+        const rows = parseInt(match[1]);
+        const cols = parseInt(match[2]);
+
+        let snippetText = "";
+        let tabStopIndex = 1;
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            snippetText += `|| \${${tabStopIndex++}:내용} `;
+          }
+          snippetText += "||\n";
+        }
+
+        const item = new vscode.CompletionItem(`table${rows}*${cols}`, vscode.CompletionItemKind.Snippet);
+        item.insertText = new vscode.SnippetString(snippetText);
+        item.detail = `${rows}행 ${cols}열 표 삽입`;
+
+        const matchText = match[0].trimStart();
+        const matchStart = position.character - matchText.length;
+        item.range = new vscode.Range(position.line, matchStart, position.line, position.character);
+
+        return [item];
+      }
+      return undefined;
+    }
+  }
+
+  context.subscriptions.push(
+    vscode.languages.registerCompletionItemProvider(
+      { language: 'namu' },
+      new TableSnippetProvider(),
+      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
+    )
+  );
+
   // Code to connect to sever
   const serverModule = context.asAbsolutePath(path.join("dist", "server.js"));
 
@@ -286,7 +331,7 @@ export function flattenSymbols(symbols: TreeSymbol[]): TreeSymbol[] {
   return result;
 }
 
-// FIXME: Code to sort paragraph
+// Code to sort paragraph
 const sortParagraph = async (context: vscode.ExtensionContext) => {
   const editor = vscode.window.activeTextEditor;
   const symbolProvider = new DocumentSymbolProvider(context);
