@@ -173,9 +173,14 @@ export async function activate(context: ExtensionContext) {
   const preview = vscode.commands.registerCommand("namucode.preview", async ({ retry = false, editorComment = false }) => {
     const editor = vscode.window.activeTextEditor;
 
+    if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length === 0) {
+      vscode.window.showWarningMessage('폴더가 열려 있지 않아 미리보기를 사용할 수 없습니다.');
+      return;
+    }
+
     if (retry) {
       if (!MarkPreview.currentActivePanelId) {
-        vscode.window.showWarningMessage('현재 열려있는 미리보기 탭이 없습니다.');
+        vscode.window.showWarningMessage('현재 열려 있는 미리보기 탭이 없습니다.');
         return;
       }
       MarkPreview.createOrShow({ context, panelId: MarkPreview.currentActivePanelId, isRenderRetry: retry, isEditorComment: editorComment });
@@ -213,9 +218,13 @@ export async function activate(context: ExtensionContext) {
     vscode.commands.executeCommand('namucode.preview', { retry: true, editorComment: true });
   });
 
+  const openPreviewInWeb = vscode.commands.registerCommand("namucode.openPreviewInWeb", () => {
+    vscode.commands.executeCommand("workbench.action.webview.openDeveloperTools");
+  });
+
   const sort = vscode.commands.registerCommand("namucode.paragraphSort", async () => { await sortParagraph(context) });
 
-  context.subscriptions.push(preview, retryPreview, previewEditorComment, sort);
+  context.subscriptions.push(preview, retryPreview, previewEditorComment, openPreviewInWeb, sort);
 
   const symbolProvider = new DocumentSymbolProvider(context);
   vscode.languages.registerDocumentSymbolProvider("namu", symbolProvider);
