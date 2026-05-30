@@ -132,17 +132,17 @@
         {
           "command": "namucode.preview",
           "group": "navigation",
-          "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
+          "when": "editorLangId == 'namu' && resourceExtname == '.namu'"
+        },
+        {
+          "command": "namucode.paragraphSort",
+          "group": "navigation",
+          "when": "editorLangId == 'namu' && resourceExtname == '.namu'"
         },
         {
           "command": "namucode.retryPreview",
           "when": "activeWebviewPanelId =~ /namucode-webview-/",
           "group": "navigation@1"
-        },
-        {
-          "command": "namucode.paragraphSort",
-          "group": "navigation",
-          "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
         },
         {
           "command": "namucode.previewEditorComment",
