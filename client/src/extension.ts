@@ -219,7 +219,11 @@ export async function activate(context: ExtensionContext) {
   });
 
   const openPreviewInWeb = vscode.commands.registerCommand("namucode.openPreviewInWeb", () => {
-    vscode.commands.executeCommand("workbench.action.webview.openDeveloperTools");
+    if (!MarkPreview.currentActivePanelId) {
+      vscode.window.showWarningMessage('현재 열려 있는 미리보기 탭이 없습니다.');
+      return;
+    }
+    MarkPreview.openInWeb(MarkPreview.currentActivePanelId, context.extensionUri);
   });
 
   const sort = vscode.commands.registerCommand("namucode.paragraphSort", async () => { await sortParagraph(context) });

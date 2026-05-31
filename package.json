@@ -122,9 +122,9 @@
       },
       {
         "command": "namucode.openPreviewInWeb",
-        "title": "개발자 도구 열기",
+        "title": "브라우저에서 열기",
         "category": "나무코드",
-        "icon": "$(wrench)"
+        "icon": "$(globe)"
       }
     ],
     "menus": {
