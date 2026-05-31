@@ -118,13 +118,13 @@
         "command": "namucode.previewEditorComment",
         "title": "고정 주석 미리보기",
         "category": "나무코드",
-        "icon": "$(book)"
+        "icon": "$(mention)"
       },
       {
         "command": "namucode.openPreviewInWeb",
         "title": "개발자 도구 열기",
         "category": "나무코드",
-        "icon": "$(file-code)"
+        "icon": "$(wrench)"
       }
     ],
     "menus": {
