@@ -254,7 +254,7 @@ export async function activate(context: ExtensionContext) {
       context: vscode.CompletionContext
     ): vscode.ProviderResult<vscode.CompletionItem[] | vscode.CompletionList> {
       const linePrefix = document.lineAt(position).text.substring(0, position.character);
-      const match = linePrefix.match(/(?:^|\s)table(\d+)\*(\d+)$/);
+      const match = linePrefix.match(/(?:^|\s)table(\d{1,2})\*(\d{1,2})$/);
 
       if (match) {
         const rows = parseInt(match[1]);
