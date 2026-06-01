@@ -1,27 +1,36 @@
-# TODOs
+# TODO
 
-## Progress
+## Ready for Release
 
-- 파일, 문서 링크와 리다이렉트, 유튜브 문법의 링크 URL 연결
-  - TODO: 현재 링크 초안만 구현된 상태.
-  - 중첩 링크 지원
-- colorText에 colorPicker 띄우기
-- tablebgcolor 등 매개변수에 colorPicker 띄우기
+- **Needs Review**
+  - AI 사용 고지: `openInWeb` 메서드를 로컬호스트 서버로 구현하는 코드를 짜는 과정에서 AI를 사용했습니다.
+    - 자체 검수 및 Mac 환경에서의 정상 작동 시험은 완료했습니다.
+    - AI 코드를 원치 않으시는 경우 알려주시면 해당 수정분을 revert한 PR을 다시 제출해드릴 수 있습니다.
+  - 미리보기 아이콘의 순서와 모양을 변경했습니다. (하단 Change에 명시)
+    - `book` 아이콘으로 주석을 직접 연상하기 어렵다고 판단해 `mention`으로 변경해보았으나, 다시 원래 아이콘으로 편집하셔도 무방합니다.
+    - 단, `namucode_preview_example.png`, `namucode_preview_navigation.png`의 스크린샷 파일에도 반영해야 됩니다.
+- **New**
+  - 복잡한 wiki 구문의 렌더링 결과를 개발자 도구로 분석할 수 있도록 미리보기를 브라우저에서 여는 기능 제공
+    - 미리보기에서 웹 아이콘을 눌러 접근 가능
+  - table행\*열 스니펫 추가
+  - 삼중괄호문 감싸기, 벗기기 코드 동작 지원
+    - `Ctrl`(`Cmd`)+`.` 단축키로 코드 동작을 열어 접근 가능
+- **Change**
+  - 미리보기 아이콘 순서 및 모양 변경
+- **Fix**
+  - 워크스페이스(폴더)가 열리지 않아 미리보기할 수 없는 경우 미리보기 아이콘 누를 시 열지 말고 경고
+  - 매개변수 편집기에서 Enter로 다음 행 추가 시 첫 열로 넘어가도록 수정
+  - 현재 탭이 나무마크라면 포커스가 없어도 아이콘을 유지하도록 수정
+  - 미리보기에서, 분류의 링크가 일반 문서로 연결되는 현상 수정
 
-### Bug
+## Feature Draft
+
+- 색상에 colorPicker 띄우기
+- View docs: 문법 도움말 페이지로 연결
+- Code Actions, linting 더 지원
+
+## Bug
+
 - 테이블문 내부에 있는 if문 내부에 OR이 들어가 있으면, 테이블문이 먼저 잡아먹는 오류
 - 미리보기 중 파일 이름이 바뀌면 재시도가 안되는 문제
 - 매개변수가 들어간 style에서 가져온 class는 잘못된 클래스임
-
-## Soon
-
-- View docs: 문법 도움말 페이지로 연결
-- Snippet 더 추가 (표, 기타 매크로, wiki-style 단축어 등)
-- 표, 파일 매개변수 자동 완성
-- 다양한 Code Actions 지원
-- key.tmlanguage.json의 name을 모두 TextMate Grammar 컨벤션에 맞게 수정
-
-## Undecided
-
-- VSCode 내 inline 미리보기 지원
-- 폭넓은 option 지원

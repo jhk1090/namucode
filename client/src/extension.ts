@@ -173,9 +173,14 @@ export async function activate(context: ExtensionContext) {
   const preview = vscode.commands.registerCommand("namucode.preview", async ({ retry = false, editorComment = false }) => {
     const editor = vscode.window.activeTextEditor;
 
+    if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length === 0) {
+      vscode.window.showWarningMessage('폴더가 열려 있지 않아 미리보기를 사용할 수 없습니다.');
+      return;
+    }
+
     if (retry) {
       if (!MarkPreview.currentActivePanelId) {
-        vscode.window.showWarningMessage('현재 열려있는 미리보기 탭이 없습니다.');
+        vscode.window.showWarningMessage('현재 열려 있는 미리보기 탭이 없습니다.');
         return;
       }
       MarkPreview.createOrShow({ context, panelId: MarkPreview.currentActivePanelId, isRenderRetry: retry, isEditorComment: editorComment });
@@ -213,9 +218,17 @@ export async function activate(context: ExtensionContext) {
     vscode.commands.executeCommand('namucode.preview', { retry: true, editorComment: true });
   });
 
+  const openPreviewInWeb = vscode.commands.registerCommand("namucode.openPreviewInWeb", () => {
+    if (!MarkPreview.currentActivePanelId) {
+      vscode.window.showWarningMessage('현재 열려 있는 미리보기 탭이 없습니다.');
+      return;
+    }
+    MarkPreview.openInWeb(MarkPreview.currentActivePanelId, context.extensionUri);
+  });
+
   const sort = vscode.commands.registerCommand("namucode.paragraphSort", async () => { await sortParagraph(context) });
 
-  context.subscriptions.push(preview, retryPreview, previewEditorComment, sort);
+  context.subscriptions.push(preview, retryPreview, previewEditorComment, openPreviewInWeb, sort);
 
   const symbolProvider = new DocumentSymbolProvider(context);
   vscode.languages.registerDocumentSymbolProvider("namu", symbolProvider);
@@ -230,6 +243,140 @@ export async function activate(context: ExtensionContext) {
       { language: 'namu' },
       new SemanticTokenProvider(),
       SemanticTokenLegend
+    )
+  );
+
+  class TableSnippetProvider implements vscode.CompletionItemProvider {
+    provideCompletionItems(
+      document: vscode.TextDocument,
+      position: vscode.Position,
+      token: vscode.CancellationToken,
+      context: vscode.CompletionContext
+    ): vscode.ProviderResult<vscode.CompletionItem[] | vscode.CompletionList> {
+      const linePrefix = document.lineAt(position).text.substring(0, position.character);
+      const match = linePrefix.match(/(?:^|\s)table(\d{1,2})\*(\d{1,2})$/);
+
+      if (match) {
+        const rows = parseInt(match[1]);
+        const cols = parseInt(match[2]);
+
+        let snippetText = "";
+        let tabStopIndex = 1;
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            snippetText += `|| \${${tabStopIndex++}:내용} `;
+          }
+          snippetText += "||\n";
+        }
+
+        const item = new vscode.CompletionItem(`table${rows}*${cols}`, vscode.CompletionItemKind.Snippet);
+        item.insertText = new vscode.SnippetString(snippetText);
+        item.detail = `${rows}행 ${cols}열 표 삽입`;
+
+        const matchText = match[0].trimStart();
+        const matchStart = position.character - matchText.length;
+        item.range = new vscode.Range(position.line, matchStart, position.line, position.character);
+
+        return [item];
+      }
+      return undefined;
+    }
+  }
+
+  context.subscriptions.push(
+    vscode.languages.registerCompletionItemProvider(
+      { language: 'namu' },
+      new TableSnippetProvider(),
+      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
+    )
+  );
+
+  class WikiCodeActionProvider implements vscode.CodeActionProvider {
+    provideCodeActions(
+      document: vscode.TextDocument,
+      range: vscode.Range | vscode.Selection,
+      context: vscode.CodeActionContext,
+      token: vscode.CancellationToken
+    ): vscode.ProviderResult<(vscode.Command | vscode.CodeAction)[]> {
+      const actions: vscode.CodeAction[] = [];
+      const text = document.getText();
+      const cursorOffset = document.offsetAt(range.start);
+
+      // Code Action: Wrap
+      if (!range.isEmpty) {
+        const selected = document.getText(range);
+        [
+          { label: 'wiki', code: `{{{#!wiki \n${selected}\n}}}` },
+          { label: 'style', code: `{{{#!style\n${selected}\n}}}` },
+          { label: 'folding', code: `{{{#!folding \n${selected}\n}}}` },
+          { label: 'if', code: `{{{#!if \n${selected}\n}}}` },
+          { label: 'syntax', code: `{{{#!syntax \n${selected}\n}}}` },
+          { label: '삼중괄호', code: `{{{${selected}}}}` }
+        ].forEach(({ label, code }) => {
+          const action = new vscode.CodeAction(
+            `${label} 구문으로 선택 영역 감싸기`,
+            vscode.CodeActionKind.RefactorRewrite,
+          );
+          action.edit = new vscode.WorkspaceEdit();
+          action.edit.replace(document.uri, range, code);
+          actions.push(action);
+        });
+      }
+
+      // Code Action: Unwrap
+      const tokenRegex = /\{\{\{|\}\}\}/g;
+      const stack: number[] = [];
+      let match, foundBlock: { start: number; end: number } | null = null;
+      let minLength = Infinity;
+      
+      // Block 찾기
+      while ((match = tokenRegex.exec(text)) !== null) {
+        if (match[0] === '{{{') {
+          stack.push(match.index);
+        } else if (stack.length > 0) {
+          const start = stack.pop()!;
+          const end = match.index + 3;
+          if (start <= cursorOffset && cursorOffset <= end && end - start < minLength) {
+            minLength = end - start;
+            foundBlock = { start, end };
+          }
+        }
+      }
+      
+      // Block 해제
+      if (foundBlock) {
+        const { start, end } = foundBlock;
+        const blockText = text.substring(start, end);
+        
+        const startRegex = /^\{\{\{(?:#!([^\r\n]*)\r?\n|([+\-#][^\s]*)\s?|)/;
+        const kindMatch = blockText.match(startRegex);
+        
+        let kind = "삼중괄호";
+        if (kindMatch) {
+          if (kindMatch[1]) kind = kindMatch[1].split(' ')[0];
+          else if (kindMatch[2]) kind = kindMatch[2];
+        }
+
+        const unwrapped = blockText
+          .replace(startRegex, '')
+          .replace(/(?:\r?\n[ \t]*)?\}\}\}$/, '');
+
+        const action = new vscode.CodeAction(`현재 위치한 ${kind} 구문 벗기기`, vscode.CodeActionKind.RefactorRewrite);
+        action.edit = new vscode.WorkspaceEdit();
+        action.edit.replace(document.uri, new vscode.Range(document.positionAt(start), document.positionAt(end)), unwrapped);
+
+        actions.push(action);
+      }
+
+      return actions;
+    }
+  }
+
+  context.subscriptions.push(
+    vscode.languages.registerCodeActionsProvider(
+      { language: 'namu' },
+      new WikiCodeActionProvider(),
+      { providedCodeActionKinds: [vscode.CodeActionKind.RefactorRewrite] }
     )
   );
 
@@ -277,7 +424,7 @@ export function flattenSymbols(symbols: TreeSymbol[]): TreeSymbol[] {
   return result;
 }
 
-// FIXME: Code to sort paragraph
+// Code to sort paragraph
 const sortParagraph = async (context: vscode.ExtensionContext) => {
   const editor = vscode.window.activeTextEditor;
   const symbolProvider = new DocumentSymbolProvider(context);
