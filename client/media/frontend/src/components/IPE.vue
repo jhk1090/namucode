@@ -95,6 +95,7 @@ export default {
 
       this.refinedParameterMap[key] = { value, order: this.currentOrder }
       this.currentOrder++;
+      e.target[0].focus();
     },
     onNewFormKeyInput(e) {
       e.target.setCustomValidity("")

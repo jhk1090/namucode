@@ -13,6 +13,8 @@ import { MarkPreview, getWebviewOptions } from './preview';
 import { FoldingRangeProvider } from './providers/FoldingRangeProvider';
 import { DocumentSymbolProvider, TreeSymbol, ParagraphTreeSymbol } from './providers/DocumentSymbolProvider';
 import { SemanticTokenLegend, SemanticTokenProvider } from './providers/SemanticTokenProvider';
+import { WikiCodeActionProvider } from './providers/CodeActionProvider';
+import { TableSnippetProvider } from './providers/CompletionProvider';
 
 let client: LanguageClient;
 let activeRules: vscode.Disposable[] = [];
@@ -175,7 +177,7 @@ export async function activate(context: ExtensionContext) {
 
     if (retry) {
       if (!MarkPreview.currentActivePanelId) {
-        vscode.window.showWarningMessage('현재 열려있는 미리보기 탭이 없습니다.');
+        vscode.window.showWarningMessage('현재 열려 있는 미리보기 탭이 없습니다.');
         return;
       }
       MarkPreview.createOrShow({ context, panelId: MarkPreview.currentActivePanelId, isRenderRetry: retry, isEditorComment: editorComment });
@@ -213,9 +215,17 @@ export async function activate(context: ExtensionContext) {
     vscode.commands.executeCommand('namucode.preview', { retry: true, editorComment: true });
   });
 
+  const openPreviewInWeb = vscode.commands.registerCommand("namucode.openPreviewInWeb", () => {
+    if (!MarkPreview.currentActivePanelId) {
+      vscode.window.showWarningMessage('현재 열려 있는 미리보기 탭이 없습니다.');
+      return;
+    }
+    MarkPreview.openInWeb(MarkPreview.currentActivePanelId, context.extensionUri);
+  });
+
   const sort = vscode.commands.registerCommand("namucode.paragraphSort", async () => { await sortParagraph(context) });
 
-  context.subscriptions.push(preview, retryPreview, previewEditorComment, sort);
+  context.subscriptions.push(preview, retryPreview, previewEditorComment, openPreviewInWeb, sort);
 
   const symbolProvider = new DocumentSymbolProvider(context);
   vscode.languages.registerDocumentSymbolProvider("namu", symbolProvider);
@@ -230,6 +240,22 @@ export async function activate(context: ExtensionContext) {
       { language: 'namu' },
       new SemanticTokenProvider(),
       SemanticTokenLegend
+    )
+  );
+
+  context.subscriptions.push(
+    vscode.languages.registerCompletionItemProvider(
+      { language: 'namu' },
+      new TableSnippetProvider(),
+      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
+    )
+  );
+
+  context.subscriptions.push(
+    vscode.languages.registerCodeActionsProvider(
+      { language: 'namu' },
+      new WikiCodeActionProvider(),
+      { providedCodeActionKinds: [vscode.CodeActionKind.RefactorRewrite] }
     )
   );
 
@@ -277,7 +303,7 @@ export function flattenSymbols(symbols: TreeSymbol[]): TreeSymbol[] {
   return result;
 }
 
-// FIXME: Code to sort paragraph
+// Code to sort paragraph
 const sortParagraph = async (context: vscode.ExtensionContext) => {
   const editor = vscode.window.activeTextEditor;
   const symbolProvider = new DocumentSymbolProvider(context);

@@ -34,7 +34,7 @@ git clone https://github.com/<id>/namucode.git
 
 - Node.js 20 이상
 - yarn 사용 환경
-- vscode 1.100.0 이상
+- vscode 1.109.0 이상
 
 #### 프로젝트 빌드
 ##### 4. 빌드하기
