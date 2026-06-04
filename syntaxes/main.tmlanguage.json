@@ -256,7 +256,7 @@
             "beginCaptures": {
                 "0": { "name": "punctuation.definition.table.namu" }
             },
-            "end": "(?=\\|\\||[\\r\\n]|$)",
+            "end": "(?!<)",
             "patterns": [
                 {
                     "comment": "속성 블록: 태그 직후에 <가 오지 않으면 즉시 종료",
@@ -285,13 +285,6 @@
                             }
                         }
                     ]
-                },
-                {
-                    "comment": "일반 텍스트",
-                    "match": "(?:[^\\n\\r|\\\\]|\\|(?!\\|)|\\\\.)*",
-                    "captures": {
-                        "0": { "patterns": [ { "include": "source.namu" } ] }
-                    }
                 }
             ]
         }
