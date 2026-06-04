@@ -222,7 +222,15 @@ export class MarkPreview {
             }
         }, null, this.disposables)
 
-        context.subscriptions.push(themeDisposable, saveDisposable, deleteDisposable);
+        const renameDisposable = vscode.workspace.onDidRenameFiles((event) => {
+            for (const file of event.files) {
+                if (panelId.split("namucode-webview-").slice(1).join("namucode-webview-") === file.oldUri.fsPath) {
+                    this.panel.dispose();
+                }
+            }
+        }, null, this.disposables)
+
+        context.subscriptions.push(themeDisposable, saveDisposable, deleteDisposable, renameDisposable);
     }
 
     public dispose(panelId: string) {
