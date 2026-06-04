@@ -9,7 +9,7 @@
           <div v-for="(documents, char) in referenced.referencedPerChar">
             <h3>{{char}}</h3>
             <ul>
-              <li v-for="document in documents">{{document.parsedName.title}}</li>
+              <li v-for="document in documents"><a @click="viewReferencedFile">{{document.parsedName.title}}</a></li>
             </ul>
           </div>
         </div>
@@ -59,7 +59,13 @@ export default {
       this.resizeTimeout = setTimeout(() => {
         this.calculateRow();  
       }, 200);
-    }
+    },
+    viewReferencedFile(e) {
+      vscode.postMessage({
+        command: "viewReferencedFile",
+        value: e.target.innerText
+      })
+    },
   },
   mounted() {
     this.calculateRow();

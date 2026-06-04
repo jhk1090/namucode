@@ -100,12 +100,8 @@ export class MarkPreview {
                     req.on('data', c => body += c.toString()).on('end', () => {
                         try {
                             const msg = JSON.parse(body), p = MarkPreview.currentPanels[pid];
-                            if (p && msg.command === "updateParameterMap") {
-                                const d = JSON.parse(msg.value);
-                                p.context.workspaceState.update('includeData', Object.keys(d).length === 0 ? null : d);
-                                vscode.commands.executeCommand("namucode.retryPreview");
-                            } else if (p && msg.command === "updatePreviewSetting") {
-                                p.context.workspaceState.update('previewSetting', JSON.parse(msg.value));
+                            if (p) {
+                                p._handleWebviewMessage(msg)
                             }
                         } catch (e) {}
                         res.writeHead(200).end("OK");
@@ -322,6 +318,37 @@ export class MarkPreview {
         };
     }
 
+    private async _handleWebviewMessage(message: any) {
+        if (message.command === "updateParameterMap") {
+            const data = JSON.parse(message.value);
+            this.context.workspaceState.update("includeData", Object.keys(data).length === 0 ? null : data);
+            vscode.commands.executeCommand("namucode.retryPreview");
+        }
+        else if (message.command === "updatePreviewSetting") {
+            const data = JSON.parse(message.value);
+            this.context.workspaceState.update("previewSetting", data);
+        }
+        else if (message.command === "viewReferencedFile") {
+            const fileName = message.value as string;
+            const isImageFile = fileName.startsWith("파일:");
+            const isFolderOpen = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0;
+            if (!isFolderOpen) {
+                return;
+            }
+
+            const folderPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+            const uriToOpen = vscode.Uri.file(isImageFile ? path.join(folderPath, fileName.slice(3)) : path.join(folderPath, fileName) + ".namu")
+            await vscode.commands.executeCommand(
+                "vscode.open",
+                uriToOpen,
+                {
+                    preview: false,
+                    viewColumn: vscode.ViewColumn.Active,
+                },
+            );
+        }
+    }
+
     private _initWebview(webview: vscode.Webview) {
         const resetStyleUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "dist/media/reset.css"));
         const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "dist/media/script.js"));
@@ -361,22 +388,7 @@ export class MarkPreview {
             </html>
         `;
         webview.onDidReceiveMessage(
-          (message) => {
-            let data;
-            switch (message.command) {
-              case "updateParameterMap":
-                data = JSON.parse(message.value);
-                this.context.workspaceState.update("includeData", Object.keys(data).length === 0 ? null : data);
-                vscode.commands.executeCommand("namucode.retryPreview");
-                break;
-              case "updatePreviewSetting":
-                data = JSON.parse(message.value);
-                this.context.workspaceState.update("previewSetting", data);
-                break;
-              default:
-                break;
-            }
-          },
+          this._handleWebviewMessage.bind(this),
           undefined,
           this.context.subscriptions,
         );
