@@ -6,6 +6,7 @@ import imageSize from "image-size";
 import { performance } from 'perf_hooks';
 import { Server, createServer } from 'http';
 import { DocumentSymbolProvider } from './providers/DocumentSymbolProvider';
+import { logger } from './logger';
 const renderer = require("../media/parser/core/toHtmlWorker.js")
 
 export function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptions {
@@ -270,15 +271,67 @@ export class MarkPreview {
 
     private _getHtmlForWebview(webview: vscode.Webview, document: vscode.TextDocument) {
         if (webview.html === "") {
-            const resetStyleUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "dist/media/reset.css"));
-            const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "dist/media/script.js"));
+            this._initWebview(webview);
+        }
 
-            const vueAppUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "dist/frontend/assets/main.js"));
+        (async () => {
+            try {
+                const parsedResult = this._runParsing(document);
+                if (parsedResult.errorCode) {
+                    this.dispose(this.panelId);
+                    const msg = await vscode.window.showErrorMessage(`파싱 허용 문서 최대 글자 수인 ${this._getConfig().maxParsingCharacter}자가 넘어가 미리보기 기능을 사용할 수 없습니다. 글자 수를 줄이거나 설정에서 "파싱 허용 문서 최대 글자 수"를 늘릴 수 있습니다.`, "설정")
+                    if (msg === "설정") {
+                        vscode.commands.executeCommand('workbench.action.openSettings', "@ext:jhk1090.namucode");
+                    }
+                    return
+                }
 
-            // Use a nonce to only allow specific scripts to be run
-            const nonce = getNonce();
+                const currentFolder = vscode.workspace.getWorkspaceFolder(this.panelUri)
+                const workspaceDocuments = await this._loadWorkspaceResources(currentFolder);
 
-            webview.html = `
+                this._runRendering(document, webview, currentFolder, parsedResult, workspaceDocuments)
+            } catch (error) {
+                this.dispose(this.panelId);
+                const errorMessage = await vscode.window.showErrorMessage(`미리보기 렌더링 중 오류 발생: ${error instanceof Error ? error.message : String(error)}`, "제보하기", "재시도");
+                if (errorMessage === "제보하기") {
+                    vscode.env.openExternal(vscode.Uri.parse("https://github.com/jhk1090/namucode/issues"));
+                }
+                if (errorMessage === "재시도") {
+                    vscode.commands.executeCommand("namucode.preview")
+                }
+            }
+            this.isEditorComment = false
+        })()
+    }
+
+    private _getConfig() {
+        const rootConfig = vscode.workspace.getConfiguration("namucode");
+        const maxLength = rootConfig.get<number>("preview.maxLength", 5000000);
+        const maxRenderingTimeout = rootConfig.get<number>("preview.maxRenderingTimeout", 10) * 1000;
+        const maxParsingDepth = rootConfig.get<number>("parser.maxParsingDepth", 30);
+        const maxParsingCharacter = rootConfig.get<number>("parser.maxParsingCharacter", 1500000);
+        const internalLinkDomain = rootConfig.get<string>("preview.internalLinkDomain", "https://namu.wiki");
+        return {
+          maxLength,
+          maxRenderingTimeout,
+          maxParsingDepth,
+          maxParsingCharacter,
+          internalLinkDomain,
+          extensionPath: this.extensionUri.fsPath,
+          isEditorComment: MarkPreview.currentPanels[this.panelId]?.isEditorComment ?? false,
+        };
+    }
+
+    private _initWebview(webview: vscode.Webview) {
+        const resetStyleUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "dist/media/reset.css"));
+        const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "dist/media/script.js"));
+
+        const vueAppUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "dist/frontend/assets/main.js"));
+
+        // Use a nonce to only allow specific scripts to be run
+        const nonce = getNonce();
+
+        webview.html = `
         <!DOCTYPE html>
             <html lang="en">
             <head>
@@ -307,210 +360,185 @@ export class MarkPreview {
             </body>
             </html>
         `;
-            webview.onDidReceiveMessage(
-                message => {
-                    let data;
-                    switch (message.command) {
-                        case "updateParameterMap":
-                            data = JSON.parse(message.value)
-                            this.context.workspaceState.update('includeData', Object.keys(data).length === 0 ? null : data);
-                            vscode.commands.executeCommand("namucode.retryPreview");
-                            break;
-                        case "updatePreviewSetting":
-                            data = JSON.parse(message.value);
-                            this.context.workspaceState.update('previewSetting', data);
-                            break;
-                        default:
-                            break;
-                    }
-                },
-                undefined,
-                this.context.subscriptions
-            )
+        webview.onDidReceiveMessage(
+          (message) => {
+            let data;
+            switch (message.command) {
+              case "updateParameterMap":
+                data = JSON.parse(message.value);
+                this.context.workspaceState.update("includeData", Object.keys(data).length === 0 ? null : data);
+                vscode.commands.executeCommand("namucode.retryPreview");
+                break;
+              case "updatePreviewSetting":
+                data = JSON.parse(message.value);
+                this.context.workspaceState.update("previewSetting", data);
+                break;
+              default:
+                break;
+            }
+          },
+          undefined,
+          this.context.subscriptions,
+        );
+    }
+
+    private _runParsing(document: vscode.TextDocument) {
+        const config = this._getConfig()
+
+        const result = DocumentSymbolProvider.getParserResult(document, { editorComment: config.isEditorComment, maxParsingDepth: config.maxParsingDepth, maxCharacter: config.maxParsingCharacter })
+
+        return result;
+    }
+
+    private async _loadWorkspaceResources(currentFolder: vscode.WorkspaceFolder) {
+        const rootConfig = vscode.workspace.getConfiguration("namucode");
+        const workspaceReference = rootConfig.get<boolean>("preview.workspaceReference", true);
+        const isFolderOpen = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0;
+        const startTime = performance.now();
+
+        let workspaceDocuments = [];
+        if (isFolderOpen && workspaceReference && currentFolder) {
+          const namuFiles = await vscode.workspace.findFiles("**/*.namu");
+          const decoder = new TextDecoder("utf-8");
+
+          workspaceDocuments.push(
+            ...(await Promise.all(
+              namuFiles.map(async (file) => {
+                const { namespace, title } = getNamespaceAndTitle(currentFolder.uri.fsPath, file.fsPath);
+                const content = decoder.decode(await vscode.workspace.fs.readFile(file));
+
+                return {
+                  namespace,
+                  title,
+                  content,
+                };
+              }),
+            )),
+          );
+
+          const mediaFiles = await vscode.workspace.findFiles("{**/*.png,**/*.jpg,**/*.jpeg,**/*.svg,**/*.gif,**/*.webp}");
+          const mappedMediaFiles = await Promise.all(
+            mediaFiles.map(async (file) => {
+              try {
+                let title = path.relative(currentFolder.uri.fsPath, file.fsPath);
+                let namespace = "문서";
+
+                title = title.replace(/\\/g, "/");
+                const fileKey = await imageUriToDataUri(file);
+                const { fileHeight, fileWidth, fileSize } = await getImageInfo(file);
+
+                return {
+                  namespace,
+                  title: "파일:" + title,
+                  content: {
+                    fileKey,
+                    fileWidth,
+                    fileHeight,
+                    fileSize,
+                  },
+                };
+              } catch (err) {
+                console.error(err.message);
+                return null;
+              }
+            }),
+          );
+
+          workspaceDocuments.push(...mappedMediaFiles.filter((v) => v !== null));
         }
 
-        const getConfig = () => {
-            const rootConfig = vscode.workspace.getConfiguration("namucode");
-            const maxLength = rootConfig.get<number>("preview.maxLength", 5000000);
-            const maxRenderingTimeout = rootConfig.get<number>("preview.maxRenderingTimeout", 10) * 1000;
-            const maxParsingDepth = rootConfig.get<number>("parser.maxParsingDepth", 30);
-            const maxParsingCharacter = rootConfig.get<number>("parser.maxParsingCharacter", 1500000);
-            const internalLinkDomain = rootConfig.get<string>("preview.internalLinkDomain", "https://namu.wiki")
-            return {
-                maxLength,
-                maxRenderingTimeout,
-                maxParsingDepth,
-                maxParsingCharacter,
-                internalLinkDomain,
-                extensionPath: this.extensionUri.fsPath,
-                isEditorComment: MarkPreview.currentPanels[this.panelId]?.isEditorComment ?? false
-            }
+        const endTime = performance.now();
+        const duration = (endTime - startTime).toFixed(2);
+        logger.debug(`[Workspace Resource] ▶️ ${duration}ms 걸림`)
+
+        workspaceDocuments.sort((a, b) => a.namespace.localeCompare(b.namespace));
+        workspaceDocuments.sort((a, b) => a.title.localeCompare(b.title));
+        return workspaceDocuments;
+    }
+
+    private async _runRendering(document: vscode.TextDocument, webview: vscode.Webview, currentFolder: vscode.WorkspaceFolder, parsedResult, workspaceDocuments) {
+        const unescape = (s: string): string => s.replace(/\\(.)/g, "$1");
+
+        const config = this._getConfig();
+        const baseParentPath = currentFolder ? currentFolder.uri.fsPath : path.dirname(document.uri.fsPath);
+        const { namespace, title } = getNamespaceAndTitle(baseParentPath, document.uri.fsPath);
+
+        // includeData 이스케이프 처리
+        const rawIncludeData = this.context.workspaceState.get("includeData") ?? {};
+        const cleanedEntries = Object.entries(rawIncludeData).map(([key, value]) => [key, unescape(value)]);
+        const includeData = cleanedEntries.length === 0 ? null : Object.fromEntries(cleanedEntries)
+
+        let timeout: NodeJS.Timeout | null = null;
+        if (config.maxRenderingTimeout && config.maxRenderingTimeout > 0) {
+            timeout = setTimeout(() => {
+              this.workerTerminator.abort();
+            }, config.maxRenderingTimeout);
         }
 
-        const runParsing = () => {
-            const config = getConfig()
+        let { html, categories, error, errorCode, errorMessage } = await RendererProvider.createRendererPromise(document, {
+          parsedResult: structuredClone(parsedResult),
+          document: { namespace, title },
+          workspaceDocuments,
+          config,
+          includeData,
+          signal: this.workerTerminator.signal,
+        });
+        clearTimeout(timeout);
 
-            const result = DocumentSymbolProvider.getParserResult(document, { editorComment: config.isEditorComment, maxParsingDepth: config.maxParsingDepth, maxCharacter: config.maxParsingCharacter })
-
-            return result;
+        if (error) {
+          this.dispose(this.panelId);
+          RendererProvider.removeRendererPromise(document);
+          const errorQuestion = await vscode.window.showErrorMessage(
+            errorCode === "aborted"
+              ? "렌더링에 실패했습니다: 렌더링이 중단되었습니다.\n이 문제가 발생하는 원인 중에는 시간 초과가 있을 수 있습니다. 설정을 누른 후, 파싱 최대 대기 시간 / 렌더링 최대 대기 시간을 적절히 조정해 시간 초과 문제를 해결할 수 있습니다. 문제를 해결하지 못했다면 제보하기를 누른 후 이슈트래커로 제보해주세요."
+              : errorCode === "render_too_long"
+                ? "렌더링에 실패했습니다: 문서가 너무 깁니다. 설정에서 최대 글자수를 늘려 이 문제를 해결할 수 있습니다. 문제를 해결하지 못했다면 제보하기를 누른 후 이슈트래커로 제보해주세요."
+                : `렌더링에 실패했습니다: 예기치 않은 오류가 발생했습니다.\n${errorMessage}\n이 버그가 계속해서 재현된다면 제보하기를 누른 후 이슈트래커로 제보해주세요.`,
+            "설정",
+            "제보하기",
+          );
+          if (errorQuestion === "설정") {
+            vscode.commands.executeCommand("workbench.action.openSettings", "@ext:jhk1090.namucode");
+          }
+          if (errorQuestion === "제보하기") {
+            vscode.env.openExternal(vscode.Uri.parse("https://github.com/jhk1090/namucode/issues"));
+          }
         }
 
-        const loadWorkspaceResources = async (currentFolder: vscode.WorkspaceFolder) => {
-            const rootConfig = vscode.workspace.getConfiguration("namucode");
-            const workspaceReference = rootConfig.get<boolean>("preview.workspaceReference", true);
-            const isFolderOpen = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0
-            const startTime = performance.now();
+        const referencedTitles = workspaceDocuments.map((document) => document.title);
 
-            let workspaceDocuments = []
-            if (isFolderOpen && workspaceReference && currentFolder) {
-                const namuFiles = await vscode.workspace.findFiles("**/*.namu")  
-                const decoder = new TextDecoder('utf-8');
-
-                workspaceDocuments.push(...await Promise.all(
-                    namuFiles.map(async (file) => {
-                        const { namespace, title } = getNamespaceAndTitle(currentFolder.uri.fsPath, file.fsPath)
-                        const content = decoder.decode(await vscode.workspace.fs.readFile(file))
-    
-                        return {
-                            namespace,
-                            title,
-                            content,
-                        };
-                    })
-                ))
-
-                const mediaFiles = await vscode.workspace.findFiles("{**/*.png,**/*.jpg,**/*.jpeg,**/*.svg,**/*.gif,**/*.webp}")
-                const mappedMediaFiles = await Promise.all(
-                    mediaFiles.map(async (file) => {
-                        try {
-                            let title = path.relative(currentFolder.uri.fsPath, file.fsPath)
-                            let namespace = "문서";
-
-                            title = title.replace(/\\/g, "/")
-                            const fileKey = await imageUriToDataUri(file)
-                            const { fileHeight, fileWidth, fileSize } = await getImageInfo(file)
-
-                            return {
-                                namespace,
-                                title: "파일:" + title,
-                                content: {
-                                    fileKey,
-                                    fileWidth,
-                                    fileHeight,
-                                    fileSize
-                                }
-                            }
-                        } catch (err) {
-                            console.error(err.message)                     
-                            return null;
-                        }
-                    })
-                )
-
-                workspaceDocuments.push(...mappedMediaFiles.filter(v => v !== null))
-            }
-
-            const endTime = performance.now();
-            const duration = (endTime - startTime).toFixed(2)
-            // console.log(`[Workspace Resource] ▶️ ${duration}ms 걸림`)
-
-            workspaceDocuments.sort((a, b) => a.namespace.localeCompare(b.namespace))
-            workspaceDocuments.sort((a, b) => a.title.localeCompare(b.title))
-            return workspaceDocuments
+        const isFolderOpen = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0;
+        let titleString = path.basename(document.uri.fsPath);
+        if (isFolderOpen) {
+          const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+          titleString = path.relative(rootPath, document.uri.fsPath).replaceAll(/\\/g, "/").split(".").slice(0, -1).join(".");
         }
 
-        const runRendering = async (currentFolder: vscode.WorkspaceFolder, parsedResult, workspaceDocuments) => {
-            const config = getConfig()
-            const { namespace, title } = getNamespaceAndTitle(currentFolder ? currentFolder.uri.fsPath : path.dirname(document.uri.fsPath), document.uri.fsPath)
-            let includeData = {...this.context.workspaceState.get("includeData") as { [key: string]: string } ?? {}}
-            const unescape = s => s.replace(/\\(.)/g, "$1");
-            for (const [key, value] of Object.entries(includeData)) {
-                includeData[key] = unescape(value)
-            }
+        webview.postMessage({ type: "updateTitle", title: titleString });
+        webview.postMessage({ type: "updateReferenced", referenced: referencedTitles });
+        webview.postMessage({ type: "updateParameterMap", parameterMap: includeData });
+        webview.postMessage({ type: "updateSetting", setting: this.context.workspaceState.get("previewSetting") });
+        webview.postMessage({
+          type: "updateContent",
+          newContent: html,
+          newCategories: categories,
+          newUserbox: { parameterAlert: includeData, editorComment: config.isEditorComment },
+          newKey: Date.now(),
+        });
 
-            if (Object.keys(includeData).length === 0) {
-                includeData = null;
-            }
-
-            const timeout = setTimeout(() => {
-                // console.log("Termination")
-                this.workerTerminator.abort()
-            }, config.maxRenderingTimeout)
-            
-            let { html, categories, error, errorCode, errorMessage } = await RendererProvider.createRendererPromise(document, { parsedResult: structuredClone(parsedResult),  document: { namespace, title }, workspaceDocuments, config, includeData, signal: this.workerTerminator.signal })
-            clearTimeout(timeout)
-
-            if (error) {
-                this.dispose(this.panelId);
-                RendererProvider.removeRendererPromise(document)
-                const errorQuestion = await vscode.window.showErrorMessage(
-                    errorCode === "aborted" ? "렌더링에 실패했습니다: 렌더링이 중단되었습니다.\n이 문제가 발생하는 원인 중에는 시간 초과가 있을 수 있습니다. 설정을 누른 후, 파싱 최대 대기 시간 / 렌더링 최대 대기 시간을 적절히 조정해 시간 초과 문제를 해결할 수 있습니다. 문제를 해결하지 못했다면 제보하기를 누른 후 이슈트래커로 제보해주세요." : errorCode === "render_too_long" ? "렌더링에 실패했습니다: 문서가 너무 깁니다. 설정에서 최대 글자수를 늘려 이 문제를 해결할 수 있습니다. 문제를 해결하지 못했다면 제보하기를 누른 후 이슈트래커로 제보해주세요." : `렌더링에 실패했습니다: 예기치 않은 오류가 발생했습니다.\n${errorMessage}\n이 버그가 계속해서 재현된다면 제보하기를 누른 후 이슈트래커로 제보해주세요.`, "설정", "제보하기")
-                if (errorQuestion === "설정") {
-                    vscode.commands.executeCommand('workbench.action.openSettings', "@ext:jhk1090.namucode");
-                }
-                if (errorQuestion === "제보하기") {
-                    vscode.env.openExternal(vscode.Uri.parse("https://github.com/jhk1090/namucode/issues"));
-                }
-            }
-
-            const referencedTitles = workspaceDocuments.map(document => document.title)
-
-            const isFolderOpen = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0
-            let titleString = path.basename(document.uri.fsPath)
-            if (isFolderOpen) {
-                const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath
-                titleString = path.relative(rootPath, document.uri.fsPath).replaceAll(/\\/g, "/").split(".").slice(0, -1).join(".");
-            }
-
-            webview.postMessage({ type: "updateTitle", title: titleString })
-            webview.postMessage({ type: "updateReferenced", referenced: referencedTitles })
-            webview.postMessage({ type: "updateParameterMap", parameterMap: includeData })
-            webview.postMessage({ type: "updateSetting", setting: this.context.workspaceState.get("previewSetting") })
-            webview.postMessage({ type: "updateContent", newContent: html, newCategories: categories, newUserbox: { parameterAlert: includeData, editorComment: config.isEditorComment }, newKey: Date.now() });
-
-            this.lastState = {
-                title: titleString,
-                referenced: referencedTitles,
-                parameterMap: includeData,
-                setting: this.context.workspaceState.get("previewSetting"),
-                content: {
-                    newContent: html,
-                    newCategories: categories,
-                    newUserbox: { parameterAlert: includeData, editorComment: config.isEditorComment },
-                    newKey: Date.now()
-                }
-            };
-            MarkPreview.onStateChange.forEach(l => l(this.panelId, this.lastState));
-        }
-
-        (async () => {
-            try {
-                const parsedResult = runParsing();
-                if (parsedResult.errorCode) {
-                    this.dispose(this.panelId);
-                    const msg = await vscode.window.showErrorMessage(`파싱 허용 문서 최대 글자 수인 ${getConfig().maxParsingCharacter}자가 넘어가 미리보기 기능을 사용할 수 없습니다. 글자 수를 줄이거나 설정에서 "파싱 허용 문서 최대 글자 수"를 늘릴 수 있습니다.`, "설정")
-                    if (msg === "설정") {
-                        vscode.commands.executeCommand('workbench.action.openSettings', "@ext:jhk1090.namucode");
-                    }
-                    return
-                }
-
-                const currentFolder = vscode.workspace.getWorkspaceFolder(this.panelUri)
-                const workspaceDocuments = await loadWorkspaceResources(currentFolder);
-
-                runRendering(currentFolder, parsedResult, workspaceDocuments)
-            } catch (error) {
-                this.dispose(this.panelId);
-                const errorMessage = await vscode.window.showErrorMessage(`미리보기 렌더링 중 오류 발생: ${error instanceof Error ? error.message : String(error)}`, "제보하기", "재시도");
-                if (errorMessage === "제보하기") {
-                    vscode.env.openExternal(vscode.Uri.parse("https://github.com/jhk1090/namucode/issues"));
-                }
-                if (errorMessage === "재시도") {
-                    vscode.commands.executeCommand("namucode.preview")
-                }
-            }
-            this.isEditorComment = false
-        })()
+        this.lastState = {
+          title: titleString,
+          referenced: referencedTitles,
+          parameterMap: includeData,
+          setting: this.context.workspaceState.get("previewSetting"),
+          content: {
+            newContent: html,
+            newCategories: categories,
+            newUserbox: { parameterAlert: includeData, editorComment: config.isEditorComment },
+            newKey: Date.now(),
+          },
+        };
+        MarkPreview.onStateChange.forEach((l) => l(this.panelId, this.lastState));
     }
 }
 
@@ -523,17 +551,19 @@ function getNonce() {
     return text;
 }
 
-function getNamespaceAndTitle(parentPath: string, childPath: string) {
-    let relativePath = path.relative(parentPath, childPath)
-    let namespace = "문서";
+const getNamespaceAndTitle = (parentPath: string, childPath: string) => {
+    const extension = ".namu";
+    const normalizedParent = parentPath.replace(/\\/g, "/");
+    const normalizedChild = childPath.replace(/\\/g, "/");
+    const relativePath = path.posix.relative(normalizedParent, normalizedChild);
 
-    const extension = ".namu"
-    relativePath = relativePath.replace(/\\/g, "/")
+    const title = relativePath.endsWith(extension) ? relativePath.slice(0, -extension.length) : relativePath;
 
-    let title = relativePath.slice(0, -extension.length)
-
-    return { namespace, title }
-}
+    return {
+        namespace: "문서",
+        title,
+    };
+};
 
 function getMimeType(uri: vscode.Uri): string {
     const extension = path.extname(uri.fsPath).toLowerCase();
@@ -620,12 +650,10 @@ export class RendererProvider {
             params.config.internalLinkDomain === cached.params.config.internalLinkDomain &&
             params.config.maxRenderingTimeout === cached.params.config.maxRenderingTimeout
         ) {
-            // console.log("[Renderer] ♻️ Promise 재활용: ", decodeURIComponent(path.basename(key)));
             return cached.promise;
         }
 
         const promise: Promise<IRendererReturn> = new Promise(async (resolve, reject) => {
-            let parseStart = performance.now();
             let result!: IRendererReturn;
             try {
                 result = await renderer([params.parsedResult, { document: params.document, workspaceDocuments: params.workspaceDocuments, config: params.config, includeData: params.includeData, signal: params.signal }])
@@ -643,22 +671,9 @@ export class RendererProvider {
                     errorMessage: err.stack,
                 });
             }
-            
-            let parseEnd = performance.now();
-            // console.log(
-            //     "[Renderer] 📌 렌더링 중...",
-            //     decodeURIComponent(path.basename(document.uri.toString())),
-            //     "v",
-            //     document.version,
-            //     "(time: ",
-            //     (parseEnd - parseStart).toFixed(2),
-            //     "ms)"
-            // );
 
             resolve(result);
         });
-
-        // console.log("[Renderer] ⚙️ Promise 생성: ", decodeURIComponent(path.basename(key)), "v", version);
 
         RendererProvider.cache.set(key, { ...cached, version, promise, params });
         return promise;
