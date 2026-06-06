@@ -164,4 +164,8 @@ h1 {
   font-weight: 700;
   margin: 0 0 .5rem;
 }
+
+a {
+  cursor: pointer;
+}
 </style>
