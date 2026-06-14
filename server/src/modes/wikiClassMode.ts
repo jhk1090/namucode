@@ -19,7 +19,7 @@ export function getWikiClassMode(
 		doValidation(document: TextDocument) {
 			return [];
 		},
-		doComplete(document: TextDocument, position: Position) {
+		doComplete(document: TextDocument, position: Position, options = {}) {
 			const fullRange = {
 				start: { line: 0, character: 0 },
 				end: document.positionAt(document.getText().length)
@@ -46,12 +46,21 @@ export function getWikiClassMode(
 			});
 
 			return {
-				isIncomplete: false,
-				items: names.map(name => ({
-					label: name,
-					kind: 7
-				}))
-			};
+        isIncomplete: false,
+        items: names.map((name) => ({
+          label: name,
+          kind: 7,
+          ...(options.isOnclickCompletion
+            ? {
+								insertText: name + ",",
+                command: {
+                  title: "suggest",
+                  command: "editor.action.triggerSuggest",
+                },
+              }
+            : {}),
+        })),
+      };
 		},
 		onDocumentRemoved() { /* nothing to do */ },
 		dispose() { /* nothing to do */ }

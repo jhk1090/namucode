@@ -24,10 +24,15 @@ import { getWikiTagMode } from './modes/wikiTagMode';
 export * from 'vscode-html-languageservice';
 export const MODES_LENGTH = 8;
 
+export interface LanguageModeCompletionOptions {
+	isArgumentCompletion?: boolean;
+  isOnclickCompletion?: boolean;
+}
+
 export interface LanguageMode {
 	getId(): string;
 	doValidation?: (document: TextDocument) => Diagnostic[];
-	doComplete?: (document: TextDocument, position: Position, isArgumentCompletion?: boolean) => CompletionList | null;
+	doComplete?: (document: TextDocument, position: Position, options?: LanguageModeCompletionOptions) => CompletionList | null;
 	onDocumentRemoved(): void;
 	dispose(): void;
 }

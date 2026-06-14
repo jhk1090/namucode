@@ -37,7 +37,7 @@ export function getWikiOnclickMode(documentRegions: HTMLDocumentRegions): Langua
 			const content = originalText.substring(regionStart, regionEnd - 1);
 
       if (content.endsWith(",")) {
-        return languageModes.getMode("wiki-class").doComplete(document, position);
+        return languageModes.getMode("wiki-class").doComplete(document, position, { isOnclickCompletion: true });
       } else {
         return {
           isIncomplete: false,

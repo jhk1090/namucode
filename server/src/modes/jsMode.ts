@@ -42,7 +42,7 @@ export function getJSMode(documentRegions: HTMLDocumentRegions): LanguageMode {
 
 			return allDiagnostics;
 		},
-    doComplete(document: TextDocument, position: Position, isArgumentCompletion = false) {
+    doComplete(document: TextDocument, position: Position, options = {}) {
       const allSymbols = new Set<string>();
 
       const fullRange = {
@@ -93,7 +93,7 @@ export function getJSMode(documentRegions: HTMLDocumentRegions): LanguageMode {
         allSymbols.add(name);
 			})
 
-      return !isArgumentCompletion
+      return !options.isArgumentCompletion
         ? (getTypeScriptCompletion(embeddedJSSourceFile, position, allSymbols) as CompletionList)
         : {
             isIncomplete: false,
