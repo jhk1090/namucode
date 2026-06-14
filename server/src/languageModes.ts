@@ -18,8 +18,11 @@ import { getCSSInlineMode } from './modes/cssInlineMode';
 import { getJSMode } from './modes/jsMode';
 import { getWikiClassMode } from './modes/wikiClassMode';
 import { getWikiLangMode } from './modes/wikiLangMode';
+import { getWikiOnclickMode } from './modes/wikiOnclickMode';
+import { getWikiTagMode } from './modes/wikiTagMode';
 
 export * from 'vscode-html-languageservice';
+export const MODES_LENGTH = 8;
 
 export interface LanguageMode {
 	getId(): string;
@@ -60,16 +63,19 @@ export function getLanguageModes(documentSymbol: Record<string, any>, document: 
 				}
 			]
 	});
-	const htmlLanguageService = getHTMLLanguageService();
 
 	const documentRegions = getDocumentRegions(document, documentSymbol)
 
 	let modes = Object.create(null);
+
+	// modes 개수 변경 시 MODES_LENGTH 변경 필요
 	modes['css'] = getCSSMode(cssLanguageService, documentRegions);
 	modes['css-inline'] = getCSSInlineMode(cssLanguageService, documentRegions);
 	modes['js'] = getJSMode(documentRegions);
 	modes['wiki-class'] = getWikiClassMode(cssLanguageService, documentRegions);
 	modes['wiki-lang'] = getWikiLangMode();
+	modes['wiki-onclick'] = getWikiOnclickMode(documentRegions);
+	modes['wiki-tag'] = getWikiTagMode();
 	modes['argument'] = {
 		getId: () => 'argument',
 		doValidation: () => [],

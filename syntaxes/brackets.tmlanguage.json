@@ -102,7 +102,7 @@
               }
             },
             {
-              "match": "(class|lang)=\\\"([^\"]*)(\\\")?",
+              "match": "(class|lang|tag|onclick)=\\\"([^\"]*)(\\\")?",
               "captures": {
                 "1": { "name": "variable.parameter.bracket.namu" },
                 "2": {

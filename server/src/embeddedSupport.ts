@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { TextDocument, Position, Range } from './languageModes';
+import { TextDocument, Position, Range, MODES_LENGTH } from './languageModes';
 
 export interface LanguageRange extends Range {
 	languageId: string | undefined;
@@ -53,15 +53,19 @@ export function getDocumentRegions(document: TextDocument, documentSymbol: Recor
 					const targetLine = document.getText().substring(startOffset).split(/(\r)?\n/)[0];
 					const syntaxStart = targetLine.indexOf("{{{#!wiki")
 
-					const propertyRegex = /(style|dark-style|class|lang)=\"/g;
+					const propertyRegex = /(style|dark-style|class|lang|onclick|tag)=\"/g;
 					const stylePropertyRegex = /(style|dark-style)=\"/g;
 					const classPropertyRegex = /(class)=\"/g;
 					const langPropertyRegex = /(lang)=\"/g;
+					const onclickPropertyRegex = /(onclick)=\"/g;
+					const tagPropertyRegex = /(tag)=\"/g;
 
 					propertyRegex.lastIndex = syntaxStart;
 					stylePropertyRegex.lastIndex = syntaxStart;
 					classPropertyRegex.lastIndex = syntaxStart;
 					langPropertyRegex.lastIndex = syntaxStart;
+					onclickPropertyRegex.lastIndex = syntaxStart;
+					tagPropertyRegex.lastIndex = syntaxStart;
 
 					while (true) {
 						const styleStartMatch = propertyRegex.exec(targetLine);
@@ -96,6 +100,18 @@ export function getDocumentRegions(document: TextDocument, documentSymbol: Recor
 									if (!matchIndexPriority || matchIndexPriority > match.index) {
 										matchIndexPriority = match.index
 										languageIdPriority = "wiki-lang"
+									}
+								}
+								if (match = onclickPropertyRegex.exec(targetLine)) {
+									if (!matchIndexPriority || matchIndexPriority > match.index) {
+										matchIndexPriority = match.index
+										languageIdPriority = "wiki-onclick"
+									}
+								}
+								if (match = tagPropertyRegex.exec(targetLine)) {
+									if (!matchIndexPriority || matchIndexPriority > match.index) {
+										matchIndexPriority = match.index
+										languageIdPriority = "wiki-tag"
 									}
 								}
 								if (languageIdPriority !== "") {
@@ -264,7 +280,7 @@ function getLanguagesInDocument(_document: TextDocument, regions: EmbeddedRegion
 		if (region.languageId && result.indexOf(region.languageId) === -1) {
 			result.push(region.languageId);
 			// modes 개수
-			if (result.length === 6) {
+			if (result.length === MODES_LENGTH) {
 				return result;
 			}
 		}

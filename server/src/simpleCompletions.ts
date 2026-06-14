@@ -544,6 +544,28 @@ function getWikiSyntaxProperties() {
           command: "editor.action.triggerSuggest",
         },
       },
+      {
+        label: "onclick",
+        kind: CompletionItemKind.Property,
+        insertText: 'onclick="${0}"',
+        insertTextFormat: InsertTextFormat.Snippet,
+        documentation: "클릭 이벤트 속성",
+        command: {
+          title: "suggest",
+          command: "editor.action.triggerSuggest",
+        },
+      },
+      {
+        label: "tag",
+        kind: CompletionItemKind.Property,
+        insertText: 'tag="${0}"',
+        insertTextFormat: InsertTextFormat.Snippet,
+        documentation: "HTML 태그 속성",
+        command: {
+          title: "suggest",
+          command: "editor.action.triggerSuggest",
+        },
+      },
     ],
   };
 }
