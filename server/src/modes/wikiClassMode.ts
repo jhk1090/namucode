@@ -27,8 +27,10 @@ export function getWikiClassMode(
 
 			const cssRegions = documentRegions.getLanguageRanges(fullRange)
 				.filter(r => r.languageId === 'css');
+			const wikiClassRegions = documentRegions.getLanguageRanges(fullRange)
+				.filter(r => r.languageId === 'wiki-class');
 
-			let names: string[] = []
+			let classNameList: string[] = []
 
 			cssRegions.forEach(region => {
 				const content = document.getText().substring(document.offsetAt(region.start), document.offsetAt(region.end));
@@ -42,17 +44,22 @@ export function getWikiClassMode(
 				const virtualDoc = TextDocument.create(document.uri, 'css', document.version, virtualText);
 				
 				const stylesheet = cssLanguageService.parseStylesheet(virtualDoc);
-				names = getAllClassNames(virtualDoc, stylesheet);
+				classNameList.push(...getAllClassNames(virtualDoc, stylesheet));
 			});
+
+			wikiClassRegions.forEach(region => {
+				const wikiClassList = document.getText().substring(document.offsetAt(region.start), document.offsetAt(region.end) - 1).trim().split(" ")
+        classNameList.push(...wikiClassList)
+			})
 
 			return {
         isIncomplete: false,
-        items: names.map((name) => ({
-          label: name,
+        items: Array.from(new Set(classNameList)).map((className) => ({
+          label: className,
           kind: 7,
           ...(options.isOnclickCompletion
             ? {
-								insertText: name + options.suffix,
+								insertText: className + options.suffix,
                 command: {
                   title: "suggest",
                   command: "editor.action.triggerSuggest",
