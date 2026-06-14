@@ -542,6 +542,10 @@ const LegacyMath = createToken({
     name: 'LegacyMath',
     pattern: /<math>(.*?)<\/math>/
 });
+const Latex = createToken({
+    name: 'Latex',
+    pattern: /{{{#!latex\n(?:(?!{{{#!latex)[\s\S])*?}}}/
+});
 const Link = createToken({
     name: 'Link',
     // pattern: /\[\[.+?]]|\[\[.*\|[\s\S]+?]]/,
@@ -662,6 +666,7 @@ const inlineTokens = [
     Folding,
     IfSyntax,
     StyleSyntax,
+    Latex,
     ColorText,
     Literal,
     // Comment,
@@ -1199,6 +1204,7 @@ class NamumarkParser extends EmbeddedActionsParser {
                         { ALT: () => $.SUBRULE($.folding) },
                         { ALT: () => $.SUBRULE($.ifSyntax) },
                         { ALT: () => $.SUBRULE($.styleSyntax) },
+                        { ALT: () => $.SUBRULE($.latex) },
                         { ALT: () => $.SUBRULE($.colorText) },
                         { ALT: () => $.SUBRULE($.literal) },
                         { ALT: () => $.SUBRULE($.categoryWithNewline) },
@@ -1414,6 +1420,25 @@ class NamumarkParser extends EmbeddedActionsParser {
 
             return {
                 type: 'styleSyntax',
+                content,
+                startLine,
+                endLine: getOriginalLine(Store.commentLines, this.rootStartLine + tok.endLine - 1) + 1,
+                innerStartLine: startLine + 1,
+                innerStartColumn: 1,
+                innerEndColumn: endColumn + offsetTail
+            }
+        });
+
+        $.RULE('latex', () => {
+            const tok = $.CONSUME(Latex);
+            const content = tok.image.slice(11, -3).trim();
+
+            let startLine = getOriginalLine(Store.commentLines, this.rootStartLine + tok.startLine - 1) + 1 
+            let endColumn = tok.endColumn
+            let offsetTail = -1 * ("}}}").length + 1
+
+            return {
+                type: 'latex',
                 content,
                 startLine,
                 endLine: getOriginalLine(Store.commentLines, this.rootStartLine + tok.endLine - 1) + 1,

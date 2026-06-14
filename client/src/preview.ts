@@ -497,7 +497,7 @@ export class MarkPreview {
 
         let { html, categories, error, errorCode, errorMessage } = await RendererProvider.createRendererPromise(document, {
           parsedResult: structuredClone(parsedResult),
-          document: { namespace, title },
+          document: { namespace, title, forceShowNamespace: namespace === "문서" ? false : null },
           workspaceDocuments,
           config,
           includeData,
@@ -635,7 +635,7 @@ async function getImageInfo(imageUri: vscode.Uri) {
 
 interface IRendererParams {
     parsedResult: any;
-    document: { namespace: string; title: string };
+    document: { namespace: string; title: string; forceShowNamespace: boolean | null };
     workspaceDocuments: any[];
     config: { maxParsingDepth: number; extensionPath: string; isEditorComment: boolean; maxLength: number; maxRenderingTimeout: number; internalLinkDomain: string; };
     includeData: { [key: string]: string } | null;

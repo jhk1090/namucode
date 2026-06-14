@@ -98,13 +98,18 @@ const topToHtml = module.exports = async parameter => {
   if (isTop) {
     const removerHandle = Store.qjsContext.evalCode(jsGlobalRemover);
     removerHandle.dispose()
-    if(includeData)
+
+    if(includeData) {
       await Promise.all(Object.entries(includeData).map(([key, value]) => {
         const valueHandle = Store.qjsContext.newString(value)
         Store.qjsContext.setProp(Store.qjsContext.global, key, valueHandle)
         valueHandle.dispose()
       }));
 
+      const calleeTitleValueHandle = Store.qjsContext.newString(mainUtils.doc_fulltitle(document))
+      Store.qjsContext.setProp(Store.qjsContext.global, 'calleeTitle', calleeTitleValueHandle)
+      calleeTitleValueHandle.dispose()
+    }
     // console.log("includedata", JSON.stringify(includeData))
     // console.log("global", JSON.stringify(Store.qjsContext.dump(Store.qjsContext.global)))
   }
@@ -297,17 +302,48 @@ const topToHtml = module.exports = async parameter => {
       case "wikiSyntax":
         let wikiParamsStr = await utils.parseIncludeParams(obj.wikiParamsStr, Store.qjsContext);
 
-        let style = wikiParamsStr.match(/(?<=(^| )style=")(.*?)(?=")/)?.[0] || '';
-        let darkStyle = wikiParamsStr.match(/(?<=(^| )dark-style=")(.*?)(?=")/)?.[0] || '';
-        let className = wikiParamsStr.match(/(?<=(^| )class=")(.*?)(?=")/)?.[0] || '';
-        const lang = wikiParamsStr.match(/(?<=(^| )lang=")(.*?)(?=")/)?.[0] || '';
+        const wikiParamsMatch = name => wikiParamsStr.match(new RegExp(`(?<=(^| )${name}=")(.*?)(?=")`))?.[0] || '';
+        let style = wikiParamsMatch('style');
+        let darkStyle = wikiParamsMatch('dark-style');
+        let className = wikiParamsMatch('class');
+        const lang = wikiParamsMatch('lang');
+        let tag = wikiParamsMatch('tag');
+        let onclick = wikiParamsMatch('onclick');
 
         className = classGenerator(className);
 
         style = utils.cssFilter(style);
         darkStyle = utils.cssFilter(darkStyle);
 
-        result += `<div${className ? ` class="${className}"` : ''}${lang ? ` lang="${utils.escapeHtml(lang)}"` : ''}${style ? ` style="${utils.escapeHtml(style)}"` : ''}${darkStyle ? ` data-dark-style="${utils.escapeHtml(darkStyle)}"` : ''}>${await toHtml(obj.content)}</div>`;
+        if(!['div', 'a', 'span'].includes(tag)) tag = 'div';
+
+        if(onclick) {
+            const onClickList = onclick.split(';');
+            const validOnclickList = [];
+            for(let onclickStr of onClickList) {
+                const onclickParams = onclickStr.split(',').filter(a => a);
+                switch(onclickParams[0]) {
+                    case 'add-class':
+                    case 'remove-class':
+                    case 'toggle-class': {
+                        if(onclickParams.length !== 3) {
+                            onclickStr = '';
+                            break;
+                        }
+                        onclickParams[1] = classGenerator(onclickParams[1]);
+                        onclickParams[2] = classGenerator(onclickParams[2]);
+                        onclickStr = onclickParams.join(',');
+                        break;
+                    }
+                    default:
+                        onclickStr = '';
+                }
+                if(onclickStr) validOnclickList.push(onclickStr);
+            }
+            onclick = validOnclickList.join(';');
+        }
+
+        result += `<${tag}${className ? ` class="${className}"` : ''}${lang ? ` lang="${utils.escapeHtml(lang)}"` : ''}${onclick ? ` data-onclick="${utils.escapeHtml(onclick)}"` : ''}${style ? ` style="${utils.escapeHtml(style)}"` : ''}${darkStyle ? ` data-dark-style="${utils.escapeHtml(darkStyle)}"` : ''}${(tag === 'a' && onclick) ? ' href="#"' : ''}>${await toHtml(obj.content)}</${tag}>`;
         break;
       case "syntaxSyntax":
         result += `<pre><code>${highlight(obj.content, { language: obj.lang }).value}</code></pre>`;
@@ -328,6 +364,9 @@ const topToHtml = module.exports = async parameter => {
                 utils.fullCssFilter(await utils.parseIncludeParams(obj.content, Store.qjsContext), { classGenerator })
             )
         }</style>`;
+        break;
+      case "latex":
+        result += utils.katex(obj.content, true);
         break;
       case "text":
         result += utils.escapeHtml(await utils.parseIncludeParams(obj.text, Store.qjsContext)).replaceAll("\n", "<br>");

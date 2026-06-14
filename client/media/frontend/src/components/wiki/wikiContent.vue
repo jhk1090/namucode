@@ -410,6 +410,39 @@ export default {
           })
         }
       }
+
+      const onClicks = [...element.querySelectorAll('[data-onclick]')]
+      for(let onClick of onClicks) {
+        const fullOnclickStr = onClick.dataset.onclick
+        const onclickList = fullOnclickStr.split(';').map(a => a.split(','))
+        const clickHandler = e => {
+          e.preventDefault()
+          for(let onclickParams of onclickList) switch(onclickParams[0]) {
+            case 'toggle-class': {
+              const target = [...document.getElementsByClassName(onclickParams[1])]
+              for(let el of target)
+                el.classList.toggle(onclickParams[2])
+              break
+            }
+            case 'add-class': {
+              const target = [...document.getElementsByClassName(onclickParams[1])]
+              for(let el of target)
+                el.classList.add(onclickParams[2])
+              break
+            }
+            case 'remove-class': {
+              const target = [...document.getElementsByClassName(onclickParams[1])]
+              for(let el of target)
+                el.classList.remove(onclickParams[2])
+              break
+            }
+          }
+        }
+        onClick.addEventListener('click', clickHandler)
+        this.cleanupFunctions.push(() => {
+          onClick.removeEventListener('click', clickHandler)
+        })
+      }
       
       // if(!this.discuss) {
       //   const hash = decodeURIComponent(location.hash.slice(1));

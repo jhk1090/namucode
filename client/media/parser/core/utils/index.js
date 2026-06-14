@@ -208,8 +208,9 @@ module.exports = {
 
         return newText;
     },
-    katex: text => katex.renderToString(text, {
-        throwOnError: false
+    katex: (text, displayMode = false) => katex.renderToString(text, {
+        throwOnError: false,
+        displayMode
     }),
     cssFilter(css) {
         if(!css) return css;
@@ -406,7 +407,7 @@ module.exports = {
             footnote: require("../syntax/macro/footnote").format,
             각주: require("../syntax/macro/footnote").format, // footnote alias
             include: require("../syntax/macro/include"),
-            math: require("../syntax/macro/math"),
+            math: require("../syntax/macro/math").format,
             navertv: require("../syntax/macro/navertv"),
             nicovideo: require("../syntax/macro/nicovideo"),
             pagecount: require("../syntax/macro/pagecount"),
