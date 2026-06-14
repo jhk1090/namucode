@@ -85,7 +85,7 @@ export function getLanguageModes(documentSymbol: Record<string, any>, document: 
 	modes['css'] = getCSSMode(cssLanguageService, documentRegions);
 	modes['css-inline'] = getCSSInlineMode(cssLanguageService, documentRegions);
 	modes['js'] = getJSMode(documentRegions);
-	modes['wiki-class'] = getWikiClassMode(cssLanguageService, documentRegions);
+	modes['wiki-class'] = getWikiClassMode(documentRegions);
 	modes['wiki-lang'] = getWikiLangMode();
 	modes['wiki-onclick'] = getWikiOnclickMode(documentRegions);
 	modes['wiki-tag'] = getWikiTagMode();
@@ -95,7 +95,7 @@ export function getLanguageModes(documentSymbol: Record<string, any>, document: 
 	modes['if-for-completion'] = getJSMode(documentRegions)
 	modes['wiki-style-for-completion'] = getCSSInlineMode(cssLanguageService, documentRegions)
 	modes['wiki-dark-style-for-completion'] = getCSSInlineMode(cssLanguageService, documentRegions)
-	modes['wiki-class-for-completion'] = getWikiClassMode(cssLanguageService, documentRegions);
+	modes['wiki-class-for-completion'] = getWikiClassMode(documentRegions);
 	modes['wiki-lang-for-completion'] = getWikiLangMode();
 	modes['wiki-onclick-for-completion'] = getWikiOnclickMode(documentRegions);
 	modes['wiki-tag-for-completion'] = getWikiTagMode();
