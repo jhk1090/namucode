@@ -36,6 +36,12 @@ git clone https://github.com/<id>/namucode.git
 - yarn 사용 환경
 - vscode 1.109.0 이상
 
+그리고 아래 코드를 실행해 프로젝트에 필요한 패키지를 다운받습니다.
+
+```sh
+yarn
+```
+
 #### 프로젝트 빌드
 ##### 4. 빌드하기
 최상위 폴더인 `namucode`에서 아래 코드를 실행해 프로젝트를 빌드합니다.
