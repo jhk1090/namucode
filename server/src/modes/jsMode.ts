@@ -93,6 +93,9 @@ export function getJSMode(documentRegions: HTMLDocumentRegions): LanguageMode {
         allSymbols.add(name);
 			})
 
+      // 예약어
+      allSymbols.add("calleeTitle")
+
       return !options.isArgumentCompletion
         ? (getTypeScriptCompletion(embeddedJSSourceFile, position, allSymbols) as CompletionList)
         : {
