@@ -582,6 +582,7 @@ const argumentsColorValueRequired = [
   "rowcolor",
 ]
 const argumentsClassValueRequired = [
+  "tableclass",
   "class",
   "rowclass",
 ]
