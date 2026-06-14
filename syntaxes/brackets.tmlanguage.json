@@ -35,6 +35,12 @@
       "include": "#brackets-styleSyntax-forCompletion"
     },
     {
+      "include": "#brackets-latex"
+    },
+    {
+      "include": "#brackets-latex-forCompletion"
+    },
+    {
       "include": "#brackets-syntaxSyntax"
     },
     {
@@ -148,6 +154,23 @@
     "brackets-styleSyntax-forCompletion": {
       "comment": "자연스러운 구문 완성을 위한 지원",
       "begin": "\\{\\{\\{(#!style)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" }
+      },
+      "end": "\\}\\}\\}"
+    },
+    "brackets-latex": {
+      "begin": "\\{\\{\\{(#!latex)$",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.bracket.namu" }
+      },
+      "end": "\\}\\}\\}",
+      "contentName": "meta.embedded.block.tex",
+      "patterns": [{ "include": "text.tex.latex" }]
+    },
+    "brackets-latex-forCompletion": {
+      "comment": "자연스러운 구문 완성을 위한 지원",
+      "begin": "\\{\\{\\{(#!latex)",
       "beginCaptures": {
         "1": { "name": "keyword.control.bracket.namu" }
       },

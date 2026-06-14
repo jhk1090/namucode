@@ -444,6 +444,13 @@ function getShebangList() {
         insertTextFormat: InsertTextFormat.Snippet,
         documentation: "스타일 블록 생성",
       },
+      {
+        label: "latex",
+        kind: CompletionItemKind.Snippet,
+        insertText: "latex\n${1:내용} ",
+        insertTextFormat: InsertTextFormat.Snippet,
+        documentation: "LaTeX 블록 생성",
+      },
     ],
   };
 }

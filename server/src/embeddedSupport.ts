@@ -25,7 +25,7 @@ export function getDocumentRegions(document: TextDocument, documentSymbol: Recor
 	let regions: EmbeddedRegion[] = [];
 
 	const targetDepthTypes = ["scaleText", "colorText", "wikiSyntax", "folding", "ifSyntax"]
-	const targetFlatTypes = ["syntaxSyntax", "htmlSyntax", "literal", "styleSyntax"]
+	const targetFlatTypes = ["syntaxSyntax", "htmlSyntax", "literal", "styleSyntax", "latex"]
 	const specialTypes = ["paragraph", "heading", "table", "link", "footnote", "blockquote", "indent", "list"]
 
 	const allTypes = [...targetDepthTypes, ...targetFlatTypes, ...specialTypes]
