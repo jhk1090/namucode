@@ -102,11 +102,30 @@
               }
             },
             {
-              "match": "(class|lang|tag|onclick)=\\\"([^\"]*)(\\\")?",
+              "match": "(class|lang|tag)=\\\"([^\"]*)(\\\")?",
               "captures": {
                 "1": { "name": "variable.parameter.bracket.namu" },
                 "2": {
                   "name": "string.quoted.double.namu"
+                }
+              }
+            },
+            {
+              "match": "(onclick)=\\\"([^\"]*)(\\\")?",
+              "captures": {
+                "1": { "name": "variable.parameter.bracket.namu" },
+                "2": {
+                  "patterns": [
+                    {
+                      "comment": "함수 이름과 매개변수들을 매칭 (세미콜론이나 문자열 끝까지)",
+                      "match": "\\b(add-class|remove-class|toggle-class)\\b(?:,([^,;\\\"]+))?(?:,([^,;\\\"]+))?",
+                      "captures": {
+                        "1": { "name": "support.function.namu" },
+                        "2": { "name": "variable.parameter.namu" },
+                        "3": { "name": "variable.parameter.namu" }
+                      }
+                    }
+                  ]
                 }
               }
             }

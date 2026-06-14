@@ -27,6 +27,7 @@ export const MODES_LENGTH = 8;
 export interface LanguageModeCompletionOptions {
 	isArgumentCompletion?: boolean;
   isOnclickCompletion?: boolean;
+	[key: string]: any;
 }
 
 export interface LanguageMode {

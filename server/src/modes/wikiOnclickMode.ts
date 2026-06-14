@@ -36,8 +36,11 @@ export function getWikiOnclickMode(documentRegions: HTMLDocumentRegions): Langua
 			const regionEnd = document.offsetAt(currentRegion.end);
 			const content = originalText.substring(regionStart, regionEnd - 1);
 
-      if (content.endsWith(",")) {
-        return languageModes.getMode("wiki-class").doComplete(document, position, { isOnclickCompletion: true });
+			const lastPart = content.split(";").pop().trim();
+			const commaCount = (lastPart.match(/,/g) || []).length;
+
+      if (commaCount <= 2 && content.trim().endsWith(",")) {
+        return languageModes.getMode("wiki-class").doComplete(document, position, { isOnclickCompletion: true, suffix: commaCount === 2 ? ";" : "," });
       } else {
         return {
           isIncomplete: false,

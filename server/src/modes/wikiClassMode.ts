@@ -52,7 +52,7 @@ export function getWikiClassMode(
           kind: 7,
           ...(options.isOnclickCompletion
             ? {
-								insertText: name + ",",
+								insertText: name + options.suffix,
                 command: {
                   title: "suggest",
                   command: "editor.action.triggerSuggest",
