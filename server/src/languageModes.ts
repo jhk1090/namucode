@@ -22,7 +22,7 @@ import { getWikiOnclickMode } from './modes/wikiOnclickMode';
 import { getWikiTagMode } from './modes/wikiTagMode';
 
 export * from 'vscode-html-languageservice';
-export const MODES_LENGTH = 8;
+export const MODES_LENGTH = 15;
 
 export interface LanguageModeCompletionOptions {
 	isArgumentCompletion?: boolean;
@@ -74,6 +74,13 @@ export function getLanguageModes(documentSymbol: Record<string, any>, document: 
 
 	let modes = Object.create(null);
 
+	const baseModeConfig = (id: string): LanguageMode => ({
+		getId: () => id,
+		doValidation: () => [],
+		doComplete: () => null,
+		onDocumentRemoved: () => {},
+		dispose: () => {}
+	})
 	// modes 개수 변경 시 MODES_LENGTH 변경 필요
 	modes['css'] = getCSSMode(cssLanguageService, documentRegions);
 	modes['css-inline'] = getCSSInlineMode(cssLanguageService, documentRegions);
@@ -82,13 +89,16 @@ export function getLanguageModes(documentSymbol: Record<string, any>, document: 
 	modes['wiki-lang'] = getWikiLangMode();
 	modes['wiki-onclick'] = getWikiOnclickMode(documentRegions);
 	modes['wiki-tag'] = getWikiTagMode();
-	modes['argument'] = {
-		getId: () => 'argument',
-		doValidation: () => [],
-		doComplete: () => null,
-		onDocumentRemoved: () => {},
-		dispose: () => {}
-	}
+	modes['argument'] = baseModeConfig("argument")
+
+	// 자연스러운 자동완성을 위한 모드
+	modes['if-for-completion'] = getJSMode(documentRegions)
+	modes['wiki-style-for-completion'] = getCSSInlineMode(cssLanguageService, documentRegions)
+	modes['wiki-dark-style-for-completion'] = getCSSInlineMode(cssLanguageService, documentRegions)
+	modes['wiki-class-for-completion'] = getWikiClassMode(cssLanguageService, documentRegions);
+	modes['wiki-lang-for-completion'] = getWikiLangMode();
+	modes['wiki-onclick-for-completion'] = getWikiOnclickMode(documentRegions);
+	modes['wiki-tag-for-completion'] = getWikiTagMode();
 
 
 	return {

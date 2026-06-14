@@ -79,7 +79,7 @@ export function getCSSInlineMode(
 				end: document.positionAt(document.getText().length)
 			};
 			
-			const regions = documentRegions.getLanguageRanges(fullRange).filter(r => r.languageId === 'css-inline');
+			const regions = documentRegions.getLanguageRanges(fullRange).filter(r => r.languageId === 'css-inline' || r.languageId === 'wiki-style-for-completion' || r.languageId === 'wiki-dark-style-for-completion');
 			const currentRegion = regions.find(r => 
 				offset >= document.offsetAt(r.start) && offset <= document.offsetAt(r.end)
 			);

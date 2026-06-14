@@ -205,12 +205,32 @@ export function getDocumentRegions(document: TextDocument, documentSymbol: Recor
 
 	findTargetTypes(documentSymbol.result ?? [])
 
+	let match = undefined;
+
 	const argumentRegex = /@([\p{L}\p{N}_]*)(=[^\n\r@]+)?@/gu
-	let match;
 	while ((match = argumentRegex.exec(document.getText())) !== null) {
 		let start = match.index;
 		let end = (start + match[0].length - 1);
 		regions.push({ languageId: "argument", start, end })
+	}
+
+	// 자연스러운 자동완성을 위한 모드
+	const ifForCompletionRegex = /\{\{\{#!if (?:(?!\}\}\}).)+(\}\}\}|$)/gm;
+	while ((match = ifForCompletionRegex.exec(document.getText())) !== null) {
+		let start = match.index;
+		let end = (start + match[0].length);
+
+		const trailingBrackets = match[1] || "";
+		regions.push({ languageId: "if-for-completion", start, end: end - trailingBrackets.length })
+	}
+
+	const wikiPropertyForCompletionRegex = /(\{\{\{#!wiki.*(style|dark-style|class|lang|onclick|tag)=")((?:(?!"|\}\}\}).)*)("|\}\}\}|$)/gm;
+	while ((match = wikiPropertyForCompletionRegex.exec(document.getText())) !== null) {
+		let start = match.index + match[1].length;
+		let end = (start + match[3].length + 1);
+
+		const property = match[2]
+		regions.push({ languageId: `wiki-${property}-for-completion`, start, end })
 	}
 
 	regions = regions.sort((a, b) => a.start - b.start)

@@ -24,7 +24,7 @@ export function getWikiOnclickMode(documentRegions: HTMLDocumentRegions): Langua
 				end: document.positionAt(document.getText().length)
 			};
 			
-			const regions = documentRegions.getLanguageRanges(fullRange).filter(r => r.languageId === 'wiki-onclick');
+			const regions = documentRegions.getLanguageRanges(fullRange).filter(r => r.languageId === 'wiki-onclick' || r.languageId === 'wiki-onclick-for-completion');
 			const currentRegion = regions.find(r => 
 				offset >= document.offsetAt(r.start) && offset <= document.offsetAt(r.end)
 			);
