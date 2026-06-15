@@ -1,6 +1,6 @@
 import { CompletionItem, CompletionItemKind, CompletionList, InsertTextFormat, Position } from "vscode-html-languageservice";
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { languageModes } from './server';
+import { documentCache } from './server';
 
 export function simpleCompletions(document: TextDocument, position: Position, triggerCharacter: string, isInvoked: boolean): CompletionList | null {
   const line = document.getText({ start: { line: position.line, character: 0 }, end: position });
@@ -665,10 +665,12 @@ function getTableArgumentColorValue() {
 }
 
 function getTableArgumentClassValue(document, position) {
+  const languageModes = documentCache.get(document.uri)?.languageModes
   return languageModes.getMode("wiki-class").doComplete(document, position);
 }
 
 function getTableArgumentIfValue(document, position) {
+  const languageModes = documentCache.get(document.uri)?.languageModes
   return languageModes.getMode("js").doComplete(document, position)
 }
 

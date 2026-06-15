@@ -7,7 +7,7 @@ import { CompletionItemKind } from 'vscode-css-languageservice';
 import { HTMLDocumentRegions } from '../embeddedSupport';
 import { LanguageMode, Position } from '../languageModes';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { languageModes } from '../server';
+import { documentCache } from '../server';
 
 export function getWikiOnclickMode(documentRegions: HTMLDocumentRegions): LanguageMode {
 	return {
@@ -40,6 +40,7 @@ export function getWikiOnclickMode(documentRegions: HTMLDocumentRegions): Langua
 			const commaCount = (lastPart.match(/,/g) || []).length;
 
       if (commaCount <= 2 && content.trim().endsWith(",")) {
+				const languageModes = documentCache.get(document.uri)?.languageModes
         return languageModes.getMode("wiki-class").doComplete(document, position, { isOnclickCompletion: true, suffix: commaCount === 2 ? ";" : "," });
       } else {
         return {
