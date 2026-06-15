@@ -11,7 +11,6 @@ import { getConfig } from "./config";
 import { LinkDefinitionProvider } from "./providers/LinkDefinitionProvider";
 import { MarkPreview, getWebviewOptions } from './preview';
 import { DocumentSymbolProvider, TreeSymbol, ParagraphTreeSymbol } from './providers/DocumentSymbolProvider';
-import { SemanticTokenLegend, SemanticTokenProvider } from './providers/SemanticTokenProvider';
 import { WikiCodeActionProvider } from './providers/CodeActionProvider';
 import { TableSnippetProvider } from './providers/CompletionProvider';
 
@@ -228,14 +227,6 @@ export async function activate(context: ExtensionContext) {
 
   const symbolProvider = new DocumentSymbolProvider(context);
   vscode.languages.registerDocumentSymbolProvider("namu", symbolProvider);
-
-  context.subscriptions.push(
-    vscode.languages.registerDocumentSemanticTokensProvider(
-      { language: 'namu' },
-      new SemanticTokenProvider(),
-      SemanticTokenLegend
-    )
-  );
 
   context.subscriptions.push(
     vscode.languages.registerCompletionItemProvider(
