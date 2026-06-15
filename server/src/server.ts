@@ -17,6 +17,7 @@ import {
 import { getLanguageModes, LanguageModes } from './languageModes';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { simpleCompletions } from './simpleCompletions';
+import { provideFoldingRanges } from './foldingSupport';
 const parser = require("../../client/media/parser/core/parser.js");
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
@@ -247,7 +248,7 @@ connection.onCompletion(async (textDocumentPosition, _token) => {
 });
 
 connection.onFoldingRanges(async (params) => {
-	return []
+	return provideFoldingRanges(documents.get(params.textDocument.uri))
 })
 
 // Make the text document manager listen on the connection

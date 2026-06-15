@@ -10,7 +10,6 @@ import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } f
 import { getConfig } from "./config";
 import { LinkDefinitionProvider } from "./providers/LinkDefinitionProvider";
 import { MarkPreview, getWebviewOptions } from './preview';
-import { FoldingRangeProvider } from './providers/FoldingRangeProvider';
 import { DocumentSymbolProvider, TreeSymbol, ParagraphTreeSymbol } from './providers/DocumentSymbolProvider';
 import { SemanticTokenLegend, SemanticTokenProvider } from './providers/SemanticTokenProvider';
 import { WikiCodeActionProvider } from './providers/CodeActionProvider';
@@ -230,11 +229,6 @@ export async function activate(context: ExtensionContext) {
   const symbolProvider = new DocumentSymbolProvider(context);
   vscode.languages.registerDocumentSymbolProvider("namu", symbolProvider);
 
-  vscode.languages.registerFoldingRangeProvider(
-    "namu",
-    new FoldingRangeProvider(context)
-  );
-
   context.subscriptions.push(
     vscode.languages.registerDocumentSemanticTokensProvider(
       { language: 'namu' },
@@ -288,19 +282,6 @@ export function deactivate(): Thenable<void> | undefined {
     return undefined;
   }
   return client.stop();
-}
-
-export function flattenSymbols(symbols: TreeSymbol[]): TreeSymbol[] {
-  const result: TreeSymbol[] = [];
-
-  for (const sym of symbols) {
-    result.push(sym);
-    if (sym.children?.length) {
-      result.push(...flattenSymbols(sym.children));
-    }
-  }
-
-  return result;
 }
 
 // Code to sort paragraph
