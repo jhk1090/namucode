@@ -5,6 +5,7 @@
 
 import {
 	CompletionList,
+	CompletionTriggerKind,
 	createConnection,
 	Diagnostic,
 	DidChangeConfigurationNotification,
@@ -173,7 +174,8 @@ connection.onCompletion(async (textDocumentPosition, _token) => {
 		return null;
 	}
 	
-	const simpleCompletionsResult = simpleCompletions(document, textDocumentPosition.position, textDocumentPosition.context.triggerCharacter);
+	const simpleCompletionsResult = simpleCompletions(document, textDocumentPosition.position, textDocumentPosition.context.triggerCharacter, textDocumentPosition?.context?.triggerKind === CompletionTriggerKind.Invoked);
+
 	if (simpleCompletionsResult) {
 		return simpleCompletionsResult
 	}

@@ -2,14 +2,17 @@ import { CompletionItem, CompletionItemKind, CompletionList, InsertTextFormat, P
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { languageModes } from './server';
 
-export function simpleCompletions(document: TextDocument, position: Position, triggerCharacter: string): CompletionList | null {
+export function simpleCompletions(document: TextDocument, position: Position, triggerCharacter: string, isInvoked: boolean): CompletionList | null {
   const line = document.getText({ start: { line: position.line, character: 0 }, end: position });
 
-  if (['.', ':', '@', '\"', ';'].includes(triggerCharacter)) {
+  // ctrl+space로 불러온 경우 무조건 자동완성, 아니면 character 기반 최적화
+  const isEvaulable = (character: string) => triggerCharacter === character || isInvoked
+
+  if (!isInvoked && ['.', ':', '@', '\"', ';'].includes(triggerCharacter)) {
     return null;
   }
 
-	if (triggerCharacter === "[" && line.endsWith("[") && !line.endsWith("[[")) {
+	if (isEvaulable("[") && line.endsWith("[") && !line.endsWith("[[")) {
 		return getSquareBracketSyntaxes();
 	}
 
@@ -32,15 +35,15 @@ export function simpleCompletions(document: TextDocument, position: Position, tr
     }
   }
 
-	if (triggerCharacter === "+" && line.endsWith("{{{+")) {
+	if (isEvaulable("+") && line.endsWith("{{{+")) {
 		return getScaleTextOptions("+");
 	}
 
-	if (triggerCharacter === "-" && line.endsWith("{{{-")) {
+	if (isEvaulable("-") && line.endsWith("{{{-")) {
 		return getScaleTextOptions("-");
 	}
 
-  if (triggerCharacter === "#" && line.endsWith("{{{#")) {
+  if (isEvaulable("#") && line.endsWith("{{{#")) {
     return getColorTextOptions();
   }
 
@@ -49,17 +52,17 @@ export function simpleCompletions(document: TextDocument, position: Position, tr
     return getColorTextOptions(true);
   }
 
-  if (triggerCharacter === "!" && line.endsWith("{{{#!")) {
+  if (isEvaulable("!") && line.endsWith("{{{#!")) {
     return getShebangList();
   }
 
-  if (triggerCharacter === " " && line.endsWith("{{{#!syntax ")) {
+  if (isEvaulable(" ") && line.endsWith("{{{#!syntax ")) {
     return getSyntaxSyntaxLanguages();
   }
 
   const wikiSyntaxStartIndex = line.indexOf("{{{#!wiki ");
   const wikiSyntaxQuoteRegex = /"/g;
-  if (triggerCharacter === " " && wikiSyntaxStartIndex !== -1) {
+  if (isEvaulable(" ") && wikiSyntaxStartIndex !== -1) {
     wikiSyntaxQuoteRegex.lastIndex = wikiSyntaxStartIndex;
     const quoteCount = (line.match(wikiSyntaxQuoteRegex) || []).length;
     if (quoteCount % 2 === 0) {
@@ -68,7 +71,7 @@ export function simpleCompletions(document: TextDocument, position: Position, tr
   }
 
   const tableArgumentsRegex = /\|\|((<)([^>=|]*(?:\|[^>=|]+)?)(?:=([^>|]*))?(>)){0,}<$/g
-  if (triggerCharacter === "<" && tableArgumentsRegex.exec(line)) {
+  if (isEvaulable("<") && tableArgumentsRegex.exec(line)) {
     return getTableArguments();
   }
 
