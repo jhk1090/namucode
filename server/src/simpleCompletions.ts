@@ -9,7 +9,7 @@ export function simpleCompletions(document: TextDocument, position: Position, tr
     return null;
   }
 
-	if (triggerCharacter === "[" && line.startsWith("[") && !line.startsWith("[[")) {
+	if (triggerCharacter === "[" && line.endsWith("[") && !line.endsWith("[[")) {
 		return getSquareBracketSyntaxes();
 	}
 
