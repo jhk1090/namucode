@@ -1,5 +1,4 @@
 import { DocumentSymbol, Range, SymbolKind, TextDocument } from 'vscode-css-languageservice';
-import { documentCache } from './server';
 
 // export class TreeSymbol extends DocumentSymbol {
 //   depth: number;
@@ -10,7 +9,7 @@ import { documentCache } from './server';
 //     this.depth = depth;
 //   }
 // }
-export interface TreeSymbol extends DocumentSymbol {
+export interface TreeSymbol {
 	name: string;
 	detail: string;
 	kind: SymbolKind;
