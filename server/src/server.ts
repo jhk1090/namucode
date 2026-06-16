@@ -19,7 +19,7 @@ import { getLanguageModes, LanguageModes } from './languageModes';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { simpleCompletions } from './simpleCompletions';
 import { provideFoldingRanges } from './foldingSupport';
-import { provideDocumentSymbol } from './documentSymbolSupport';
+import { provideDocumentSymbol, TreeSymbol } from './documentSymbolSupport';
 const parser = require("../../client/media/parser/core/parser.js");
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
@@ -49,6 +49,7 @@ interface DocumentCacheValue {
   version: number;
   parsedResult: any;
   languageModes: LanguageModes | null;
+	documentSymbol: TreeSymbol[];
   settings: { editorComment: boolean; isLengthOverNotified: boolean } & ParserSettings;
 }
 export const documentCache = new Map<string, DocumentCacheValue>();
@@ -172,6 +173,7 @@ async function fetchDocumentSymbol(document: TextDocument) {
       version: document.version,
       parsedResult: {},
       languageModes: null,
+			documentSymbol: [],
       settings: { ...settings, ...globalSettings, isLengthOverNotified },
     });
 		return;
@@ -198,6 +200,7 @@ async function fetchDocumentSymbol(document: TextDocument) {
     version: document.version,
     parsedResult: result,
     languageModes: getLanguageModes(result, document),
+		documentSymbol: provideDocumentSymbol(document, result),
     settings: { ...settings, ...globalSettings, isLengthOverNotified },
   });
 
@@ -208,7 +211,7 @@ async function fetchDocumentSymbol(document: TextDocument) {
 		fileInitLocks.set(document.uri, { promise, resolve: () => {} });
 	}
 
-	console.log(document.uri, "document")
+	
 }
 
 async function validateTextDocument(textDocument: TextDocument) {
@@ -303,7 +306,17 @@ connection.languages.semanticTokens.on((params) => {
 connection.onDocumentSymbol(async (params) => {
 	const document = documents.get(params.textDocument.uri)
 	await getFileInitLock(document.uri)
-	return provideDocumentSymbol(document)
+	return documentCache.get(document.uri).documentSymbol
+})
+
+connection.onRequest("namucode/getParsedResult", async (params: { uri: string, isEditorComment: boolean; }) => {
+	await getFileInitLock(params.uri)
+	return documentCache.get(params.uri).parsedResult
+})
+
+connection.onRequest("namucode/getDocumentSymbol", async (params: { uri: string }) => {
+	await getFileInitLock(params.uri)
+	return documentCache.get(params.uri).documentSymbol
 })
 
 // Make the text document manager listen on the connection

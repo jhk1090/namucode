@@ -10,11 +10,10 @@ import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } f
 import { getConfig } from "./config";
 import { LinkDefinitionProvider } from "./providers/LinkDefinitionProvider";
 import { MarkPreview, getWebviewOptions } from './preview';
-import { DocumentSymbolProvider, TreeSymbol, ParagraphTreeSymbol } from './providers/DocumentSymbolProvider';
 import { WikiCodeActionProvider } from './providers/CodeActionProvider';
 import { TableSnippetProvider } from './providers/CompletionProvider';
 
-let client: LanguageClient;
+export let client: LanguageClient;
 let activeRules: vscode.Disposable[] = [];
 enum Level {
   UP,
@@ -225,9 +224,6 @@ export async function activate(context: ExtensionContext) {
 
   context.subscriptions.push(preview, retryPreview, previewEditorComment, openPreviewInWeb, sort);
 
-  const symbolProvider = new DocumentSymbolProvider(context);
-  vscode.languages.registerDocumentSymbolProvider("namu", symbolProvider);
-
   context.subscriptions.push(
     vscode.languages.registerCompletionItemProvider(
       { language: 'namu' },
@@ -275,13 +271,28 @@ export function deactivate(): Thenable<void> | undefined {
   return client.stop();
 }
 
+class TreeSymbol extends vscode.DocumentSymbol {
+  depth: number;
+  children: TreeSymbol[];
+
+  constructor(name: string, detail: string, kind: vscode.SymbolKind, range: vscode.Range, selectionRange: vscode.Range, depth: number) {
+    super(name, detail, kind, range, selectionRange);
+    this.depth = depth;
+  }
+}
+class ParagraphTreeSymbol extends TreeSymbol {
+  contentRange: vscode.Range;
+  children: ParagraphTreeSymbol[];
+
+  constructor(symbol: TreeSymbol, contentRange: vscode.Range) {
+    super(symbol.name, symbol.detail, symbol.kind, symbol.range, symbol.selectionRange, symbol.depth);
+    this.contentRange = contentRange;
+  }
+}
 // Code to sort paragraph
 const sortParagraph = async (context: vscode.ExtensionContext) => {
   const editor = vscode.window.activeTextEditor;
-  const symbolProvider = new DocumentSymbolProvider(context);
-
-  const cts = new vscode.CancellationTokenSource();
-  const symbolsProvided = await symbolProvider.provideDocumentSymbols(vscode.window.activeTextEditor.document, cts.token);
+  const symbolsProvided = await client.sendRequest("namucode/getDocumentSymbol", { uri: vscode.window.activeTextEditor.document.uri.toString() }) as TreeSymbol[];
   let symbols!: ParagraphTreeSymbol[];
   let isDocumentPerfect = true;
   let imperfectReason = "";

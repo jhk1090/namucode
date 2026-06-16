@@ -10,7 +10,7 @@ import { documentCache } from './server';
 //     this.depth = depth;
 //   }
 // }
-interface TreeSymbol extends DocumentSymbol {
+export interface TreeSymbol extends DocumentSymbol {
 	name: string;
 	detail: string;
 	kind: SymbolKind;
@@ -30,12 +30,7 @@ interface Heading {
   actualLevel: number;
 }
 
-export const provideDocumentSymbol = (document: TextDocument) => {
-	const result = documentCache.get(document.uri)?.parsedResult
-	if (!result) {
-		return []
-	}
-	
+export const provideDocumentSymbol = (document: TextDocument, parsedResult: any) => {
   function makeTreeSymbol(heading: Heading): TreeSymbol {
     const line = heading.line - 1
 
@@ -56,7 +51,7 @@ export const provideDocumentSymbol = (document: TextDocument) => {
     }
   }
 
-  const rawHeadings: Heading[] = result.data.headings;
+  const rawHeadings: Heading[] = parsedResult.data.headings;
   
   function buildHeadingTree(headings: Heading[]): TreeSymbol[] {
     const root: TreeSymbol[] = [];

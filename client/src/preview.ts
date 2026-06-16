@@ -5,8 +5,8 @@ import { ExtensionContext } from "vscode";
 import imageSize from "image-size";
 import { performance } from 'perf_hooks';
 import { Server, createServer } from 'http';
-import { DocumentSymbolProvider } from './providers/DocumentSymbolProvider';
 import { logger } from './logger';
+import { client } from './extension';
 const renderer = require("../media/parser/core/toHtmlWorker.js")
 
 export function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptions {
@@ -280,7 +280,7 @@ export class MarkPreview {
 
         (async () => {
             try {
-                const parsedResult = this._runParsing(document);
+                const parsedResult = await this._runParsing(document) as any;
                 if (parsedResult.errorCode) {
                     this.dispose(this.panelId);
                     const msg = await vscode.window.showErrorMessage(`파싱 허용 문서 최대 글자 수인 ${this._getConfig().maxParsingCharacter}자가 넘어가 미리보기 기능을 사용할 수 없습니다. 글자 수를 줄이거나 설정에서 "파싱 허용 문서 최대 글자 수"를 늘릴 수 있습니다.`, "설정")
@@ -402,10 +402,10 @@ export class MarkPreview {
         );
     }
 
-    private _runParsing(document: vscode.TextDocument) {
+    private async _runParsing(document: vscode.TextDocument) {
         const config = this._getConfig()
 
-        const result = DocumentSymbolProvider.getParserResult(document, { editorComment: config.isEditorComment, maxParsingDepth: config.maxParsingDepth, maxCharacter: config.maxParsingCharacter })
+        const result = await client.sendRequest("namucode/getParsedResult", { uri: document.uri.toString(), isEditorComment: config.isEditorComment })
 
         return result;
     }
