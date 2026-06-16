@@ -57,7 +57,7 @@ export class DocumentSymbolProvider implements vscode.DocumentSymbolProvider {
       return [];
     }
 
-    return this.createSymbol(document, result);
+    // return this.createSymbol(document, result);
   }
 
   static getParserResult(document: vscode.TextDocument, { editorComment = false, maxParsingDepth = null, maxCharacter = 1500000 }) {

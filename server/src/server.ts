@@ -19,6 +19,7 @@ import { getLanguageModes, LanguageModes } from './languageModes';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { simpleCompletions } from './simpleCompletions';
 import { provideFoldingRanges } from './foldingSupport';
+import { provideDocumentSymbol } from './documentSymbolSupport';
 const parser = require("../../client/media/parser/core/parser.js");
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
@@ -51,6 +52,18 @@ interface DocumentCacheValue {
   settings: { editorComment: boolean; isLengthOverNotified: boolean } & ParserSettings;
 }
 export const documentCache = new Map<string, DocumentCacheValue>();
+const fileInitLocks = new Map<string, { promise: Promise<void>; resolve: () => void }>();
+
+function getFileInitLock(uri: string): Promise<void> {
+	if (!fileInitLocks.has(uri)) {
+		let resolveFunc!: () => void;
+		const promise = new Promise<void>((resolve) => {
+			resolveFunc = resolve;
+		});
+		fileInitLocks.set(uri, { promise, resolve: resolveFunc });
+	}
+	return fileInitLocks.get(uri)!.promise;
+}
 
 let hasConfigurationCapability = false;
 let resolveInitialization: () => void;
@@ -92,10 +105,10 @@ connection.onInitialize(async (_params: InitializeParams) => {
 					tokenModifiers: []
 				},
 				full: true
-			}
+			},
+			documentSymbolProvider: true
 			// hoverProvider: true,
 			// definitionProvider: true,
-			// documentSymbolProvider: true
 		}
 	};
 });
@@ -187,6 +200,15 @@ async function fetchDocumentSymbol(document: TextDocument) {
     languageModes: getLanguageModes(result, document),
     settings: { ...settings, ...globalSettings, isLengthOverNotified },
   });
+
+	if (fileInitLocks.has(document.uri)) {
+		fileInitLocks.get(document.uri)!.resolve();
+	} else {
+		const promise = Promise.resolve();
+		fileInitLocks.set(document.uri, { promise, resolve: () => {} });
+	}
+
+	console.log(document.uri, "document")
 }
 
 async function validateTextDocument(textDocument: TextDocument) {
@@ -276,6 +298,12 @@ connection.languages.semanticTokens.on((params) => {
 	}
 	
 	return tokensBuilder.build();
+})
+
+connection.onDocumentSymbol(async (params) => {
+	const document = documents.get(params.textDocument.uri)
+	await getFileInitLock(document.uri)
+	return provideDocumentSymbol(document)
 })
 
 // Make the text document manager listen on the connection
