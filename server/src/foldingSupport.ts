@@ -83,10 +83,14 @@ export const provideFoldingRanges = (document: TextDocument) => {
     }
   };
 
-	const result = documentCache.get(document.uri)?.parsedResult ?? {}
-  findTargetTypes(result.result);
+	const result = documentCache.get(document.uri)?.parsedResult
+  let headings = [];
+  
+  if (result) {
+    findTargetTypes(result.result);
+    headings = result.data.headings;
+  }
 
-  const headings = result.data.headings;
   for (let index = 0; index < headings.length; index++) {
     const heading = headings[index];
     const nextHeading = headings[index + 1];

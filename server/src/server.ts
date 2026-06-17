@@ -48,9 +48,10 @@ let globalSettings: ParserSettings & CodeACSettings = defaultSettings;
 interface DocumentCacheValue {
   version: number;
   parsedResult: any;
+	editorCommentParsedResult: any;
   languageModes: LanguageModes | null;
 	documentSymbol: TreeSymbol[];
-  settings: { editorComment: boolean; isLengthOverNotified: boolean } & ParserSettings;
+  settings: { isLengthOverNotified: boolean } & ParserSettings;
 }
 export const documentCache = new Map<string, DocumentCacheValue>();
 const fileInitLocks = new Map<string, { promise: Promise<void>; resolve: () => void }>();
@@ -154,8 +155,8 @@ documents.onDidChangeContent(async (change) => {
 	await validateTextDocument(change.document);
 });
 
-async function fetchDocumentSymbol(document: TextDocument) {
-	const settings = { editorComment: false, maxParsingDepth: globalSettings.maxParsingDepth };
+async function fetchDocumentSymbol(document: TextDocument, isEditorComment: boolean = false) {
+	const settings = { editorComment: isEditorComment, maxParsingDepth: globalSettings.maxParsingDepth };
 	const isLengthOver = document.getText().length > globalSettings.maxParsingCharacter
 	
 	const target = documentCache.get(document.uri)
@@ -171,7 +172,8 @@ async function fetchDocumentSymbol(document: TextDocument) {
     isLengthOverNotified = true;
     documentCache.set(document.uri, {
       version: document.version,
-      parsedResult: {},
+      parsedResult: null,
+			editorCommentParsedResult: null,
       languageModes: null,
 			documentSymbol: [],
       settings: { ...settings, ...globalSettings, isLengthOverNotified },
@@ -183,10 +185,18 @@ async function fetchDocumentSymbol(document: TextDocument) {
     isLengthOverNotified = false;
   }
 
+	if (target && isEditorComment) {
+		let editorCommentParsedResult = target.editorCommentParsedResult;
+		if (!editorCommentParsedResult) {
+			editorCommentParsedResult = parser(document.getText(), settings);
+			documentCache.set(document.uri, { ...target, editorCommentParsedResult })
+		}
+		return editorCommentParsedResult
+	}
+
 	const isConfigurationUnchanged = (
 		target &&
 		target.version === document.version &&
-		target.settings.editorComment === settings.editorComment &&
 		target.settings.maxParsingDepth === globalSettings.maxParsingDepth &&
 		target.settings.maxParsingCharacter === globalSettings.maxParsingCharacter
 	)
@@ -199,6 +209,7 @@ async function fetchDocumentSymbol(document: TextDocument) {
   documentCache.set(document.uri, {
     version: document.version,
     parsedResult: result,
+		editorCommentParsedResult: null,
     languageModes: getLanguageModes(result, document),
 		documentSymbol: provideDocumentSymbol(document, result),
     settings: { ...settings, ...globalSettings, isLengthOverNotified },
@@ -289,8 +300,8 @@ connection.onFoldingRanges(async (params) => {
 connection.languages.semanticTokens.on((params) => {
 	const document = documents.get(params.textDocument.uri)
 
-	const result = documentCache.get(document.uri)?.parsedResult ?? {}
-	const headings = result.data.headings
+	const result = documentCache.get(document.uri)?.parsedResult
+	const headings = result ? result.data.headings : []
 
 	const tokensBuilder = new SemanticTokensBuilder()
 
@@ -311,7 +322,7 @@ connection.onDocumentSymbol(async (params) => {
 
 connection.onRequest("namucode/getParsedResult", async (params: { uri: string, isEditorComment: boolean; }) => {
 	await getFileInitLock(params.uri)
-	return documentCache.get(params.uri).parsedResult
+	return params.isEditorComment ? fetchDocumentSymbol(documents.get(params.uri), true) : documentCache.get(params.uri).parsedResult
 })
 
 connection.onRequest("namucode/getDocumentSymbol", async (params: { uri: string }) => {

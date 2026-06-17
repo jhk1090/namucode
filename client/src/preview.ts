@@ -280,8 +280,7 @@ export class MarkPreview {
 
         (async () => {
             try {
-                const parsedResult = await this._runParsing(document) as any;
-                if (parsedResult.errorCode) {
+                if (document.getText().length > this._getConfig().maxParsingCharacter) {
                     this.dispose(this.panelId);
                     const msg = await vscode.window.showErrorMessage(`파싱 허용 문서 최대 글자 수인 ${this._getConfig().maxParsingCharacter}자가 넘어가 미리보기 기능을 사용할 수 없습니다. 글자 수를 줄이거나 설정에서 "파싱 허용 문서 최대 글자 수"를 늘릴 수 있습니다.`, "설정")
                     if (msg === "설정") {
@@ -289,6 +288,7 @@ export class MarkPreview {
                     }
                     return
                 }
+                const parsedResult = await this._runParsing(document) as any;
 
                 const currentFolder = vscode.workspace.getWorkspaceFolder(this.panelUri)
                 const workspaceDocuments = await this._loadWorkspaceResources(currentFolder);
