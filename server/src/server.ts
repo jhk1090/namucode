@@ -11,7 +11,6 @@ import {
 	DidChangeConfigurationNotification,
 	InitializeParams,
 	ProposedFeatures,
-	SemanticTokensBuilder,
 	TextDocuments,
 	TextDocumentSyncKind
 } from 'vscode-languageserver/node';
@@ -73,7 +72,6 @@ const initializationPromise = new Promise<void>((resolve) => {
 	resolveInitialization = resolve;
 })
 
-const tokenTypes = ["heading"]
 
 connection.onInitialize(async (_params: InitializeParams) => {
 	const capabilities = _params.capabilities;
@@ -101,13 +99,6 @@ connection.onInitialize(async (_params: InitializeParams) => {
 				triggerCharacters: ['.', '#', ':', '@', '\"', ';', ' ', '!', '[', '+', '-', '|', '=', '&', '<', ',']
 			},
 			foldingRangeProvider: true,
-			semanticTokensProvider: {
-				legend: {
-					tokenTypes,
-					tokenModifiers: []
-				},
-				full: true
-			},
 			documentSymbolProvider: true
 			// hoverProvider: true,
 			// definitionProvider: true,
@@ -295,23 +286,6 @@ connection.onCompletion(async (textDocumentPosition, _token) => {
 
 connection.onFoldingRanges(async (params) => {
 	return provideFoldingRanges(documents.get(params.textDocument.uri))
-})
-
-connection.languages.semanticTokens.on((params) => {
-	const document = documents.get(params.textDocument.uri)
-
-	const result = documentCache.get(document.uri)?.parsedResult
-	const headings = result ? result.data.headings : []
-
-	const tokensBuilder = new SemanticTokensBuilder()
-
-	for (const heading of headings) {
-		const line = heading.line - 1
-		const lineText = document.getText().split(/\r?\n/)[line]
-		tokensBuilder.push(line, 0, lineText.length, tokenTypes.indexOf("heading"), 0);
-	}
-	
-	return tokensBuilder.build();
 })
 
 connection.onDocumentSymbol(async (params) => {

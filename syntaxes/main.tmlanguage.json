@@ -54,6 +54,9 @@
                     "include": "source.namu.brackets"
                 },
                 {
+                    "include": "#headings"
+                },
+                {
                     "include": "#footnotes"
                 },
                 {
@@ -242,6 +245,10 @@
                     "match": "(?<=^(> ?){0,8} ( )*)(\\*|1\\.|a\\.|A\\.|i\\.|I\\.(\\#[0-9][0-9]?)?)"
                 }
             ]
+        },
+        "headings": {
+            "name": "keyword.control.namu",
+            "match": "^(={1,6})(#?) (.*) (\\2)(\\1)$"
         },
         "footnotes": {
             "match": "\\[(\\*)",
