@@ -236,6 +236,10 @@ const Text = createToken({
     name: 'Text',
     pattern: /[^\\'\r\n_\[\]~\-^,|{#@<]+|['\r\n_\[\]~\-^,|{#@<]/
 });
+const MinifiedText = createToken({
+    name: 'Text',
+    pattern: /[^\\\r\n{]+|[\r\n{]/
+});
 
 const HeadingRegex = /^(={1,6})(#)? +(.+?) +\2\1$/m;
 const Heading = createToken({
@@ -685,6 +689,22 @@ const inlineTokens = [
 
     Text
 ];
+
+const minifiedTokens = [
+    Heading,
+    ScaleText,
+    WikiSyntax,
+    SyntaxSyntax,
+    HtmlSyntax,
+    Folding,
+    IfSyntax,
+    StyleSyntax,
+    Latex,
+    ColorText,
+    Literal,
+    MinifiedText
+]
+
 const inlineLexer = new Lexer([...importantTokens, ...inlineTokens]);
 
 const allTokens = [
@@ -715,6 +735,10 @@ const modeGenerator = tokens => ({
 });
 
 const blockLexer = new Lexer(modeGenerator(allTokens.filter(a => !['Heading'].includes(a.name))));
+const minifiedBlockLexer = new Lexer(modeGenerator(minifiedTokens.filter(a => !['Heading'].includes(a.name))));
+
+const minifiedLexer = new Lexer(modeGenerator(minifiedTokens));
+
 const lexer = new Lexer(modeGenerator(allTokens));
 
 const TableSplit = createToken({
@@ -1225,9 +1249,79 @@ class NamumarkParser extends EmbeddedActionsParser {
             return result;
         });
 
+        $.RULE('minified', () => {
+            const result = [];
+            $.AT_LEAST_ONE({
+                GATE: ParagraphGate,
+                DEF: () => {
+                    const tok = $.OR([
+                        { ALT: () => $.SUBRULE($.heading) },
+                        { ALT: () => $.SUBRULE($.scaleText) },
+                        { ALT: () => $.SUBRULE($.wikiSyntax) },
+                        { ALT: () => $.SUBRULE($.syntaxSyntax) },
+                        { ALT: () => $.SUBRULE($.htmlSyntax) },
+                        { ALT: () => $.SUBRULE($.folding) },
+                        { ALT: () => $.SUBRULE($.ifSyntax) },
+                        { ALT: () => $.SUBRULE($.styleSyntax) },
+                        { ALT: () => $.SUBRULE($.latex) },
+                        { ALT: () => $.SUBRULE($.colorText) },
+                        { ALT: () => $.SUBRULE($.literal) },
+                        { ALT: () => $.SUBRULE($.escape) },
+                        { ALT: () => $.SUBRULE($.minifiedText) }
+                    ]);
+                    if(result.at(-1)?.type === 'text' && tok.type === 'text') {
+                        result.at(-1).text += tok.text;
+                        return;
+                    }
+                    result.push(tok);
+                }
+            });
+            return result;
+        });
+
+        $.RULE('minifiedInline', () => {
+            const result = [];
+            $.AT_LEAST_ONE({
+                GATE: ParagraphGate,
+                DEF: () => {
+                    const tok = $.OR([
+                        { ALT: () => $.SUBRULE($.scaleText) },
+                        { ALT: () => $.SUBRULE($.wikiSyntax) },
+                        { ALT: () => $.SUBRULE($.syntaxSyntax) },
+                        { ALT: () => $.SUBRULE($.htmlSyntax) },
+                        { ALT: () => $.SUBRULE($.folding) },
+                        { ALT: () => $.SUBRULE($.ifSyntax) },
+                        { ALT: () => $.SUBRULE($.styleSyntax) },
+                        { ALT: () => $.SUBRULE($.latex) },
+                        { ALT: () => $.SUBRULE($.colorText) },
+                        { ALT: () => $.SUBRULE($.literal) },
+                        { ALT: () => $.SUBRULE($.escape) },
+                        { ALT: () => $.SUBRULE($.minifiedText) }
+                    ]);
+                    if(result.at(-1)?.type === 'text' && tok.type === 'text') {
+                        result.at(-1).text += tok.text;
+                        return;
+                    }
+                    result.push(tok);
+                }
+            });
+            return result;
+        });
+
         $.RULE('text', () => {
             const tok = $.OR([
                 { ALT: () => $.CONSUME(Text) },
+                { ALT: () => $.CONSUME(Newline) }
+            ]);
+            return {
+                type: 'text',
+                text: tok.image
+            }
+        });
+
+        $.RULE('minifiedText', () => {
+            const tok = $.OR([
+                { ALT: () => $.CONSUME(MinifiedText) },
                 { ALT: () => $.CONSUME(Newline) }
             ]);
             return {
@@ -1787,7 +1881,7 @@ const parseInline = (text, name, rootStartLine = 0) => {
 const parseBlock = (text, name, noTopParagraph = false, noLineStart = false, rootStartLine = 0) => {
     if(name) Store.parentTypes.push(name);
     noCheckStartAtFirst = noLineStart;
-    const lexed = blockLexer.tokenize(text);
+    const lexed = globalMinified ? minifiedBlockLexer.tokenize(text) : blockLexer.tokenize(text);
     noCheckStartAtFirst = false;
     const blockParser = getParser();
     if(!blockParser) {
@@ -1804,7 +1898,7 @@ const parseBlock = (text, name, noTopParagraph = false, noLineStart = false, roo
     blockParser.noTopParagraph = noTopParagraph;
     blockParser.rootStartLine = rootStartLine;
     blockParser.input = lexed.tokens;
-    const result = blockParser.blockDocument();
+    const result = globalMinified ? blockParser.minified() : blockParser.blockDocument();
     if(name) Store.parentTypes.pop();
     currDepth--;
     // console.log(`"${text}"`);
@@ -1814,14 +1908,17 @@ const parseBlock = (text, name, noTopParagraph = false, noLineStart = false, roo
 }
 
 const parser = new NamumarkParser();
+let globalMinified = false;
 
-module.exports = (text, { tokens = null, editorComment = false, thread = false, noTopParagraph = false, maxParsingDepth = null } = {}) => {
+module.exports = (text, { tokens = null, editorComment = false, thread = false, noTopParagraph = false, maxParsingDepth = null, minified = false } = {}) => {
     if (maxParsingDepth) {
         MAXIMUM_DEPTH = maxParsingDepth
         instances = []
         for(let i = 0; i < MAXIMUM_DEPTH; i++)
             instances.push(new NamumarkParser());
     }
+
+    globalMinified = minified;
 
     text = text?.replaceAll('\r', '');
 
@@ -1855,7 +1952,7 @@ module.exports = (text, { tokens = null, editorComment = false, thread = false, 
         }
         text = newLines.join('\n');
 
-        const lexed = lexer.tokenize(text);
+        const lexed = minified ? minifiedLexer.tokenize(text) : lexer.tokenize(text);
         tokens = lexed.tokens;
 
         // console.timeEnd('tokenize');
@@ -1864,7 +1961,7 @@ module.exports = (text, { tokens = null, editorComment = false, thread = false, 
     parser.noTopParagraph = noTopParagraph;
     parser.input = tokens ?? [];
     // console.time('cst');
-    const result = parser.input.length ? parser.document() : [];
+    const result = parser.input.length ? (minified ? parser.minified() : parser.document()) : [];
     // console.timeEnd('cst');
 
     const paragraphNum = [...Array(6 + 1 - Store.heading.lowestLevel)].map(_ => 0);

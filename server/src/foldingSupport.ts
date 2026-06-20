@@ -83,7 +83,7 @@ export const provideFoldingRanges = (document: TextDocument) => {
     }
   };
 
-	const result = documentCache.get(document.uri)?.parsedResult
+	const result = documentCache.get(document.uri)?.result?.minified
   let headings = [];
   
   if (result) {

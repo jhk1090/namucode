@@ -46,8 +46,11 @@ let globalSettings: ParserSettings & CodeACSettings = defaultSettings;
 
 interface DocumentCacheValue {
   version: number;
-  parsedResult: any;
-	editorCommentParsedResult: any;
+	result: {
+		common: any;
+		minified: any;
+		editorComment: any;
+	};
   languageModes: LanguageModes | null;
 	documentSymbol: TreeSymbol[];
   settings: { isLengthOverNotified: boolean } & ParserSettings;
@@ -146,8 +149,8 @@ documents.onDidChangeContent(async (change) => {
 	await validateTextDocument(change.document);
 });
 
-async function fetchDocumentSymbol(document: TextDocument, isEditorComment: boolean = false) {
-	const settings = { editorComment: isEditorComment, maxParsingDepth: globalSettings.maxParsingDepth };
+async function fetchDocumentSymbol(document: TextDocument, isEditorComment: boolean = false, isMinified: boolean = true) {
+	const settings = { editorComment: isEditorComment, minified: isMinified, maxParsingDepth: globalSettings.maxParsingDepth };
 	const isLengthOver = document.getText().length > globalSettings.maxParsingCharacter
 	
 	const target = documentCache.get(document.uri)
@@ -163,11 +166,14 @@ async function fetchDocumentSymbol(document: TextDocument, isEditorComment: bool
     isLengthOverNotified = true;
     documentCache.set(document.uri, {
       version: document.version,
-      parsedResult: null,
-			editorCommentParsedResult: null,
+			result: {
+				common: null,
+				editorComment: null,
+				minified: null
+			},
       languageModes: null,
 			documentSymbol: [],
-      settings: { ...settings, ...globalSettings, isLengthOverNotified },
+      settings: { ...globalSettings, isLengthOverNotified },
     });
 		return;
   }
@@ -176,13 +182,22 @@ async function fetchDocumentSymbol(document: TextDocument, isEditorComment: bool
     isLengthOverNotified = false;
   }
 
-	if (target && isEditorComment) {
-		let editorCommentParsedResult = target.editorCommentParsedResult;
+	if (target && isEditorComment && !isMinified) {
+		let editorCommentParsedResult = target.result.editorComment;
 		if (!editorCommentParsedResult) {
 			editorCommentParsedResult = parser(document.getText(), settings);
-			documentCache.set(document.uri, { ...target, editorCommentParsedResult })
+			documentCache.set(document.uri, { ...target, result: { ...target.result, editorComment: editorCommentParsedResult } })
 		}
 		return editorCommentParsedResult
+	}
+
+	if (target && !isMinified) {
+		let commonResult = target.result.common;
+		if (!commonResult) {
+			commonResult = parser(document.getText(), settings);
+			documentCache.set(document.uri, { ...target, result: { ...target.result, common: commonResult } })
+		}
+		return commonResult
 	}
 
 	const isConfigurationUnchanged = (
@@ -199,11 +214,14 @@ async function fetchDocumentSymbol(document: TextDocument, isEditorComment: bool
 	const result = parser(document.getText(), settings);
   documentCache.set(document.uri, {
     version: document.version,
-    parsedResult: result,
-		editorCommentParsedResult: null,
+		result: {
+			common: null,
+			minified: result,
+			editorComment: null
+		},
     languageModes: getLanguageModes(result, document),
 		documentSymbol: provideDocumentSymbol(document, result),
-    settings: { ...settings, ...globalSettings, isLengthOverNotified },
+    settings: { ...globalSettings, isLengthOverNotified },
   });
 
 	if (fileInitLocks.has(document.uri)) {
@@ -296,7 +314,7 @@ connection.onDocumentSymbol(async (params) => {
 
 connection.onRequest("namucode/getParsedResult", async (params: { uri: string, isEditorComment: boolean; }) => {
 	await getFileInitLock(params.uri)
-	return params.isEditorComment ? fetchDocumentSymbol(documents.get(params.uri), true) : documentCache.get(params.uri).parsedResult
+	return params.isEditorComment ? fetchDocumentSymbol(documents.get(params.uri), true, false) : fetchDocumentSymbol(documents.get(params.uri), false, false)
 })
 
 connection.onRequest("namucode/getDocumentSymbol", async (params: { uri: string }) => {
