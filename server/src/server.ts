@@ -9,6 +9,8 @@ import {
 	createConnection,
 	Diagnostic,
 	DidChangeConfigurationNotification,
+	DidChangeWatchedFilesNotification,
+	FileChangeType,
 	InitializeParams,
 	ProposedFeatures,
 	TextDocuments,
@@ -103,7 +105,12 @@ connection.onInitialize(async (_params: InitializeParams) => {
 
 			},
 			foldingRangeProvider: true,
-			documentSymbolProvider: true
+			documentSymbolProvider: true,
+			workspace: {
+				workspaceFolders: {
+					supported: true
+				}
+			}
 			// hoverProvider: true,
 			// definitionProvider: true,
 		}
@@ -114,6 +121,13 @@ connection.onInitialized(async () => {
 	if (hasConfigurationCapability) {
 		// Register for all configuration changes.
 		connection.client.register(DidChangeConfigurationNotification.type, undefined);
+		connection.client.register(DidChangeWatchedFilesNotification.type, {
+			watchers: [
+				{
+					globPattern: "**/*.namu"
+				}
+			]
+		})
 		const latestSettings = await connection.workspace.getConfiguration("namucode")
 		globalSettings = { ...latestSettings.parser, ...latestSettings.codeAnalysisCompletion }
 	}
@@ -141,6 +155,18 @@ connection.onDidChangeConfiguration(async (_change) => {
 		await validateTextDocument(document)
 	});
 });
+
+connection.onDidChangeWatchedFiles((change) => {
+	for (const event of change.changes) {
+		if (event.type === FileChangeType.Deleted) {
+			const deletedUri = event.uri;
+			if (documentCache.has(deletedUri)) {
+				console.log(`${deletedUri} 캐싱 삭제됨.`)
+				documentCache.delete(deletedUri)
+			}
+		}
+	}
+})
 
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.

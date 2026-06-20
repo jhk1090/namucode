@@ -255,7 +255,7 @@ export async function activate(context: ExtensionContext) {
       provideCompletionItem: serverCompletionMiddleware,
     },
     synchronize: {
-      fileEvents: workspace.createFileSystemWatcher("**/.clientrc"),
+      fileEvents: workspace.createFileSystemWatcher("**/*.namu"),
     },
   };
   client = new LanguageClient("Namucode", serverOptions, clientOptions);
