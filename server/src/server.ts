@@ -16,9 +16,9 @@ import {
 } from 'vscode-languageserver/node';
 import { getLanguageModes, LanguageModes } from './languageModes';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { simpleCompletions } from './simpleCompletions';
 import { provideFoldingRanges } from './foldingSupport';
 import { provideDocumentSymbol, TreeSymbol } from './documentSymbolSupport';
+import { provideCompletionSupport } from './completionSupport';
 const parser = require("../../client/media/parser/core/parser.js");
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
@@ -99,7 +99,8 @@ connection.onInitialize(async (_params: InitializeParams) => {
 			// Tell the client that the server supports code completion
 			completionProvider: {
 				resolveProvider: false,
-				triggerCharacters: ['.', '#', ':', '@', '\"', ';', ' ', '!', '[', '+', '-', '|', '=', '&', '<', ',']
+				triggerCharacters: ['.', ':', '@', '\"', ';', ',', ' ', '='],
+
 			},
 			foldingRangeProvider: true,
 			documentSymbolProvider: true
@@ -277,32 +278,15 @@ connection.onCompletion(async (textDocumentPosition, _token) => {
 	if (!document) {
 		return null;
 	}
+
+	await getFileInitLock(document.uri)
 	
-	const simpleCompletionsResult = simpleCompletions(document, textDocumentPosition.position, textDocumentPosition.context.triggerCharacter, textDocumentPosition?.context?.triggerKind === CompletionTriggerKind.Invoked);
-
-	if (simpleCompletionsResult) {
-		return simpleCompletionsResult
-	}
-
-	const languageModes = documentCache.get(textDocumentPosition.textDocument.uri)?.languageModes;
-	if (!languageModes) return null;
-
-	const line = document.getText({ start: { line: textDocumentPosition.position.line, character: 0 }, end: textDocumentPosition.position });
-
-	if (textDocumentPosition.context.triggerCharacter === "@" && /(?<!@[\p{L}\p{N}_]*(=[^\n\r@]+)?)@$/gu.exec(line)) {
-		return languageModes.getMode("js").doComplete(document, textDocumentPosition.position, { isArgumentCompletion: true })
-	}
-
-	const mode = languageModes.getModeAtPosition(textDocumentPosition.position);
-	if (!mode || !mode.doComplete) {
-		return CompletionList.create();
-	}
-	const doComplete = mode.doComplete!;
-
-	return doComplete(document, textDocumentPosition.position);
+	return provideCompletionSupport(document, textDocumentPosition.position, textDocumentPosition.context)
 });
 
 connection.onFoldingRanges(async (params) => {
+	const document = documents.get(params.textDocument.uri)
+	await getFileInitLock(document.uri)
 	return provideFoldingRanges(documents.get(params.textDocument.uri))
 })
 

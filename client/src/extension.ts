@@ -11,8 +11,8 @@ import { getConfig } from "./config";
 import { LinkDefinitionProvider } from "./providers/LinkDefinitionProvider";
 import { MarkPreview, getWebviewOptions } from './preview';
 import { WikiCodeActionProvider } from './providers/CodeActionProvider';
-import { TableSnippetProvider } from './providers/CompletionProvider';
 import { sortParagraph } from './sortParagraph';
+import { registerCompletionProviders, serverCompletionMiddleware } from './providers/CompletionProvider';
 
 export let client: LanguageClient;
 let activeRules: vscode.Disposable[] = [];
@@ -225,13 +225,7 @@ export async function activate(context: ExtensionContext) {
 
   context.subscriptions.push(preview, retryPreview, previewEditorComment, openPreviewInWeb, sort);
 
-  context.subscriptions.push(
-    vscode.languages.registerCompletionItemProvider(
-      { language: 'namu' },
-      new TableSnippetProvider(),
-      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
-    )
-  );
+  registerCompletionProviders(context);
 
   context.subscriptions.push(
     vscode.languages.registerCodeActionsProvider(
@@ -257,6 +251,9 @@ export async function activate(context: ExtensionContext) {
       { scheme: "file", language: "namu" },
       { scheme: "untitled", language: "namu" },
     ],
+    middleware: {
+      provideCompletionItem: serverCompletionMiddleware,
+    },
     synchronize: {
       fileEvents: workspace.createFileSystemWatcher("**/.clientrc"),
     },
