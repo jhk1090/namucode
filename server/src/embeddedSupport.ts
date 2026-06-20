@@ -215,7 +215,7 @@ export function getDocumentRegions(document: TextDocument, documentSymbol: Recor
 	}
 
 	// 자연스러운 자동완성을 위한 모드
-	const ifForCompletionRegex = /\{\{\{#!if (?:(?!\}\}\}).)+(\}\}\}|$)/gm;
+	const ifForCompletionRegex = /\{\{\{#!if (?:(?!\}\}\}).)*(\}\}\}|$)/gm;
 	while ((match = ifForCompletionRegex.exec(document.getText())) !== null) {
 		let start = match.index;
 		let end = (start + match[0].length);
