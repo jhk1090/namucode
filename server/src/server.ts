@@ -18,7 +18,6 @@ import {
 } from 'vscode-languageserver/node';
 import { getLanguageModes, LanguageModes } from './languageModes';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { provideFoldingRanges } from './foldingSupport';
 import { provideDocumentSymbol, TreeSymbol } from './documentSymbolSupport';
 import { provideCompletionSupport } from './completionSupport';
 const parser = require("../../client/media/parser/core/parser.js");
@@ -313,7 +312,20 @@ connection.onCompletion(async (textDocumentPosition, _token) => {
 connection.onFoldingRanges(async (params) => {
 	const document = documents.get(params.textDocument.uri)
 	await getFileInitLock(document.uri)
-	return provideFoldingRanges(documents.get(params.textDocument.uri))
+
+	const ranges = [];
+	const minified = documentCache.get(document.uri)?.result?.minified;
+	const headings = minified.data.headings;
+	for (let index = 0; index < headings.length; index++) {
+    const heading = headings[index];
+    const nextHeading = headings[index + 1];
+
+    const startLine = heading.line - 1;
+    const endLine = nextHeading ? nextHeading.line - 2 : document.lineCount - 1;
+
+    ranges.push({ startLine, endLine });
+  }
+	return [...ranges, ...minified.data.foldingRanges]
 })
 
 connection.onDocumentSymbol(async (params) => {

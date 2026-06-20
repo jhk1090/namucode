@@ -780,9 +780,18 @@ let Store = {
     // },
     commentLines: [],
     noLiteralPos: [],
-    parentTypes: []
+    parentTypes: [],
+    foldingRanges: []
 }
 const originalStore = { ...Store };
+
+const addFoldingRange = (startLine, endLine) => {
+    const tokStartLine = startLine - 1;
+    const tokEndLine = endLine - 2;
+    if (tokStartLine < tokEndLine) {
+        Store.foldingRanges.push({ startLine: tokStartLine, endLine: tokEndLine })
+    }
+}
 
 class NamumarkParser extends EmbeddedActionsParser {
     constructor() {
@@ -1354,6 +1363,10 @@ class NamumarkParser extends EmbeddedActionsParser {
                 content = parseBlock(content, 'scaleText', true, undefined, (tok.image[5] === "\n" ? startLine : startLine - 1) - startLeft);
             });
 
+            $.ACTION(() => {
+                addFoldingRange(startLine, endLine)
+            })
+
             return {
                 type: 'scaleText',
                 isSizeUp,
@@ -1382,6 +1395,10 @@ class NamumarkParser extends EmbeddedActionsParser {
                 content = parseBlock(content, 'wikiSyntax', true, undefined, startLine - startLeft);
             });
 
+            $.ACTION(() => {
+                addFoldingRange(startLine, endLine)
+            })
+
             return {
                 type: 'wikiSyntax',
                 // style,
@@ -1400,12 +1417,19 @@ class NamumarkParser extends EmbeddedActionsParser {
             const lang = AllowedLanguages.find(a => text.startsWith(a));
             const content = text.slice(lang?.length ?? 0).trim();
 
+            let startLine = getOriginalLine(Store.commentLines, this.rootStartLine + tok.startLine - 1) + 1
+            let endLine = getOriginalLine(Store.commentLines, this.rootStartLine + tok.endLine - 1) + 1
+
+            $.ACTION(() => {
+                addFoldingRange(startLine, endLine)
+            })
+
             return {
                 type: 'syntaxSyntax',
                 lang,
                 content,
-                startLine: getOriginalLine(Store.commentLines, this.rootStartLine + tok.startLine - 1) + 1,
-                endLine: getOriginalLine(Store.commentLines, this.rootStartLine + tok.endLine - 1) + 1
+                startLine,
+                endLine
             }
         });
 
@@ -1413,11 +1437,19 @@ class NamumarkParser extends EmbeddedActionsParser {
             const tok = $.CONSUME(HtmlSyntax);
             const text = tok.image.slice(9, -3).trim();
             // const safeHtml = utils.sanitizeHtml(text);
+
+            let startLine = getOriginalLine(Store.commentLines, this.rootStartLine + tok.startLine - 1) + 1
+            let endLine = getOriginalLine(Store.commentLines, this.rootStartLine + tok.endLine - 1) + 1
+
+            $.ACTION(() => {
+                addFoldingRange(startLine, endLine)
+            })
+
             return {
                 type: 'htmlSyntax',
                 text,
-                startLine: getOriginalLine(Store.commentLines, this.rootStartLine + tok.startLine - 1) + 1,
-                endLine: getOriginalLine(Store.commentLines, this.rootStartLine + tok.endLine - 1) + 1
+                startLine,
+                endLine
                 // safeHtml
             }
         });
@@ -1468,6 +1500,10 @@ class NamumarkParser extends EmbeddedActionsParser {
                 content = parseBlock(content, 'syntaxSyntax', true, undefined, startLine - startLeft);
             });
 
+            $.ACTION(() => {
+                addFoldingRange(startLine, endLine)
+            })
+
             return {
                 type: 'folding',
                 text: text || 'More',
@@ -1493,7 +1529,12 @@ class NamumarkParser extends EmbeddedActionsParser {
 
             $.ACTION(() => {
                 content = parseBlock(content, 'ifSyntax', true, undefined, startLine - startLeft);
+                addFoldingRange(startLine, endLine)
             });
+
+            $.ACTION(() => {
+                addFoldingRange(startLine, endLine)
+            })
 
             return {
                 type: 'ifSyntax',
@@ -1508,15 +1549,20 @@ class NamumarkParser extends EmbeddedActionsParser {
             const tok = $.CONSUME(StyleSyntax);
             const content = tok.image.slice(10, -3).trim();
             
-            let startLine = getOriginalLine(Store.commentLines, this.rootStartLine + tok.startLine - 1) + 1 
+            let startLine = getOriginalLine(Store.commentLines, this.rootStartLine + tok.startLine - 1) + 1
+            let endLine = getOriginalLine(Store.commentLines, this.rootStartLine + tok.endLine - 1) + 1
             let endColumn = tok.endColumn
             let offsetTail = -1 * ("}}}").length + 1
+
+            $.ACTION(() => {
+                addFoldingRange(startLine, endLine)
+            })
 
             return {
                 type: 'styleSyntax',
                 content,
                 startLine,
-                endLine: getOriginalLine(Store.commentLines, this.rootStartLine + tok.endLine - 1) + 1,
+                endLine,
                 innerStartLine: startLine + 1,
                 innerStartColumn: 1,
                 innerEndColumn: endColumn + offsetTail
@@ -1527,15 +1573,20 @@ class NamumarkParser extends EmbeddedActionsParser {
             const tok = $.CONSUME(Latex);
             const content = tok.image.slice(11, -3).trim();
 
-            let startLine = getOriginalLine(Store.commentLines, this.rootStartLine + tok.startLine - 1) + 1 
+            let startLine = getOriginalLine(Store.commentLines, this.rootStartLine + tok.startLine - 1) + 1
+            let endLine = getOriginalLine(Store.commentLines, this.rootStartLine + tok.endLine - 1) + 1
             let endColumn = tok.endColumn
             let offsetTail = -1 * ("}}}").length + 1
+
+            $.ACTION(() => {
+                addFoldingRange(startLine, endLine)
+            })
 
             return {
                 type: 'latex',
                 content,
                 startLine,
-                endLine: getOriginalLine(Store.commentLines, this.rootStartLine + tok.endLine - 1) + 1,
+                endLine,
                 innerStartLine: startLine + 1,
                 innerStartColumn: 1,
                 innerEndColumn: endColumn + offsetTail
@@ -1558,6 +1609,10 @@ class NamumarkParser extends EmbeddedActionsParser {
                 content = parseBlock(content, 'colorText', true, undefined, (tok.image[offsetHead - 1] === "\n" ? startLine : startLine - 1) - startLeft);
             });
 
+            $.ACTION(() => {
+                addFoldingRange(startLine, endLine)
+            })
+
             return {
                 type: 'colorText',
                 color,
@@ -1572,11 +1627,18 @@ class NamumarkParser extends EmbeddedActionsParser {
             const tok = $.CONSUME(Literal);
             const text = tok.image.slice(3, -3);
 
+            let startLine = getOriginalLine(Store.commentLines, this.rootStartLine + tok.startLine - 1) + 1
+            let endLine = getOriginalLine(Store.commentLines, this.rootStartLine + tok.endLine - 1) + 1
+
+            $.ACTION(() => {
+                addFoldingRange(startLine, endLine)
+            })
+
             return {
                 type: 'literal',
                 text,
-                startLine: getOriginalLine(Store.commentLines, this.rootStartLine + tok.startLine - 1) + 1,
-                endLine: getOriginalLine(Store.commentLines, this.rootStartLine + tok.endLine - 1) + 1
+                startLine,
+                endLine
             }
         });
 
@@ -1991,7 +2053,8 @@ module.exports = (text, { tokens = null, editorComment = false, thread = false, 
             categories: Store.categories,
             includes: Store.includes,
             includeParams: Store.includeParams,
-            headings: Store.heading.list
+            headings: Store.heading.list,
+            foldingRanges: Store.foldingRanges
         }
     }
 }
