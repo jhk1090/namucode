@@ -160,11 +160,13 @@ function getTypeScriptCompletion(document, position, allSymbols: Set<string>) {
   const fileName = "virtual.js";
 
   const startsWithNumberRegex = /^\d/;
-  const virtualDeclarations = Array.from(allSymbols)
+  let virtualDeclarations = Array.from(allSymbols)
       .map(symbol => {
         return startsWithNumberRegex.exec(symbol) ? `this["${symbol}"]="";` : `var ${symbol};`
       })
       .join(' ');
+
+  virtualDeclarations += `function time() {};`
 
   const content = virtualDeclarations + document.getText();
   const offset = document.offsetAt(position) +  virtualDeclarations.length;

@@ -110,6 +110,9 @@ const topToHtml = module.exports = async parameter => {
       Store.qjsContext.setProp(Store.qjsContext.global, 'calleeTitle', calleeTitleValueHandle)
       calleeTitleValueHandle.dispose()
     }
+
+    const timeHandle = Store.qjsContext.evalCode(`function time() { return ${Math.floor(Date.now() / 1000)} }`.trim())
+    timeHandle.dispose()
     // console.log("includedata", JSON.stringify(includeData))
     // console.log("global", JSON.stringify(Store.qjsContext.dump(Store.qjsContext.global)))
   }
