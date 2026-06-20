@@ -523,8 +523,6 @@ class SyntaxLanguagesSnippetProvider implements vscode.CompletionItemProvider {
     token: vscode.CancellationToken,
     context: vscode.CompletionContext,
   ): vscode.ProviderResult<vscode.CompletionItem[] | vscode.CompletionList> {
-    console.log("client: oncompletion");
-
     const linePrefix = document.lineAt(position).text.substring(0, position.character);
 
     const charBeforeCursor = position.character > 0 ? linePrefix[position.character - 1] : "";
@@ -535,7 +533,6 @@ class SyntaxLanguagesSnippetProvider implements vscode.CompletionItemProvider {
     }
 
     if (linePrefix.endsWith("{{{#!syntax ")) {
-      console.log("client: finish");
       return syntaxSyntaxLangs;
     }
 
@@ -565,7 +562,6 @@ class WikiSyntaxSnippetProvider implements vscode.CompletionItemProvider {
       wikiSyntaxQuoteRegex.lastIndex = wikiSyntaxStartIndex;
       const quoteCount = (linePrefix.match(wikiSyntaxQuoteRegex) || []).length;
       if (quoteCount % 2 === 0) {
-        console.log("client: finish");
         return [
           {
             label: "style",

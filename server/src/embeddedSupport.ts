@@ -24,186 +24,90 @@ interface EmbeddedRegion { languageId: string | undefined; start: number; end: n
 export function getDocumentRegions(document: TextDocument, documentSymbol: Record<string, any>): HTMLDocumentRegions {
 	let regions: EmbeddedRegion[] = [];
 
-	const targetDepthTypes = ["scaleText", "colorText", "wikiSyntax", "folding", "ifSyntax"]
-	const targetFlatTypes = ["syntaxSyntax", "htmlSyntax", "literal", "styleSyntax", "latex"]
-	const specialTypes = ["paragraph", "heading", "table", "link", "footnote", "blockquote", "indent", "list"]
+	const ingredients = documentSymbol?.data?.embeddedRegionIngredients ?? []
+	for (const ingredient of ingredients) {
+    if (ingredient.type === "wikiSyntax") {
+      const tokStartLine = ingredient.startLine - 1;
+      const startOffset = document.offsetAt({ line: tokStartLine, character: 0 });
+      const targetLine = document
+        .getText()
+        .substring(startOffset)
+        .split(/(\r)?\n/)[0];
+      const syntaxStart = targetLine.indexOf("{{{#!wiki");
 
-	const allTypes = [...targetDepthTypes, ...targetFlatTypes, ...specialTypes]
+      const propertyRegex = /(style|dark-style)=\"/g;
+      const stylePropertyRegex = /(style|dark-style)=\"/g;
 
-	const findTargetTypes = (array: any[]) => {
-		if (array.length === undefined) {
-			findTargetTypes([array]);
-			return;
-		}
+      propertyRegex.lastIndex = syntaxStart;
+      stylePropertyRegex.lastIndex = syntaxStart;
 
-		for (const element of array) {
-			if (!allTypes.includes(element.type)) continue
+      while (true) {
+        const styleStartMatch = propertyRegex.exec(targetLine);
+        if (styleStartMatch) {
+          let styleStart = styleStartMatch.index + styleStartMatch[0].length;
 
-			if (targetDepthTypes.includes(element.type)) {
-				const tokStartLine = element.startLine - 1;
-				const tokEndLine = element.endLine - 2;
-				element.content = element.content ?? [];
-				if (tokStartLine < tokEndLine) {
-					for (const content of element.content) {
-						findTargetTypes(content);
-					}
-				}
-				if (element.type === "wikiSyntax") {
-					const startOffset = document.offsetAt({ line: tokStartLine, character: 0 })
-					const targetLine = document.getText().substring(startOffset).split(/(\r)?\n/)[0];
-					const syntaxStart = targetLine.indexOf("{{{#!wiki")
+          const styleEndRegex = /\"/g;
+          styleEndRegex.lastIndex = styleStart;
 
-					const propertyRegex = /(style|dark-style|class|lang|onclick|tag)=\"/g;
-					const stylePropertyRegex = /(style|dark-style)=\"/g;
-					const classPropertyRegex = /(class)=\"/g;
-					const langPropertyRegex = /(lang)=\"/g;
-					const onclickPropertyRegex = /(onclick)=\"/g;
-					const tagPropertyRegex = /(tag)=\"/g;
+          const styleEndMatch = styleEndRegex.exec(targetLine);
+          let styleEnd = styleEndMatch ? styleEndMatch.index + 1 : targetLine.length + 1;
 
-					propertyRegex.lastIndex = syntaxStart;
-					stylePropertyRegex.lastIndex = syntaxStart;
-					classPropertyRegex.lastIndex = syntaxStart;
-					langPropertyRegex.lastIndex = syntaxStart;
-					onclickPropertyRegex.lastIndex = syntaxStart;
-					tagPropertyRegex.lastIndex = syntaxStart;
+          if (styleStart < styleEnd) {
+            // 가장 낮은 걸 채택
+            let match;
+            let matchIndexPriority: number | undefined;
+            let languageIdPriority = "";
 
-					while (true) {
-						const styleStartMatch = propertyRegex.exec(targetLine);
-						if (styleStartMatch) {
-							let styleStart = styleStartMatch.index + styleStartMatch[0].length;
+            if ((match = stylePropertyRegex.exec(targetLine))) {
+              if (!matchIndexPriority || matchIndexPriority > match.index) {
+                matchIndexPriority = match.index;
+                languageIdPriority = "css-inline";
+              }
+            }
+            if (languageIdPriority !== "") {
+              regions.push({ languageId: languageIdPriority, start: startOffset + styleStart, end: startOffset + styleEnd });
+            }
+          }
 
-							const styleEndRegex = /\"/g;
-							styleEndRegex.lastIndex = styleStart;
+          propertyRegex.lastIndex = styleEnd;
+          stylePropertyRegex.lastIndex = styleEnd;
 
-							const styleEndMatch = styleEndRegex.exec(targetLine);
-							let styleEnd = styleEndMatch ? styleEndMatch.index + 1 : targetLine.length + 1;
-
-							if (styleStart < styleEnd) {
-								// 가장 낮은 걸 채택
-								let match;
-								let matchIndexPriority: number | undefined;
-								let languageIdPriority = "";
-
-								if (match = stylePropertyRegex.exec(targetLine)) {
-									if (!matchIndexPriority || matchIndexPriority > match.index) {
-										matchIndexPriority = match.index
-										languageIdPriority = "css-inline"
-									}
-								}
-								if (match = classPropertyRegex.exec(targetLine)) {
-									if (!matchIndexPriority || matchIndexPriority > match.index) {
-										matchIndexPriority = match.index
-										languageIdPriority = "wiki-class"
-									}
-								}
-								if (match = langPropertyRegex.exec(targetLine)) {
-									if (!matchIndexPriority || matchIndexPriority > match.index) {
-										matchIndexPriority = match.index
-										languageIdPriority = "wiki-lang"
-									}
-								}
-								if (match = onclickPropertyRegex.exec(targetLine)) {
-									if (!matchIndexPriority || matchIndexPriority > match.index) {
-										matchIndexPriority = match.index
-										languageIdPriority = "wiki-onclick"
-									}
-								}
-								if (match = tagPropertyRegex.exec(targetLine)) {
-									if (!matchIndexPriority || matchIndexPriority > match.index) {
-										matchIndexPriority = match.index
-										languageIdPriority = "wiki-tag"
-									}
-								}
-								if (languageIdPriority !== "") {
-									regions.push({ languageId: languageIdPriority, start: startOffset + styleStart, end: startOffset + styleEnd })
-								}
-							}
-
-							propertyRegex.lastIndex = styleEnd;
-							stylePropertyRegex.lastIndex = styleEnd;
-							classPropertyRegex.lastIndex = styleEnd;
-							langPropertyRegex.lastIndex = styleEnd;
-
-							if (!styleEndMatch) {
-								break;
-							}
-							continue;
-						}	
-						break;
-					}
-				}
-				if (element.type === "ifSyntax") {
-					const startOffset = document.offsetAt({ line: tokStartLine, character: 0 })
-					const targetLine = document.getText().substring(startOffset).split(/(\r)?\n/)[0];
-					const syntaxStart = targetLine.indexOf("{{{#!if ") + "{{{#!if ".length;
-					const syntaxEnd = targetLine.length + 1;
-
-					if (syntaxStart < syntaxEnd) {
-						regions.push({ languageId: 'js', start: startOffset + syntaxStart, end: startOffset + syntaxEnd })
-					}
-				}
-				continue;
-			}
-			if (targetFlatTypes.includes(element.type)) {
-				if (element.type === "styleSyntax") {
-					let { innerStartLine, endLine, innerStartColumn, innerEndColumn } = element;
-					// Zero-index base
-					innerStartLine -= 1
-					endLine -= 1
-					innerStartColumn -= 1
-					innerEndColumn -= 1
-
-					const startPosition = { line: innerStartLine, character: innerStartColumn }
-					const endPosition = { line: endLine, character: innerEndColumn }
-					regions.push({ languageId: 'css', start: document.offsetAt(startPosition), end: document.offsetAt(endPosition) })
-				}
-				continue;
-			}
-			if (element.type === "paragraph") {
-				for (const line of element.lines ?? []) {
-					findTargetTypes(line);
-				}
-				continue;
-			}
-			if (element.type === "heading") {
-				// heading은 상위에서만 적용됨: startLine == 0
-				findTargetTypes(element.content);
-				continue;
-			}
-			if (element.type === "table") {
-				for (const row of element.rows) {
-					for (const column of row) {
-						findTargetTypes(column.value ?? []);
-					}
-				}
-				continue;
-			}
-			if (element.type === "link") {
-				findTargetTypes(element.parsedText ?? []);
-				continue;
-			}
-			if (element.type === "footnote") {
-				findTargetTypes(element.value ?? []);
-				continue;
-			}
-			if (element.type === "blockquote") {
-          findTargetTypes(element.content ?? []);
+          if (!styleEndMatch) {
+            break;
+          }
           continue;
-			}
-			if (element.type === "indent") {
-				findTargetTypes(element.content ?? []);
-				continue;
-			}
-			if (element.type === "list") {
-				for (const item of element.items ?? []) {
-					findTargetTypes(item);
-				}
-				continue;
-			}
-		}
-	};
+        }
+        break;
+      }
+    }
+    if (ingredient.type === "ifSyntax") {
+      const tokStartLine = ingredient.startLine - 1;
+      const startOffset = document.offsetAt({ line: tokStartLine, character: 0 });
+      const targetLine = document
+        .getText()
+        .substring(startOffset)
+        .split(/(\r)?\n/)[0];
+      const syntaxStart = targetLine.indexOf("{{{#!if ") + "{{{#!if ".length;
+      const syntaxEnd = targetLine.length + 1;
 
-	findTargetTypes(documentSymbol.result ?? [])
+      if (syntaxStart < syntaxEnd) {
+        regions.push({ languageId: "js", start: startOffset + syntaxStart, end: startOffset + syntaxEnd });
+      }
+    }
+
+    if (ingredient.type === "styleSyntax") {
+      let { innerStartLine, endLine, innerStartColumn, innerEndColumn } = ingredient;
+      // Zero-index base
+      innerStartLine -= 1;
+      endLine -= 1;
+      innerStartColumn -= 1;
+      innerEndColumn -= 1;
+
+      const startPosition = { line: innerStartLine, character: innerStartColumn };
+      const endPosition = { line: endLine, character: innerEndColumn };
+      regions.push({ languageId: "css", start: document.offsetAt(startPosition), end: document.offsetAt(endPosition) });
+    }
+  }
 
 	let match = undefined;
 
@@ -214,17 +118,7 @@ export function getDocumentRegions(document: TextDocument, documentSymbol: Recor
 		regions.push({ languageId: "argument", start, end })
 	}
 
-	// 자연스러운 자동완성을 위한 모드
-	const ifForCompletionRegex = /\{\{\{#!if (?:(?!\}\}\}).)*(\}\}\}|$)/gm;
-	while ((match = ifForCompletionRegex.exec(document.getText())) !== null) {
-		let start = match.index;
-		let end = (start + match[0].length);
-
-		const trailingBrackets = match[1] || "";
-		regions.push({ languageId: "if-for-completion", start, end: end - trailingBrackets.length })
-	}
-
-	const wikiPropertyForCompletionRegex = /(\{\{\{#!wiki.*(style|dark-style|class|lang|onclick|tag)=")((?:(?!"|\}\}\}).)*)("|\}\}\}|$)/gm;
+	const wikiPropertyForCompletionRegex = /(\{\{\{#!wiki.*(style|dark-style)=")((?:(?!"|\}\}\}).)*)("|\}\}\}|$)/gm;
 	while ((match = wikiPropertyForCompletionRegex.exec(document.getText())) !== null) {
 		let start = match.index + match[1].length;
 		let end = (start + match[3].length + 1);

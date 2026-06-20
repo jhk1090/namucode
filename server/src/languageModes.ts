@@ -16,13 +16,9 @@ import { getCSSMode } from './modes/cssMode';
 import { getDocumentRegions } from './embeddedSupport';
 import { getCSSInlineMode } from './modes/cssInlineMode';
 import { getJSMode } from './modes/jsMode';
-import { getWikiClassMode } from './modes/wikiClassMode';
-import { getWikiLangMode } from './modes/wikiLangMode';
-import { getWikiOnclickMode } from './modes/wikiOnclickMode';
-import { getWikiTagMode } from './modes/wikiTagMode';
 
 export * from 'vscode-html-languageservice';
-export const MODES_LENGTH = 15;
+export const MODES_LENGTH = 6;
 
 export interface LanguageModeCompletionOptions {
 	isArgumentCompletion?: boolean;
@@ -53,8 +49,7 @@ export interface LanguageModeRange extends Range {
 	attributeValue?: boolean;
 }
 
-export function getLanguageModes(documentSymbol: Record<string, any>, document: TextDocument): LanguageModes {
-	const cssLanguageService = getCSSLanguageService({
+export const cssLanguageService = getCSSLanguageService({
 			customDataProviders: [
 				{
 					provideAtDirectives: () => [
@@ -70,6 +65,7 @@ export function getLanguageModes(documentSymbol: Record<string, any>, document: 
 			]
 	});
 
+export function getLanguageModes(documentSymbol: Record<string, any>, document: TextDocument): LanguageModes {
 	const documentRegions = getDocumentRegions(document, documentSymbol)
 
 	let modes = Object.create(null);
@@ -85,20 +81,11 @@ export function getLanguageModes(documentSymbol: Record<string, any>, document: 
 	modes['css'] = getCSSMode(cssLanguageService, documentRegions);
 	modes['css-inline'] = getCSSInlineMode(cssLanguageService, documentRegions);
 	modes['js'] = getJSMode(documentRegions);
-	modes['wiki-class'] = getWikiClassMode(documentRegions);
-	modes['wiki-lang'] = getWikiLangMode();
-	modes['wiki-onclick'] = getWikiOnclickMode(documentRegions);
-	modes['wiki-tag'] = getWikiTagMode();
 	modes['argument'] = baseModeConfig("argument")
 
 	// 자연스러운 자동완성을 위한 모드
-	modes['if-for-completion'] = getJSMode(documentRegions)
 	modes['wiki-style-for-completion'] = getCSSInlineMode(cssLanguageService, documentRegions)
 	modes['wiki-dark-style-for-completion'] = getCSSInlineMode(cssLanguageService, documentRegions)
-	modes['wiki-class-for-completion'] = getWikiClassMode(documentRegions);
-	modes['wiki-lang-for-completion'] = getWikiLangMode();
-	modes['wiki-onclick-for-completion'] = getWikiOnclickMode(documentRegions);
-	modes['wiki-tag-for-completion'] = getWikiTagMode();
 
 
 	return {

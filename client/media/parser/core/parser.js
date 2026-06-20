@@ -781,7 +781,9 @@ let Store = {
     commentLines: [],
     noLiteralPos: [],
     parentTypes: [],
-    foldingRanges: []
+    foldingRanges: [],
+    embeddedRegionIngredients: [],
+    cssClassNames: []
 }
 const originalStore = { ...Store };
 
@@ -791,6 +793,10 @@ const addFoldingRange = (startLine, endLine) => {
     if (tokStartLine < tokEndLine) {
         Store.foldingRanges.push({ startLine: tokStartLine, endLine: tokEndLine })
     }
+}
+
+const addEmbeddedRegionIngredient = (region) => {
+    Store.embeddedRegionIngredients.push(region)
 }
 
 class NamumarkParser extends EmbeddedActionsParser {
@@ -1397,6 +1403,26 @@ class NamumarkParser extends EmbeddedActionsParser {
 
             $.ACTION(() => {
                 addFoldingRange(startLine, endLine)
+
+                const wikiClassRegex = /class=\"([^"]+)"/;
+                const validClassNameRegex = /^([a-zA-Z0-9_-]+)$/;
+
+                const wikiClassMatch = wikiParamsStr.match(wikiClassRegex)
+                if (wikiClassMatch) {
+                    let wikiClassList = wikiClassMatch[1].trim().split(" ")
+                    wikiClassList = wikiClassList.filter(wikiClass => validClassNameRegex.exec(wikiClass))
+                    Store.cssClassNames.push(...wikiClassList)
+                }
+
+                addEmbeddedRegionIngredient({
+                  type: "wikiSyntax",
+                  // style,
+                  // darkStyle,
+                  wikiParamsStr,
+                  content,
+                  startLine,
+                  endLine,
+                });
             })
 
             return {
@@ -1534,6 +1560,13 @@ class NamumarkParser extends EmbeddedActionsParser {
 
             $.ACTION(() => {
                 addFoldingRange(startLine, endLine)
+                addEmbeddedRegionIngredient({
+                  type: "ifSyntax",
+                  expression,
+                  content,
+                  startLine,
+                  endLine,
+                });
             })
 
             return {
@@ -1556,6 +1589,18 @@ class NamumarkParser extends EmbeddedActionsParser {
 
             $.ACTION(() => {
                 addFoldingRange(startLine, endLine)
+
+                const classNameRegex = /\.([a-zA-Z0-9_-]+)(?=[^;}]*\{)/g;
+                Store.cssClassNames.push(...[...content.matchAll(classNameRegex)].map(match => match[1]))
+                addEmbeddedRegionIngredient({
+                  type: "styleSyntax",
+                  content,
+                  startLine,
+                  endLine,
+                  innerStartLine: startLine + 1,
+                  innerStartColumn: 1,
+                  innerEndColumn: endColumn + offsetTail,
+                });
             })
 
             return {
@@ -2054,7 +2099,9 @@ module.exports = (text, { tokens = null, editorComment = false, thread = false, 
             includes: Store.includes,
             includeParams: Store.includeParams,
             headings: Store.heading.list,
-            foldingRanges: Store.foldingRanges
+            foldingRanges: Store.foldingRanges,
+            embeddedRegionIngredients: Store.embeddedRegionIngredients,
+            cssClassNames: Store.cssClassNames
         }
     }
 }
