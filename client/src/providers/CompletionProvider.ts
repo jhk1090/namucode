@@ -808,7 +808,7 @@ export const registerCompletionProviders = (context: vscode.ExtensionContext) =>
 
   context.subscriptions.push(vscode.languages.registerCompletionItemProvider({ language: "namu" }, new TableArgumentsProvider(), "<"));
 
-  context.subscriptions.push(vscode.languages.registerCompletionItemProvider({ language: "namu" }, new TableArgumentColorValueProvider(), "="));
+  context.subscriptions.push(vscode.languages.registerCompletionItemProvider({ language: "namu" }, new TableArgumentColorValueProvider(), "=", ","));
 
   context.subscriptions.push(vscode.languages.registerCompletionItemProvider({ language: "namu" }, new TableArgumentCommonValueProvider(), "="));
 };
@@ -868,6 +868,17 @@ export async function serverCompletionMiddleware(
       if (argumentType === "tablealign") {
         return null;
       }
+    }
+  }
+
+  if ([","].includes(charBeforeCursor)) {
+    // CompletionProvider/TableArgumentColorValueProvider
+    const tableArgumentColorValueRegex = new RegExp(
+      `\\|\\|((<)([^>=|]*(?:\\|[^>=|]+)?)(?:=([^>|]*))?(>)){0,}<(${argumentsColorValueRequired.join("|")})=([^,]+,)?$`,
+      "g",
+    );
+    if (tableArgumentColorValueRegex.exec(line)) {
+      return null;
     }
   }
 
