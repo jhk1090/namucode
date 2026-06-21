@@ -124,7 +124,7 @@ export function provideCompletionSupport(document: TextDocument, position: Posit
     }
   }
 
-	if (context.triggerCharacter === "@" && /(?<!@[\p{L}\p{N}_]*(=[^\n\r@]+)?)@$/gu.exec(line)) {
+	if (context.triggerCharacter === "@" && /(?<!@[\p{L}\p{N}_]+(=[^\n\r@]+)?)@$/gu.exec(line)) {
 		return languageModes.getMode("js").doComplete(document, position, { isArgumentCompletion: true })
 	}
 

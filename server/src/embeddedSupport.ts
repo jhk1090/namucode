@@ -111,7 +111,7 @@ export function getDocumentRegions(document: TextDocument, documentSymbol: Recor
 
 	let match = undefined;
 
-	const argumentRegex = /@([\p{L}\p{N}_]*)(=[^\n\r@]+)?@/gu
+	const argumentRegex = /@([\p{L}\p{N}_]+)(=[^\n\r@]+)?@/gu
 	while ((match = argumentRegex.exec(document.getText())) !== null) {
 		let start = match.index;
 		let end = (start + match[0].length - 1);
