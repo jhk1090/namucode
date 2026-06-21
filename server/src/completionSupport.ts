@@ -52,7 +52,7 @@ export function provideCompletionSupport(document: TextDocument, position: Posit
 
 	const tableArgumentClassValueRegex = new RegExp(`\\|\\|((<)([^>=|]*(?:\\|[^>=|]+)?)(?:=([^>|]*))?(>)){0,}<(${argumentsClassValueRequired.join("|")})=([^>]+ )?$`, "g")
   if (tableArgumentClassValueRegex.exec(line)) {
-    return getTableArgumentClassValue(document, position);
+    return getTableArgumentClassValue(minified);
   }
 
   const tableArgumentIfValueRegex = new RegExp(`\\|\\|((<)([^>=|]*(?:\\|[^>=|]+)?)(?:=([^>|]*))?(>)){0,}<(${argumentsIfValueRequired.join("|")})=([^>]+ )?$`, "g")
@@ -146,9 +146,12 @@ const argumentsIfValueRequired = [
   "rowif",
 ]
 
-function getTableArgumentClassValue(document, position) {
-  const languageModes = documentCache.get(document.uri)?.languageModes
-  return languageModes.getMode("wiki-class").doComplete(document, position);
+function getTableArgumentClassValue(minified) {
+  const cssClassNames: string[] = minified.data.cssClassNames
+  return Array.from(new Set(cssClassNames)).map((className) => ({
+      label: className,
+      kind: CompletionItemKind.Class
+    }))
 }
 
 function getTableArgumentIfValue(document, position) {
