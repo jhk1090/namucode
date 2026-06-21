@@ -151,6 +151,10 @@ const colorTextOptions = [
   "YellowGreen",
 ];
 
+function isCommentLine(linePrefix: string): boolean {
+  return /^##(?!@)/.test(linePrefix)
+}
+
 class TableSnippetProvider implements vscode.CompletionItemProvider {
   provideCompletionItems(
     document: vscode.TextDocument,
@@ -162,6 +166,10 @@ class TableSnippetProvider implements vscode.CompletionItemProvider {
 
     const charBeforeCursor = position.character > 0 ? linePrefix[position.character - 1] : "";
     const targetCharacters = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+
+    if (isCommentLine(linePrefix)) {
+      return undefined;
+    }
 
     if (context.triggerKind !== vscode.CompletionTriggerKind.TriggerCharacter && !targetCharacters.includes(charBeforeCursor)) {
       return undefined;
@@ -239,6 +247,10 @@ class FileLinkPropertySnippetProvider implements vscode.CompletionItemProvider {
     const charBeforeCursor = position.character > 0 ? linePrefix[position.character - 1] : "";
     const targetCharacters = ["|", "&", "="];
 
+    if (isCommentLine(linePrefix)) {
+      return undefined;
+    }
+
     if (context.triggerKind !== vscode.CompletionTriggerKind.TriggerCharacter && !targetCharacters.includes(charBeforeCursor)) {
       return undefined;
     }
@@ -293,6 +305,10 @@ class SquareBracketSnippetProvider implements vscode.CompletionItemProvider {
     const charBeforeCursor = position.character > 0 ? linePrefix[position.character - 1] : "";
     const targetCharacters = ["["];
 
+    if (isCommentLine(linePrefix)) {
+      return undefined;
+    }
+
     if (context.triggerKind !== vscode.CompletionTriggerKind.TriggerCharacter && !targetCharacters.includes(charBeforeCursor)) {
       return undefined;
     }
@@ -336,6 +352,10 @@ class ScaleTextSnippetProvider implements vscode.CompletionItemProvider {
 
     const charBeforeCursor = position.character > 0 ? linePrefix[position.character - 1] : "";
     const targetCharacters = ["+", "-"];
+
+    if (isCommentLine(linePrefix)) {
+      return undefined;
+    }
 
     if (context.triggerKind !== vscode.CompletionTriggerKind.TriggerCharacter && !targetCharacters.includes(charBeforeCursor)) {
       return undefined;
@@ -393,6 +413,10 @@ class ColorTextSnippetProvider implements vscode.CompletionItemProvider {
     const charBeforeCursor = position.character > 0 ? linePrefix[position.character - 1] : "";
     const targetCharacters = ["#"];
 
+    if (isCommentLine(linePrefix)) {
+      return undefined;
+    }
+
     if (context.triggerKind !== vscode.CompletionTriggerKind.TriggerCharacter && !targetCharacters.includes(charBeforeCursor)) {
       return undefined;
     }
@@ -421,6 +445,10 @@ class ShebangSnippetProvider implements vscode.CompletionItemProvider {
 
     const charBeforeCursor = position.character > 0 ? linePrefix[position.character - 1] : "";
     const targetCharacters = ["!"];
+
+    if (isCommentLine(linePrefix)) {
+      return undefined;
+    }
 
     if (context.triggerKind !== vscode.CompletionTriggerKind.TriggerCharacter && !targetCharacters.includes(charBeforeCursor)) {
       return undefined;
@@ -528,6 +556,10 @@ class SyntaxLanguagesSnippetProvider implements vscode.CompletionItemProvider {
     const charBeforeCursor = position.character > 0 ? linePrefix[position.character - 1] : "";
     const targetCharacters = [" "];
 
+    if (isCommentLine(linePrefix)) {
+      return undefined;
+    }
+
     if (context.triggerKind !== vscode.CompletionTriggerKind.TriggerCharacter && !targetCharacters.includes(charBeforeCursor)) {
       return undefined;
     }
@@ -551,6 +583,10 @@ class WikiSyntaxSnippetProvider implements vscode.CompletionItemProvider {
 
     const charBeforeCursor = position.character > 0 ? linePrefix[position.character - 1] : "";
     const targetCharacters = [" "];
+
+    if (isCommentLine(linePrefix)) {
+      return undefined;
+    }
 
     if (context.triggerKind !== vscode.CompletionTriggerKind.TriggerCharacter && !targetCharacters.includes(charBeforeCursor)) {
       return undefined;
@@ -666,6 +702,10 @@ class TableArgumentsProvider implements vscode.CompletionItemProvider {
     const charBeforeCursor = position.character > 0 ? linePrefix[position.character - 1] : "";
     const targetCharacters = ["<"];
 
+    if (isCommentLine(linePrefix)) {
+      return undefined;
+    }
+
     if (context.triggerKind !== vscode.CompletionTriggerKind.TriggerCharacter && !targetCharacters.includes(charBeforeCursor)) {
       return undefined;
     }
@@ -716,6 +756,10 @@ class TableArgumentColorValueProvider implements vscode.CompletionItemProvider {
     const charBeforeCursor = position.character > 0 ? linePrefix[position.character - 1] : "";
     const targetCharacters = ["="];
 
+    if (isCommentLine(linePrefix)) {
+      return undefined;
+    }
+
     if (context.triggerKind !== vscode.CompletionTriggerKind.TriggerCharacter && !targetCharacters.includes(charBeforeCursor)) {
       return undefined;
     }
@@ -747,6 +791,10 @@ class TableArgumentCommonValueProvider implements vscode.CompletionItemProvider 
 
     const charBeforeCursor = position.character > 0 ? linePrefix[position.character - 1] : "";
     const targetCharacters = ["="];
+
+    if (isCommentLine(linePrefix)) {
+      return undefined;
+    }
 
     if (context.triggerKind !== vscode.CompletionTriggerKind.TriggerCharacter && !targetCharacters.includes(charBeforeCursor)) {
       return undefined;
@@ -823,6 +871,11 @@ export async function serverCompletionMiddleware(
   const line = document.lineAt(position).text.substring(0, position.character);
 
   const charBeforeCursor = position.character > 0 ? line[position.character - 1] : "";
+
+  // 맨 앞이 주석일 경우
+  if (/^##(?!@)/.exec(line)) {
+    return null;
+  }
 
   if ([" "].includes(charBeforeCursor)) {
     // CompletionProvider/SyntaxLanguagesSnippetProvider
