@@ -877,6 +877,12 @@ export async function serverCompletionMiddleware(
     return null;
   }
 
+  if (context.triggerCharacter === "@" && context.triggerKind === vscode.CompletionTriggerKind.TriggerCharacter) {
+    if (/^##@$/.exec(line)) {
+      return null;
+    }
+  }
+
   if ([" "].includes(charBeforeCursor)) {
     // CompletionProvider/SyntaxLanguagesSnippetProvider
     if (line.endsWith("{{{#!syntax ")) {
