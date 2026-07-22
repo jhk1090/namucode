@@ -13,25 +13,15 @@ export class WikiCodeActionProvider implements vscode.CodeActionProvider {
 
       // Code Action: Wrap
       if (!range.isEmpty) {
-        const selected = document.getText(range);
-        [
-          { label: 'wiki', code: `{{{#!wiki \n${selected}\n}}}` },
-          { label: 'style', code: `{{{#!style\n${selected}\n}}}` },
-          { label: 'folding', code: `{{{#!folding \n${selected}\n}}}` },
-          { label: 'if', code: `{{{#!if \n${selected}\n}}}` },
-          { label: 'syntax', code: `{{{#!syntax \n${selected}\n}}}` },
-          { label: 'html', code: `{{{#!html ${selected}}}}` },
-          { label: 'latex', code: `{{{#!latex\n${selected}}}}` },
-          { label: '삼중괄호', code: `{{{${selected}}}}` }
-        ].forEach(({ label, code }) => {
-          const action = new vscode.CodeAction(
-            `선택 영역 구문 감싸기: ${label} 구문`,
-            vscode.CodeActionKind.RefactorRewrite,
-          );
-          action.edit = new vscode.WorkspaceEdit();
-          action.edit.replace(document.uri, range, code);
-          actions.push(action);
-        });
+        const wrapAction = new vscode.CodeAction("선택 영역 구문 감싸기", vscode.CodeActionKind.RefactorRewrite)
+
+        wrapAction.command = {
+          command: 'namucode.wrapSelection',
+          title: "선택 영역 구문 감싸기",
+          arguments: [document, range]
+        }
+
+        actions.push(wrapAction)
       }
 
       // Code Action: Unwrap

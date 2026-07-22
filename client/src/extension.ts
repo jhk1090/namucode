@@ -223,7 +223,36 @@ export async function activate(context: ExtensionContext) {
 
   const sort = vscode.commands.registerCommand("namucode.paragraphSort", async () => { await sortParagraph() });
 
-  context.subscriptions.push(preview, retryPreview, previewEditorComment, openPreviewInWeb, sort);
+  const wrapCommand = vscode.commands.registerCommand("namucode.wrapSelection", async (document: vscode.TextDocument, range: vscode.Range) => {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) return;
+
+    const selected = document.getText(range);
+    const options = [
+      { label: "#!wiki 구문", detail: "{{{#!wiki }}}", code: `{{{#!wiki \n${selected}\n}}}` },
+      { label: "#!style 구문", detail: "{{{#!style }}}", code: `{{{#!style\n${selected}\n}}}` },
+      { label: "#!folding 구문", detail: "{{{#!folding }}}", code: `{{{#!folding \n${selected}\n}}}` },
+      { label: "#!if 구문", detail: "{{{#!if }}}", code: `{{{#!if \n${selected}\n}}}` },
+      { label: "#!syntax 구문", detail: "{{{#!syntax }}}", code: `{{{#!syntax \n${selected}\n}}}` },
+      { label: "#!html 구문", detail: "{{{#!html }}}", code: `{{{#!html ${selected}}}}` },
+      { label: "#!latex 구문", detail: "{{{#!latex }}}", code: `{{{#!latex\n${selected}}}}` },
+      { label: "삼중괄호 구문", detail: "{{{ }}}", code: `{{{${selected}}}}` },
+    ];
+
+    const picked = await vscode.window.showQuickPick(options, {
+      placeHolder: "감쌀 위키 구문을 선택하세요",
+      matchOnDescription: true,
+    });
+
+    if (picked) {
+      // 선택한 구문으로 텍스트 치환
+      editor.edit((editBuilder) => {
+        editBuilder.replace(range, picked.code);
+      });
+    }
+  });
+
+  context.subscriptions.push(preview, retryPreview, previewEditorComment, openPreviewInWeb, sort, wrapCommand);
 
   registerCompletionProviders(context);
 
