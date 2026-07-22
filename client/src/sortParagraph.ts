@@ -44,13 +44,15 @@ function attachContentRange(document: vscode.TextDocument, symbols: TreeSymbol[]
 
   return result;
 }
-function sortTreeSymbols(symbols: ParagraphTreeSymbol[], isSortingChildren: boolean): ParagraphTreeSymbol[] {
-  symbols.sort((a, b) => sanitizeName(a.name).localeCompare(sanitizeName(b.name)));
+function sortTreeSymbols(symbols: ParagraphTreeSymbol[], isSortingChildren: boolean, isAscending: boolean): ParagraphTreeSymbol[] {
+  symbols.sort((a, b) => {
+    return isAscending ? sanitizeName(a.name).localeCompare(sanitizeName(b.name)) : sanitizeName(b.name).localeCompare(sanitizeName(a.name));
+  });
 
   if (isSortingChildren) {
     symbols.forEach((symbol) => {
       if (symbol.children && symbol.children.length > 0) {
-        sortTreeSymbols(symbol.children as ParagraphTreeSymbol[], true);
+        sortTreeSymbols(symbol.children as ParagraphTreeSymbol[], true, isAscending);
       }
     });
   }
@@ -126,22 +128,38 @@ export async function sortParagraph() {
     finalTarget === ""
       ? [
           {
-            label: "$(check) 첫 번째 레벨 문단만 정렬",
-            detail: `첫 번째 레벨 문단끼리 정렬합니다.`,
+            label: "$(check) 첫 번째 레벨 문단만 오름차순으로 정렬",
+            detail: `첫 번째 레벨 문단끼리 A-Z 순서로 정렬합니다.`,
           },
           {
-            label: "$(check-all) 모든 문단의 하위 문단까지 모두 정렬",
-            detail: `모든 문단에 대한 하위 문단끼리 정렬합니다.`,
+            label: "$(check-all) 모든 문단의 하위 문단까지 모두 오름차순으로 정렬",
+            detail: `모든 문단에 대한 하위 문단끼리 A-Z 순서로 정렬합니다.`,
+          },
+          {
+            label: "$(check) 첫 번째 레벨 문단만 내림차순으로 정렬",
+            detail: `첫 번째 레벨 문단끼리 Z-A 순서로 정렬합니다.`,
+          },
+          {
+            label: "$(check-all) 모든 문단의 하위 문단까지 모두 내림차순으로 정렬",
+            detail: `모든 문단에 대한 하위 문단끼리 Z-A 순서로 정렬합니다.`,
           },
         ]
       : [
           {
-            label: "$(check) 선택한 문단의 첫 번째 하위 문단만 정렬",
-            detail: `${finalTarget} 문단에 대한 첫 번째 하위 문단끼리 정렬합니다.`,
+            label: "$(check) 선택한 문단의 첫 번째 하위 문단만 오름차순으로 정렬",
+            detail: `${finalTarget} 문단에 대한 첫 번째 하위 문단끼리 A-Z 순서로 정렬합니다.`,
           },
           {
-            label: "$(check-all) 선택한 문단의 하위 문단 모두 정렬",
-            detail: `${finalTarget} 문단에 대한 모든 하위 문단을 정렬합니다.`,
+            label: "$(check-all) 선택한 문단의 하위 문단 모두 오름차순으로 정렬",
+            detail: `${finalTarget} 문단에 대한 모든 하위 문단을 A-Z 순서로 정렬합니다.`,
+          },
+          {
+            label: "$(check) 선택한 문단의 첫 번째 하위 문단만 내림차순으로 정렬",
+            detail: `${finalTarget} 문단에 대한 첫 번째 하위 문단끼리 Z-A 순서로 정렬합니다.`,
+          },
+          {
+            label: "$(check-all) 선택한 문단의 하위 문단 모두 내림차순으로 정렬",
+            detail: `${finalTarget} 문단에 대한 모든 하위 문단을 Z-A 순서로 정렬합니다.`,
           },
         ];
 
@@ -154,6 +172,7 @@ export async function sortParagraph() {
   if (!finalSelected) return
 
   const isSortingChildren = finalSelected.label.includes("$(check-all)")
+  const isAscending = finalSelected.label.includes("오름차순")
 
   const attachedDocumentSymbol = attachContentRange(
     editor.document,
@@ -180,7 +199,7 @@ export async function sortParagraph() {
     splittedText.push(editor.document.getText(topEmptyRange));
   }
 
-  const sortedDocumentSymbol = sortTreeSymbols(attachedDocumentSymbol, isSortingChildren);
+  const sortedDocumentSymbol = sortTreeSymbols(attachedDocumentSymbol, isSortingChildren, isAscending);
   
   function walkTree(nodes: ParagraphTreeSymbol[]) {
     nodes.forEach((node) => {
