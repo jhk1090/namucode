@@ -44,14 +44,16 @@ function attachContentRange(document: vscode.TextDocument, symbols: TreeSymbol[]
 
   return result;
 }
-function sortTreeSymbols(symbols: ParagraphTreeSymbol[]): ParagraphTreeSymbol[] {
+function sortTreeSymbols(symbols: ParagraphTreeSymbol[], isSortingChildren: boolean): ParagraphTreeSymbol[] {
   symbols.sort((a, b) => sanitizeName(a.name).localeCompare(sanitizeName(b.name)));
 
-  symbols.forEach((symbol) => {
-    if (symbol.children && symbol.children.length > 0) {
-      sortTreeSymbols(symbol.children as ParagraphTreeSymbol[]);
-    }
-  });
+  if (isSortingChildren) {
+    symbols.forEach((symbol) => {
+      if (symbol.children && symbol.children.length > 0) {
+        sortTreeSymbols(symbol.children as ParagraphTreeSymbol[], true);
+      }
+    });
+  }
 
   return symbols;
 }
@@ -66,14 +68,108 @@ export async function sortParagraph() {
   const documentSymbol = (await client.sendRequest("namucode/getDocumentSymbol", {
     uri: vscode.window.activeTextEditor.document.uri.toString(),
   })) as TreeSymbol[];
+
   if (documentSymbol.length === 0) {
     vscode.window.showErrorMessage(`문서 내에 문단이 없습니다.`);
     return;
   }
 
-  const attachedDocumentSymbol = attachContentRange(editor.document, documentSymbol, editor.document.lineAt(editor.document.lineCount - 1));
+  const rootItems: vscode.QuickPickItem[] = [
+      {
+          label: '$(replace-all) 문서 전체 정렬',
+          detail: '문서에 있는 모든 문단을 정렬합니다.'
+      },
+      {
+          label: '$(replace) 특정 문단 정렬',
+          detail: '문서 내의 특정 문단을 선택해 정렬합니다.'
+      }
+  ];
+
+  // 2. showQuickPick 호출
+  const rootSelected = await vscode.window.showQuickPick(rootItems, {
+      placeHolder: '수행할 작업을 선택하세요', // 입력창에 옅게 뜨는 힌트 문구
+      matchOnDescription: true,             // description 검색 허용 여부
+      matchOnDetail: true                    // detail 검색 허용 여부
+  });
+
+  if (!rootSelected) return
+
+  let finalTarget = "";
+  let finalSelectedSymbol: TreeSymbol;
+  let finalSelectedSymbolNext: TreeSymbol;
+
+  if (rootSelected.label.includes('특정')) {
+    const flattenTree = (symbols: TreeSymbol[]): TreeSymbol[] => symbols.flatMap(node => [node, ...flattenTree(node.children)]);
+
+    const flatSymbols = flattenTree(documentSymbol);
+    const specificItems: vscode.QuickPickItem[] = flatSymbols.map(value => ({ label: value.name }))
+
+    // 2. showQuickPick 호출
+    const specificSelected = await vscode.window.showQuickPick(specificItems, {
+        placeHolder: '정렬할 특정 문단을 선택하세요', // 입력창에 옅게 뜨는 힌트 문구
+        matchOnDescription: true,             // description 검색 허용 여부
+        matchOnDetail: true                    // detail 검색 허용 여부
+    });
+
+    if (!specificSelected) return
+
+    finalTarget = specificSelected.label
+    
+    const prefixNumberNext = finalTarget.split(" ")[0].replace(/(\d+)(\D*)$/, (match, num, rest) => {
+        return (parseInt(num, 10) + 1) + rest;
+    });
+    finalSelectedSymbol = flatSymbols.find(symbol => symbol.name === finalTarget)
+    finalSelectedSymbolNext = flatSymbols.find(symbol => symbol.name.startsWith(prefixNumberNext))
+  }
+
+  const finalItems: vscode.QuickPickItem[] =
+    finalTarget === ""
+      ? [
+          {
+            label: "$(check) 첫 번째 레벨 문단만 정렬",
+            detail: `첫 번째 레벨 문단끼리 정렬합니다.`,
+          },
+          {
+            label: "$(check-all) 모든 문단의 하위 문단까지 모두 정렬",
+            detail: `모든 문단에 대한 하위 문단끼리 정렬합니다.`,
+          },
+        ]
+      : [
+          {
+            label: "$(check) 선택한 문단의 첫 번째 하위 문단만 정렬",
+            detail: `${finalTarget} 문단에 대한 첫 번째 하위 문단끼리 정렬합니다.`,
+          },
+          {
+            label: "$(check-all) 선택한 문단의 하위 문단 모두 정렬",
+            detail: `${finalTarget} 문단에 대한 모든 하위 문단을 정렬합니다.`,
+          },
+        ];
+
+  const finalSelected = await vscode.window.showQuickPick(finalItems, {
+      placeHolder: '수행할 작업을 선택하세요', // 입력창에 옅게 뜨는 힌트 문구
+      matchOnDescription: true,             // description 검색 허용 여부
+      matchOnDetail: true                    // detail 검색 허용 여부
+  });
+
+  if (!finalSelected) return
+
+  const isSortingChildren = finalSelected.label.includes("$(check-all)")
+
+  const attachedDocumentSymbol = attachContentRange(
+    editor.document,
+    finalSelectedSymbol?.children ?? documentSymbol,
+    finalSelectedSymbol?.children
+      ? finalSelectedSymbolNext
+        ? editor.document.lineAt(finalSelectedSymbolNext.range.start.line - 1)
+        : editor.document.lineAt(finalSelectedSymbol.range.end.line)
+      : editor.document.lineAt(editor.document.lineCount - 1),
+  );
   if (sortingFailedReason) {
     vscode.window.showErrorMessage(sortingFailedReason);
+    return;
+  }
+  if (attachedDocumentSymbol.length === 0) {
+    vscode.window.showWarningMessage("아무 것도 정렬되지 않았습니다.");
     return;
   }
 
@@ -84,7 +180,7 @@ export async function sortParagraph() {
     splittedText.push(editor.document.getText(topEmptyRange));
   }
 
-  const sortedDocumentSymbol = sortTreeSymbols(attachedDocumentSymbol);
+  const sortedDocumentSymbol = sortTreeSymbols(attachedDocumentSymbol, isSortingChildren);
   
   function walkTree(nodes: ParagraphTreeSymbol[]) {
     nodes.forEach((node) => {
@@ -102,7 +198,9 @@ export async function sortParagraph() {
 
   const entireRange = new vscode.Range(
     editor.document.positionAt(0), // 문서 시작
-    editor.document.positionAt(editor.document.getText().length), // 문서 끝
+    finalSelectedSymbolNext
+      ? editor.document.lineAt(finalSelectedSymbolNext.range.start.line - 1).range.end
+      : editor.document.positionAt(editor.document.getText().length), // 문서 끝
   );
 
   editor.edit((editBuilder) => {
