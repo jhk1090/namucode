@@ -229,14 +229,14 @@ export async function activate(context: ExtensionContext) {
 
     const selected = document.getText(range);
     const options = [
-      { label: "#!wiki 구문", detail: "{{{#!wiki }}}", code: `{{{#!wiki \n${selected}\n}}}` },
-      { label: "#!style 구문", detail: "{{{#!style }}}", code: `{{{#!style\n${selected}\n}}}` },
-      { label: "#!folding 구문", detail: "{{{#!folding }}}", code: `{{{#!folding \n${selected}\n}}}` },
-      { label: "#!if 구문", detail: "{{{#!if }}}", code: `{{{#!if \n${selected}\n}}}` },
-      { label: "#!syntax 구문", detail: "{{{#!syntax }}}", code: `{{{#!syntax \n${selected}\n}}}` },
-      { label: "#!html 구문", detail: "{{{#!html }}}", code: `{{{#!html ${selected}}}}` },
-      { label: "#!latex 구문", detail: "{{{#!latex }}}", code: `{{{#!latex\n${selected}}}}` },
-      { label: "삼중괄호 구문", detail: "{{{ }}}", code: `{{{${selected}}}}` },
+      { label: "#!wiki 구문", description: "{{{#!wiki }}}", code: `{{{#!wiki \n${selected}\n}}}` },
+      { label: "#!style 구문", description: "{{{#!style }}}", code: `{{{#!style\n${selected}\n}}}` },
+      { label: "#!folding 구문", description: "{{{#!folding }}}", code: `{{{#!folding \n${selected}\n}}}` },
+      { label: "#!if 구문", description: "{{{#!if }}}", code: `{{{#!if \n${selected}\n}}}` },
+      { label: "#!syntax 구문", description: "{{{#!syntax }}}", code: `{{{#!syntax \n${selected}\n}}}` },
+      { label: "#!html 구문", description: "{{{#!html }}}", code: `{{{#!html ${selected}}}}` },
+      { label: "#!latex 구문", description: "{{{#!latex }}}", code: `{{{#!latex\n${selected}}}}` },
+      { label: "삼중괄호 구문", description: "{{{ }}}", code: `{{{${selected}}}}` },
     ];
 
     const picked = await vscode.window.showQuickPick(options, {
