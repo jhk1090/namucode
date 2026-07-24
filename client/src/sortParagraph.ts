@@ -32,7 +32,7 @@ function attachContentRange(document: vscode.TextDocument, symbols: TreeSymbol[]
     }
 
     if (current.depth > next.depth) {
-      sortingFailedReason = `${current.depth}단계 문단 "${current.name}"은/는 ${next.depth}단계 문단 "${next.name}"보다 선행될 수 없습니다. `;
+      sortingFailedReason = `"${current.name}"은/는 "${next.name}"보다 선행될 수 없어 정렬할 수 없습니다. `;
       result = [];
       break;
     }
@@ -61,6 +61,8 @@ function sortTreeSymbols(symbols: ParagraphTreeSymbol[], isSortingChildren: bool
 }
 
 export async function sortParagraph() {
+  sortingFailedReason = null;
+
   const editor = vscode.window.activeTextEditor;
   if (!editor || editor.document.languageId !== "namu") {
     vscode.window.showWarningMessage("이 명령어는 나무마크 파일(*.namu)에서만 사용할 수 있습니다.");
@@ -116,12 +118,22 @@ export async function sortParagraph() {
     if (!specificSelected) return
 
     finalTarget = specificSelected.label
-    
-    const prefixNumberNext = finalTarget.split(" ")[0].replace(/(\d+)(\D*)$/, (match, num, rest) => {
-        return (parseInt(num, 10) + 1) + rest;
-    });
-    finalSelectedSymbol = flatSymbols.find(symbol => symbol.name === finalTarget)
-    finalSelectedSymbolNext = flatSymbols.find(symbol => symbol.name.startsWith(prefixNumberNext))
+
+    const symbolIndex = flatSymbols.findIndex(symbol => symbol.name === finalTarget)
+    if (symbolIndex !== -1) {
+      finalSelectedSymbol = flatSymbols[symbolIndex];
+      const symbolNumbering = finalSelectedSymbol.name.split(" ")[0].split(".")
+      for (let i = symbolIndex + 1; i < flatSymbols.length; i++) {
+        const name = flatSymbols[i].name;
+        const numbering = name.split(" ")[0].split(".")
+        
+        const remained = numbering.slice(symbolNumbering.length)
+        if (remained.length === 0) {
+          finalSelectedSymbolNext = flatSymbols[i];
+          break;
+        }
+      }
+    }
   }
 
   const finalItems: vscode.QuickPickItem[] =
@@ -177,10 +189,8 @@ export async function sortParagraph() {
   const attachedDocumentSymbol = attachContentRange(
     editor.document,
     finalSelectedSymbol?.children ?? documentSymbol,
-    finalSelectedSymbol?.children
-      ? finalSelectedSymbolNext
-        ? editor.document.lineAt(finalSelectedSymbolNext.range.start.line - 1)
-        : editor.document.lineAt(finalSelectedSymbol.range.end.line)
+    finalSelectedSymbol?.children && finalSelectedSymbolNext
+      ? editor.document.lineAt(finalSelectedSymbolNext.range.start.line - 1)
       : editor.document.lineAt(editor.document.lineCount - 1),
   );
   if (sortingFailedReason) {
