@@ -32,68 +32,68 @@
         "command": "namucode.paragraphLevelDown",
         "title": "문단 한단계 낮추기",
         "category": "나무코드",
-        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
+        "when": "editorTextFocus && editorLangId == 'namu'"
       },
       {
         "command": "namucode.paragraphLevelUp",
         "title": "문단 한단계 높이기",
         "category": "나무코드",
-        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
+        "when": "editorTextFocus && editorLangId == 'namu'"
       },
       {
         "command": "namucode.paragraphSort",
         "title": "문단 자동 정렬",
         "category": "나무코드",
-        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'",
+        "when": "editorTextFocus && editorLangId == 'namu'",
         "icon": "$(sort-precedence)"
       },
       {
         "command": "namucode.linkify",
         "title": "텍스트 링크",
         "category": "나무코드",
-        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
+        "when": "editorTextFocus && editorLangId == 'namu'"
       },
       {
         "command": "namucode.textBold",
         "title": "텍스트 굵게",
         "category": "나무코드",
-        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
+        "when": "editorTextFocus && editorLangId == 'namu'"
       },
       {
         "command": "namucode.textItalic",
         "title": "텍스트 기울임",
         "category": "나무코드",
-        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
+        "when": "editorTextFocus && editorLangId == 'namu'"
       },
       {
         "command": "namucode.textUnderline",
         "title": "텍스트 밑줄",
         "category": "나무코드",
-        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
+        "when": "editorTextFocus && editorLangId == 'namu'"
       },
       {
         "command": "namucode.textStrike",
         "title": "텍스트 취소선",
         "category": "나무코드",
-        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
+        "when": "editorTextFocus && editorLangId == 'namu'"
       },
       {
         "command": "namucode.textSuperscript",
         "title": "텍스트 위첨자",
         "category": "나무코드",
-        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
+        "when": "editorTextFocus && editorLangId == 'namu'"
       },
       {
         "command": "namucode.textSubscript",
         "title": "텍스트 아래첨자",
         "category": "나무코드",
-        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'"
+        "when": "editorTextFocus && editorLangId == 'namu'"
       },
       {
         "command": "namucode.preview",
         "title": "미리보기",
         "category": "나무코드",
-        "when": "editorTextFocus && editorLangId == 'namu' && resourceExtname == '.namu'",
+        "when": "editorTextFocus && editorLangId == 'namu'",
         "icon": "$(open-preview)"
       },
       {
@@ -132,12 +132,12 @@
         {
           "command": "namucode.preview",
           "group": "navigation",
-          "when": "editorLangId == 'namu' && resourceExtname == '.namu'"
+          "when": "editorLangId == 'namu'"
         },
         {
           "command": "namucode.paragraphSort",
           "group": "navigation",
-          "when": "editorLangId == 'namu' && resourceExtname == '.namu'"
+          "when": "editorLangId == 'namu'"
         },
         {
           "command": "namucode.retryPreview",
