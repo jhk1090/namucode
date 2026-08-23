@@ -170,7 +170,14 @@ export async function activate(context: ExtensionContext) {
     vscode.env.openExternal(vscode.Uri.parse("https://github.com/jhk1090/namucode/blob/main/docs/preview.md"));
   });
 
-  const preview = vscode.commands.registerCommand("namucode.preview", async ({ retry = false, editorComment = false }) => {
+  interface PreviewOptions {
+    retry?: boolean;
+    editorComment?: boolean;
+  }
+  const preview = vscode.commands.registerCommand("namucode.preview", async (args?: PreviewOptions | vscode.Uri) => {
+    const options: PreviewOptions = (args && 'retry' in args) ? args : {};
+    const { retry = false, editorComment = false } = options;
+
     const editor = vscode.window.activeTextEditor;
 
     if (retry) {
