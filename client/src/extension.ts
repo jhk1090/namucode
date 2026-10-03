@@ -13,6 +13,8 @@ import { MarkPreview, getWebviewOptions } from './preview';
 import { WikiCodeActionProvider } from './providers/CodeActionProvider';
 import { sortParagraph } from './sortParagraph';
 import { registerCompletionProviders, serverCompletionMiddleware } from './providers/CompletionProvider';
+import { initTreeSitter, makeTree, updateTree } from './parser';
+import { FoldingProvider } from './providers/FoldingProvider';
 
 export let client: LanguageClient;
 let activeRules: vscode.Disposable[] = [];
@@ -23,6 +25,15 @@ enum Level {
 let oldDomain = vscode.workspace.getConfiguration("namucode").get<string>("editor.internalLinkDomain", "https://namu.wiki")
 
 export async function activate(context: ExtensionContext) {
+  await initTreeSitter(context);
+
+  for (const document of vscode.workspace.textDocuments) {
+    makeTree(document);
+  }
+
+  context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(makeTree))
+  context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(updateTree))
+
   provideLink(context);
 
   // namucode.editor.internalLinkDomain 변경 감지
@@ -271,31 +282,38 @@ export async function activate(context: ExtensionContext) {
     )
   );
 
-  // Code to connect to sever
-  const serverModule = context.asAbsolutePath(path.join("dist", "server.js"));
+  context.subscriptions.push(
+    vscode.languages.registerFoldingRangeProvider(
+      { language: 'namu' },
+      new FoldingProvider()
+    )
+  )
 
-  const serverOptions: ServerOptions = {
-    run: { module: serverModule, transport: TransportKind.ipc },
-    debug: {
-      module: serverModule,
-      transport: TransportKind.ipc,
-    },
-  };
+  // // Code to connect to sever
+  // const serverModule = context.asAbsolutePath(path.join("dist", "server.js"));
 
-  const clientOptions: LanguageClientOptions = {
-    documentSelector: [
-      { scheme: "file", language: "namu" },
-      { scheme: "untitled", language: "namu" },
-    ],
-    middleware: {
-      provideCompletionItem: serverCompletionMiddleware,
-    },
-    synchronize: {
-      fileEvents: workspace.createFileSystemWatcher("**/*.namu"),
-    },
-  };
-  client = new LanguageClient("Namucode", serverOptions, clientOptions);
-  await client.start();
+  // const serverOptions: ServerOptions = {
+  //   run: { module: serverModule, transport: TransportKind.ipc },
+  //   debug: {
+  //     module: serverModule,
+  //     transport: TransportKind.ipc,
+  //   },
+  // };
+
+  // const clientOptions: LanguageClientOptions = {
+  //   documentSelector: [
+  //     { scheme: "file", language: "namu" },
+  //     { scheme: "untitled", language: "namu" },
+  //   ],
+  //   middleware: {
+  //     provideCompletionItem: serverCompletionMiddleware,
+  //   },
+  //   synchronize: {
+  //     fileEvents: workspace.createFileSystemWatcher("**/*.namu"),
+  //   },
+  // };
+  // client = new LanguageClient("Namucode", serverOptions, clientOptions);
+  // await client.start();
 }
 
 export function deactivate(): Thenable<void> | undefined {

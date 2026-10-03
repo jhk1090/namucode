@@ -13,6 +13,7 @@ const quickjsPackages = [
   '@jitl/quickjs-wasmfile-release-sync',
   'quickjs-emscripten',
   'quickjs-emscripten-core',
+  'web-tree-sitter'
 ];
 
 const serverExceptionModules = [
@@ -20,7 +21,7 @@ const serverExceptionModules = [
   'vscode-html-languageservice',
   '@vscode/l10n',
   'vscode-languageserver-types',
-  'vscode-uri'
+  'vscode-uri',
 ]
 
 /**
@@ -133,7 +134,8 @@ async function copyServerExceptionModules() {
 // 복사할 파일 목록
 const mediaFiles = [
   'script.js',
-  'reset.css'
+  'reset.css',
+  'tree-sitter-namumark.wasm'
 ];
 
 // 원본 경로

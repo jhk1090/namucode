@@ -23,7 +23,8 @@
     "quickjs-emscripten": "^0.31.0",
     "sanitize-html": "^2.13.1",
     "validate-color": "^2.2.4",
-    "vscode-languageclient": "^9.0.1"
+    "vscode-languageclient": "^9.0.1",
+    "web-tree-sitter": "^0.27.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.8",
