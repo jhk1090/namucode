@@ -15,6 +15,7 @@ import { sortParagraph } from './sortParagraph';
 import { registerCompletionProviders, serverCompletionMiddleware } from './providers/CompletionProvider';
 import { initTreeSitter, makeTree, updateTree } from './parser';
 import { FoldingProvider } from './providers/FoldingProvider';
+import { LinkProvider } from './providers/LinkProvider';
 
 export let client: LanguageClient;
 let activeRules: vscode.Disposable[] = [];
@@ -34,7 +35,7 @@ export async function activate(context: ExtensionContext) {
   context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(makeTree))
   context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(updateTree))
 
-  provideLink(context);
+  // provideLink(context);
 
   // namucode.editor.internalLinkDomain 변경 감지
   const linkDomainChangeListener = vscode.workspace.onDidChangeConfiguration((event) => {
@@ -286,6 +287,13 @@ export async function activate(context: ExtensionContext) {
     vscode.languages.registerFoldingRangeProvider(
       { language: 'namu' },
       new FoldingProvider()
+    )
+  )
+
+  context.subscriptions.push(
+    vscode.languages.registerDocumentLinkProvider(
+      { language: 'namu' },
+      new LinkProvider()
     )
   )
 

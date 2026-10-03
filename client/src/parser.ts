@@ -12,6 +12,7 @@ export let cache = new Map<string, Cache>;
 let parser: Parser;
 let language: Language;
 export let foldingQuery: Query;
+export let linkQuery: Query;
 export async function initTreeSitter(context: vscode.ExtensionContext) {
   await Parser.init();
 
@@ -44,12 +45,13 @@ export async function initTreeSitter(context: vscode.ExtensionContext) {
 				(latex_fallback_block (bracket_end))
 				(scale_fallback_block (bracket_end))
 				(color_fallback_block (bracket_end))
-			] @block
+			] @folding
 	`);
-}
-
-function utf8Length(text: string): number {
-    return Buffer.byteLength(text, 'utf8');
+  linkQuery = new Query(language, `
+			[
+				(macro (required_arg_macro_name ("include")))
+			] @macro
+	`);
 }
 
 function treeSitterPositionAt(text: string, offset: number) {
@@ -57,7 +59,7 @@ function treeSitterPositionAt(text: string, offset: number) {
 
     return {
         row: lines.length - 1,
-        column: utf8Length(lines[lines.length - 1]),
+        column: lines[lines.length - 1].length,
     };
 }
 
@@ -70,13 +72,13 @@ function positionAfterText(
     if (lines.length === 1) {
         return {
             row: start.row,
-            column: start.column + utf8Length(lines[0]),
+            column: start.column + lines[0].length,
         };
     }
 
     return {
         row: start.row + lines.length - 1,
-        column: utf8Length(lines[lines.length - 1]),
+        column: lines[lines.length - 1].length,
     };
 }
 
@@ -86,9 +88,9 @@ function convertToTreeSitterEdit(
 ) {
     const startOffset = change.rangeOffset;
     const oldEndOffset = startOffset + change.rangeLength;
-    const startIndex = utf8Length(oldText.slice(0, startOffset));
-    const oldEndIndex = utf8Length(oldText.slice(0, oldEndOffset));
-    const newEndIndex = startIndex + utf8Length(change.text);
+    const startIndex = oldText.slice(0, startOffset).length;
+    const oldEndIndex = oldText.slice(0, oldEndOffset).length;
+    const newEndIndex = startIndex + change.text.length;
     const startPosition = treeSitterPositionAt(oldText, startOffset);
     const oldEndPosition = treeSitterPositionAt(oldText, oldEndOffset);
 
