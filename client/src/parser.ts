@@ -45,12 +45,19 @@ export async function initTreeSitter(context: vscode.ExtensionContext) {
 				(latex_fallback_block (bracket_end))
 				(scale_fallback_block (bracket_end))
 				(color_fallback_block (bracket_end))
+        (section (heading))
 			] @folding
 	`);
   linkQuery = new Query(language, `
-			[
-				(macro (required_arg_macro_name ("include")))
-			] @macro
+			(link 
+        (link_link) @link
+        (link_end))
+      (file_link 
+        (file_link_link) @link
+        (link_end))
+      (macro 
+        (required_arg_macro_name ("include"))
+        (macro_end)) @macro
 	`);
 }
 

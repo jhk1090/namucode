@@ -10,17 +10,27 @@ export class LinkProvider implements vscode.DocumentLinkProvider {
 		}
 
 		const result = []
-		for (const { node: macro } of linkQuery.captures(tree.rootNode)) {
-			const macroContent = macro.namedChild(2);
-			const firstArgument = macroContent?.namedChild(0);
-
-			if (firstArgument?.type === "macro_argument") {
-				const startPos = document.positionAt(firstArgument.startIndex);
-				const endPos = document.positionAt(firstArgument.endIndex);
+		for (const { name, node } of linkQuery.captures(tree.rootNode)) {
+			if (name === "link") {
+				const startPos = document.positionAt(node.startIndex);
+				const endPos = document.positionAt(node.endIndex);
 				const linkRange = new vscode.Range(startPos, endPos);
 
-				result.push(new vscode.DocumentLink(linkRange, vscode.Uri.parse(encodeURIComponent("https://namu.wiki/w/" + firstArgument.text))))
-				firstArgument.startIndex
+				const isExternalLink = /^(http(s)?|ftp)/.test(node.text);
+				result.push(new vscode.DocumentLink(linkRange, vscode.Uri.parse(isExternalLink ? node.text : "https://namu.wiki/w/" + node.text)))
+			}
+			if (name === "macro") {
+				const macroContent = node.namedChild(2);
+				const firstArgument = macroContent?.namedChild(0);
+	
+				if (firstArgument?.type === "macro_argument") {
+					const startPos = document.positionAt(firstArgument.startIndex);
+					const endPos = document.positionAt(firstArgument.endIndex);
+					const linkRange = new vscode.Range(startPos, endPos);
+	
+					result.push(new vscode.DocumentLink(linkRange, vscode.Uri.parse("https://namu.wiki/w/" + firstArgument.text)))
+				}
+				continue;
 			}
 		}
 

@@ -11,7 +11,7 @@ export class FoldingProvider implements vscode.FoldingRangeProvider {
 		for (const match of matches) {
 				const node = match.captures[0].node;
 				const startLine = node.startPosition.row;
-				const endLine = node.endPosition.row - 1;
+				const endLine = node.type === "section" ? node.endPosition.row : node.endPosition.row - 1;
 
 				if (endLine - startLine < 1) {
 						continue;
