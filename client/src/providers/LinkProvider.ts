@@ -12,12 +12,15 @@ export class LinkProvider implements vscode.DocumentLinkProvider {
 		const result = []
 		for (const { name, node } of linkQuery.captures(tree.rootNode)) {
 			if (name === "link") {
+				if (node.children.find(child => child.type === "argument")) continue;
+
 				const startPos = document.positionAt(node.startIndex);
 				const endPos = document.positionAt(node.endIndex);
 				const linkRange = new vscode.Range(startPos, endPos);
 
 				const isExternalLink = /^(http(s)?|ftp)/.test(node.text);
 				result.push(new vscode.DocumentLink(linkRange, vscode.Uri.parse(isExternalLink ? node.text : "https://namu.wiki/w/" + node.text)))
+				continue;
 			}
 			if (name === "macro") {
 				const macroContent = node.namedChild(2);

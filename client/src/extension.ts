@@ -16,6 +16,7 @@ import { registerCompletionProviders, serverCompletionMiddleware } from './provi
 import { initTreeSitter, makeTree, updateTree } from './parser';
 import { FoldingProvider } from './providers/FoldingProvider';
 import { LinkProvider } from './providers/LinkProvider';
+import { diagnostics } from './diagnostics';
 
 export let client: LanguageClient;
 let activeRules: vscode.Disposable[] = [];
@@ -26,6 +27,8 @@ enum Level {
 let oldDomain = vscode.workspace.getConfiguration("namucode").get<string>("editor.internalLinkDomain", "https://namu.wiki")
 
 export async function activate(context: ExtensionContext) {
+  context.subscriptions.push(diagnostics);
+
   await initTreeSitter(context);
 
   for (const document of vscode.workspace.textDocuments) {

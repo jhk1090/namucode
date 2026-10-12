@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { Edit, Language, Parser, Query, Tree } from 'web-tree-sitter';
 import path from "path";
+import { updateDiagnostics } from './diagnostics';
 
 interface Cache {
 	version: number;
@@ -13,6 +14,7 @@ let parser: Parser;
 let language: Language;
 export let foldingQuery: Query;
 export let linkQuery: Query;
+export let diagnosticsQuery: Query;
 export async function initTreeSitter(context: vscode.ExtensionContext) {
   await Parser.init();
 
@@ -59,6 +61,43 @@ export async function initTreeSitter(context: vscode.ExtensionContext) {
         (required_arg_macro_name ("include"))
         (macro_end)) @macro
 	`);
+  diagnosticsQuery = new Query(language, `
+    (_ (argument_implicit_end)) @argument_implicit_end
+    (_ (bracket_implicit_end)) @bracket_implicit_end
+    (_ (macro_implicit_end)) @macro_implicit_end
+    (_ (link_implicit_end)) @link_implicit_end
+    (_ (bold_implicit_end)) @bold_implicit_end
+    (_ (italic_implicit_end)) @italic_implicit_end
+    (_ (strike_implicit_end)) @strike_implicit_end
+    (_ (strike2_implicit_end)) @strike2_implicit_end
+    (_ (superscript_implicit_end)) @superscript_implicit_end
+    (_ (subscript_implicit_end)) @subscript_implicit_end
+    (_ (underline_implicit_end)) @underline_implicit_end
+    (_ (footnote_implicit_end)) @footnote_implicit_end
+    (_ (table_row_implicit_end)) @table_row_implicit_end
+    (_ (table_caption_implicit_end)) @table_caption_implicit_end
+    (_ (table_argument_implicit_end)) @table_argument_implicit_end
+    (horizontal_line_implicit) @horizontal_line_implicit
+    (table_argument (table_argument_name) @unknown_table_argument_name)
+    [
+        (wiki_style_attr)
+        (wiki_dark_style_attr)
+        (wiki_tag_attr)
+        (wiki_class_attr)
+        (wiki_lang_attr)
+        (wiki_onclick_attr)
+    ] @wiki_attribute
+    (macro_without_args) @macro_without_args
+    (macro (no_arg_macro_name) @unnecessary_macro_argument)
+    (if_fallback_block (bracket_end)) @if_fallback_block
+    (folding_fallback_block (bracket_end)) @folding_fallback_block
+    (syntax_fallback_block (bracket_end)) @syntax_fallback_block
+    (wiki_fallback_block (bracket_end)) @wiki_fallback_block
+    (style_fallback_block (bracket_end)) @style_fallback_block
+    (latex_fallback_block (bracket_end)) @latex_fallback_block
+    (scale_fallback_block (bracket_end)) @scale_fallback_block
+    (color_fallback_block (bracket_end)) @color_fallback_block
+    `)
 }
 
 function treeSitterPositionAt(text: string, offset: number) {
@@ -137,6 +176,8 @@ export function makeTree(document: vscode.TextDocument) {
 		const version = document.version;
 		
 		cache.set(key, { tree, version, text });
+
+        updateDiagnostics(document);
 	}
 }
 
@@ -161,4 +202,6 @@ export function updateTree(event: vscode.TextDocumentChangeEvent) {
 
 	const newTree = parser.parse(document.getText(), oldTree);
 	cache.set(key, { tree: newTree, version, text: document.getText() });
+
+    updateDiagnostics(document);
 }

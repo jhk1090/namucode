@@ -20,8 +20,6 @@ export class FoldingProvider implements vscode.FoldingRangeProvider {
 				result.push(new vscode.FoldingRange(startLine, endLine));
 		}
 
-		console.log('result: ', result);
-
 		return result;
 	}
 }
