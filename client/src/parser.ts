@@ -51,8 +51,11 @@ export async function initTreeSitter(context: vscode.ExtensionContext) {
 			] @folding
 	`);
   linkQuery = new Query(language, `
-			(link 
+      (link 
         (link_link) @link
+        (link_end))
+      (link_inline
+        (link_link_inline) @link
         (link_end))
       (file_link 
         (file_link_link) @link
@@ -78,17 +81,10 @@ export async function initTreeSitter(context: vscode.ExtensionContext) {
     (_ (table_caption_implicit_end)) @table_caption_implicit_end
     (_ (table_argument_implicit_end)) @table_argument_implicit_end
     (horizontal_line_implicit) @horizontal_line_implicit
-    (table_argument (table_argument_name) @unknown_table_argument_name)
-    [
-        (wiki_style_attr)
-        (wiki_dark_style_attr)
-        (wiki_tag_attr)
-        (wiki_class_attr)
-        (wiki_lang_attr)
-        (wiki_onclick_attr)
-    ] @wiki_attribute
+    (table_argument) @table_argument
+    (wiki_block (block_header) @wiki_block_header)
     (macro_without_args) @macro_without_args
-    (macro (no_arg_macro_name) @unnecessary_macro_argument)
+    (macro) @macro
     (if_fallback_block (bracket_end)) @if_fallback_block
     (folding_fallback_block (bracket_end)) @folding_fallback_block
     (syntax_fallback_block (bracket_end)) @syntax_fallback_block
@@ -97,6 +93,7 @@ export async function initTreeSitter(context: vscode.ExtensionContext) {
     (latex_fallback_block (bracket_end)) @latex_fallback_block
     (scale_fallback_block (bracket_end)) @scale_fallback_block
     (color_fallback_block (bracket_end)) @color_fallback_block
+    (file_link (file_link_attribute) @file_link_attribute)
     `)
 }
 
@@ -170,6 +167,8 @@ function canApplyChangesIncrementally(
 
 export function makeTree(document: vscode.TextDocument) {
 	const key = document.uri.toString();
+    if (document.languageId !== "namu") return;
+
 	if (!cache.has(key)) {
 		const text = document.getText();
 		const tree = parser.parse(text);
@@ -186,6 +185,8 @@ export function updateTree(event: vscode.TextDocumentChangeEvent) {
 	const key = document.uri.toString();
 	const version = document.version;
 
+    if (document.languageId !== "namu") return;
+    
 	const cached = cache.get(key);
 	if (cached?.version === version) return;
 
