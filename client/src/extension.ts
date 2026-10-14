@@ -37,6 +37,9 @@ export async function activate(context: ExtensionContext) {
 
   context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(makeTree))
   context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(updateTree))
+  context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(document => {
+    diagnostics.delete(document.uri);
+  }))
 
   // provideLink(context);
 
