@@ -85,6 +85,9 @@ export async function initTreeSitter(context: vscode.ExtensionContext) {
     (wiki_block (block_header) @wiki_block_header)
     (macro_without_args) @macro_without_args
     (macro) @macro
+    (style_block
+        content: (_) @style_block_content
+        (bracket_end))
     (if_fallback_block (bracket_end)) @if_fallback_block
     (folding_fallback_block (bracket_end)) @folding_fallback_block
     (syntax_fallback_block (bracket_end)) @syntax_fallback_block

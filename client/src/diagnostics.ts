@@ -2,8 +2,25 @@ import vscode from "vscode";
 import { cache, diagnosticsQuery } from './parser';
 import { colorTextOptions } from './providers/CompletionProvider';
 import { Node } from 'web-tree-sitter';
+import { TextDocument, getCSSLanguageService } from 'vscode-css-languageservice';
 
 export const diagnostics = vscode.languages.createDiagnosticCollection('namucode');
+
+const cssLanguageService = getCSSLanguageService({
+	customDataProviders: [
+		{
+			provideAtDirectives: () => [
+				{
+					name: '@theseed-dark-mode',
+					description: '다크 모드 전용 스타일을 정의합니다.',
+				}
+			],
+			provideProperties: () => [],
+			providePseudoClasses: () => [],
+			providePseudoElements: () => []
+		}
+	]
+});
 
 const requiredArgMacros = ["anchor", "age", "dday", "youtube", "kakaotv", "vimeo", "nicovideo", "navertv", "math", "include", "ruby"]
 const colorBlockColorRegex = new RegExp(`^#([a-fA-F0-9]{3}|[a-fA-F0-9]{6}|${colorTextOptions.join("|")})$`, "i");
@@ -120,6 +137,75 @@ function handleTableArgument(document: vscode.TextDocument, node: Node): vscode.
 	}
 
 	return null;
+}
+
+function handleWikiBlockHeader(document: vscode.TextDocument, node: Node): vscode.Diagnostic[] {
+	const result = []
+
+	if (node.children.find(child => child.type === "argument")) return result;
+
+	const regex = /(style|dark-style|lang|class|tag|onclick)="([^"]*)(")?/g;
+
+	const matches = [...node.text.matchAll(regex)].map(match => ({
+			name: match[1],
+			value: match[2],
+			endToken: match[3],
+			startIndex: node.startIndex + match.index,
+			endIndex: node.startIndex + match.index + match[0].length
+	}));
+
+	const counts = new Map();
+
+	for (const match of matches) {
+		if (!match.endToken) {
+			result.push(new vscode.Diagnostic(getRangeByIndex(document, match.endIndex, match.endIndex), `종료 기호 "가 누락되었습니다.`, vscode.DiagnosticSeverity.Error))
+		}
+		if (match.name === "style" || match.name === "dark-style") {
+			const prefix = ".i{"
+			const suffix = "}"
+			const virtualText = `${prefix}${match.value}${suffix}`
+			const virtualDoc = TextDocument.create(
+				'namucode-virtual://embedded.css',
+				'css',
+				document.version,
+				virtualText
+			);
+
+			const stylesheet = cssLanguageService.parseStylesheet(virtualDoc);
+			const cssDiagnostics = cssLanguageService.doValidation(virtualDoc, stylesheet);
+
+			const offset = match.startIndex + match.name.length + "=\"".length
+			result.push(...cssDiagnostics
+				.filter(diagnostic => {
+					const start = virtualDoc.offsetAt(diagnostic.range.start);
+
+					return start >= prefix.length
+				})
+				.map(diagnostic => {
+					const start = virtualDoc.offsetAt(diagnostic.range.start);
+					const end = virtualDoc.offsetAt(diagnostic.range.end);
+
+					return new vscode.Diagnostic(
+						new vscode.Range(
+							document.positionAt(offset + start - prefix.length),
+							document.positionAt(offset + end - prefix.length)
+						),
+						diagnostic.message,
+						diagnostic.severity-- // severity 차이 보정
+					)
+				})
+			)
+		}
+		counts.set(match.name, (counts.get(match.name) || 0) + 1);
+	}
+
+	const duplicates = matches.filter(item => counts.get(item.name) > 1);
+
+	for (const duplicate of duplicates) {
+		result.push(new vscode.Diagnostic(getRangeByIndex(document, duplicate.startIndex, duplicate.startIndex + duplicate.name.length), `${duplicate.name}은/는 중복된 속성입니다. 선행 속성이 우선적으로 적용됩니다.`, vscode.DiagnosticSeverity.Warning))
+	}
+
+	return result;
 }
 
 function handleColorFallbackBlock(document: vscode.TextDocument, node: Node): vscode.Diagnostic | null {
@@ -262,31 +348,7 @@ export function updateDiagnostics(document: vscode.TextDocument) {
 		}
 		else if (name === "wiki_block_header") {
 			if (node.children.find(child => child.type === "argument")) continue;
-
-			const regex = /(style|dark-style|lang|class|tag|onclick)="([^"]*)(")?/g;
-
-			const matches = [...node.text.matchAll(regex)].map(match => ({
-					name: match[1],
-					value: match[2],
-					endToken: match[3],
-					startIndex: node.startIndex + match.index,
-					endIndex: node.startIndex + match.index + match[0].length
-			}));
-
-			const counts = new Map();
-
-			for (const match of matches) {
-				if (!match.endToken) {
-					updated.push(new vscode.Diagnostic(getRangeByIndex(document, match.endIndex, match.endIndex), `종료 기호 "가 누락되었습니다.`, vscode.DiagnosticSeverity.Error))
-				}
-				counts.set(match.name, (counts.get(match.name) || 0) + 1);
-			}
-
-			const duplicates = matches.filter(item => counts.get(item.name) > 1);
-
-			for (const duplicate of duplicates) {
-				updated.push(new vscode.Diagnostic(getRangeByIndex(document, duplicate.startIndex, duplicate.startIndex + duplicate.name.length), `${duplicate.name}은/는 중복된 속성입니다. 선행 속성이 우선적으로 적용됩니다.`, vscode.DiagnosticSeverity.Warning))
-			}
+			updated.push(...handleWikiBlockHeader(document, node))
 		}
 		else if (name === "macro_without_args") {
 			const range = getNodeRange(document, node);
@@ -303,6 +365,37 @@ export function updateDiagnostics(document: vscode.TextDocument) {
 				const range = getNodeRange(document, node);
 				updated.push(new vscode.Diagnostic(range, `'${node.children[1].text}' 매크로는 매개변수가 1개 이상 필요합니다.`, vscode.DiagnosticSeverity.Warning))
 			}
+		}
+		else if (name === "style_block_content") {
+			if (node.children.find(child => child.type === "argument")) continue;
+			
+			let virtualText = `${node.text}`
+			virtualText = virtualText.replace(/@theseed-dark-mode/g, '@media all and (n)')
+			const virtualDoc = TextDocument.create(
+				'namucode-virtual://embedded.css',
+				'css',
+				document.version,
+				virtualText
+			);
+
+			const stylesheet = cssLanguageService.parseStylesheet(virtualDoc);
+			const cssDiagnostics = cssLanguageService.doValidation(virtualDoc, stylesheet);
+
+			updated.push(...cssDiagnostics
+				.map(diagnostic => {
+					const start = virtualDoc.offsetAt(diagnostic.range.start);
+					const end = virtualDoc.offsetAt(diagnostic.range.end);
+
+					return new vscode.Diagnostic(
+						new vscode.Range(
+							document.positionAt(node.startIndex + start),
+							document.positionAt(node.startIndex + end)
+						),
+						diagnostic.message,
+						diagnostic.severity-- // severity 차이 보정
+					)
+				})
+			)
 		}
 		else if (name === "if_fallback_block") {
 			const range = getNodeRange(document, node);
