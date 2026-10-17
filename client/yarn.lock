@@ -1746,11 +1746,6 @@ wcwidth@^1.0.1:
   dependencies:
     defaults "^1.0.3"
 
-web-tree-sitter@^0.27.0:
-  version "0.27.0"
-  resolved "https://registry.yarnpkg.com/web-tree-sitter/-/web-tree-sitter-0.27.0.tgz#72ed2c61bfbbec2489f3af6113ece9ecd47252fa"
-  integrity sha512-XK08gj6RwTMQatAG7uVRP8MunqotL/XC19vHgkSPKmELgbGPBj4ECvB8haHOUnyj6ls2B8t42UTro14zxGgAHg==
-
 which@^2.0.1, which@^2.0.2:
   version "2.0.2"
   resolved "https://registry.npmjs.org/which/-/which-2.0.2.tgz"

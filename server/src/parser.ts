@@ -1,7 +1,9 @@
-import * as vscode from "vscode";
 import { Edit, Language, Parser, Query, Tree } from 'web-tree-sitter';
 import path from "path";
 import { updateDiagnostics } from './diagnostics';
+import { DidChangeTextDocumentParams } from 'vscode-languageserver';
+import { documents } from './server';
+import { Position, TextDocument, TextDocumentContentChangeEvent } from 'vscode-languageserver-textdocument';
 
 interface Cache {
 	version: number;
@@ -15,12 +17,12 @@ let language: Language;
 export let foldingQuery: Query;
 export let linkQuery: Query;
 export let diagnosticsQuery: Query;
-export async function initTreeSitter(context: vscode.ExtensionContext) {
+export async function initTreeSitter() {
   await Parser.init();
 
   parser = new Parser();
   const wasmPath = path.join(
-    context.extensionPath,
+    process.env.NAMUCODE_EXTENSION_PATH, 
     "dist/media/tree-sitter-namumark.wasm"
   )
 
@@ -100,6 +102,27 @@ export async function initTreeSitter(context: vscode.ExtensionContext) {
     `)
 }
 
+function offsetAt(text: string, position: Position): number {
+    let offset = 0;
+    let line = 0;
+
+    while (line < position.line) {
+        const newline = text.indexOf("\n", offset);
+
+        if (newline === -1) {
+            return text.length;
+        }
+
+        offset = newline + 1;
+        line++;
+    }
+
+    const newline = text.indexOf("\n", offset);
+    const lineEnd = newline === -1 ? text.length : newline;
+
+    return Math.min(offset + position.character, lineEnd);
+}
+
 function treeSitterPositionAt(text: string, offset: number) {
     const lines = text.slice(0, offset).split(/\r\n|\r|\n/);
 
@@ -129,14 +152,20 @@ function positionAfterText(
 }
 
 function convertToTreeSitterEdit(
-	 oldText: string,
-    change: vscode.TextDocumentContentChangeEvent
+    oldText: string,
+    change: TextDocumentContentChangeEvent
 ) {
-    const startOffset = change.rangeOffset;
-    const oldEndOffset = startOffset + change.rangeLength;
-    const startIndex = oldText.slice(0, startOffset).length;
-    const oldEndIndex = oldText.slice(0, oldEndOffset).length;
+    if (!("range" in change)) {
+        throw new Error("Incremental change requires a range");
+    }
+
+    const startOffset = offsetAt(oldText, change.range.start);
+    const oldEndOffset = offsetAt(oldText, change.range.end);
+
+    const startIndex = startOffset;
+    const oldEndIndex = oldEndOffset;
     const newEndIndex = startIndex + change.text.length;
+
     const startPosition = treeSitterPositionAt(oldText, startOffset);
     const oldEndPosition = treeSitterPositionAt(oldText, oldEndOffset);
 
@@ -152,23 +181,18 @@ function convertToTreeSitterEdit(
 
 function canApplyChangesIncrementally(
     text: string,
-    changes: readonly vscode.TextDocumentContentChangeEvent[]
+    changes: readonly TextDocumentContentChangeEvent[]
 ): boolean {
     if (changes.length !== 1) return false;
 
     const change = changes[0];
-    if (
-        change.rangeOffset < 0 ||
-        change.rangeLength < 0 ||
-        change.rangeOffset + change.rangeLength > text.length
-    ) {
-        return false;
-    }
+
+    if (!("range" in change)) return false;
 
     return true;
 }
 
-export function makeTree(document: vscode.TextDocument) {
+export function makeTree(document: TextDocument) {
 	const key = document.uri.toString();
     if (document.languageId !== "namu") return;
 
@@ -183,8 +207,8 @@ export function makeTree(document: vscode.TextDocument) {
 	}
 }
 
-export function updateTree(event: vscode.TextDocumentChangeEvent) {
-	const document = event.document;
+export function updateTree(params: DidChangeTextDocumentParams) {
+	const document = documents.get(params.textDocument.uri);
 	const key = document.uri.toString();
 	const version = document.version;
 
@@ -197,10 +221,10 @@ export function updateTree(event: vscode.TextDocumentChangeEvent) {
 	if (
 		cached &&
 		cached.version === version - 1 &&
-		canApplyChangesIncrementally(cached.text, event.contentChanges)
+		canApplyChangesIncrementally(cached.text, params.contentChanges)
 	) {
 		oldTree = cached.tree;
-		const change = event.contentChanges[0];
+		const change = params.contentChanges[0];
 		oldTree.edit(new Edit(convertToTreeSitterEdit(cached.text, change)));
 	}
 

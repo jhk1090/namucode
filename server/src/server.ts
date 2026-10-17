@@ -4,12 +4,14 @@
  * ------------------------------------------------------------------------------------------ */
 
 import {
+	CompletionItemKind,
 	CompletionList,
 	CompletionTriggerKind,
 	createConnection,
 	Diagnostic,
 	DidChangeConfigurationNotification,
 	DidChangeWatchedFilesNotification,
+	DocumentLink,
 	FileChangeType,
 	InitializeParams,
 	ProposedFeatures,
@@ -20,15 +22,17 @@ import { getLanguageModes, LanguageModes } from './languageModes';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { provideDocumentSymbol, TreeSymbol } from './documentSymbolSupport';
 import { provideCompletionSupport } from './completionSupport';
+import { cache, foldingQuery, initTreeSitter, linkQuery, makeTree, updateTree } from './parser';
+import { provideCompletion } from './completion';
 const parser = require("../../client/media/parser/core/parser.js");
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
-const connection = createConnection(ProposedFeatures.all);
+export const connection = createConnection(ProposedFeatures.all);
 
 // Create a simple text document manager. The text document manager
 // supports full document sync only
-const documents = new TextDocuments(TextDocument);
+export const documents = new Map<string, TextDocument>();
 
 interface ParserSettings {
 	maxParsingCharacter: number;
@@ -45,18 +49,6 @@ const defaultCodeACSettings = { disableCodeAnalysis: false, disableCompletion: f
 let defaultSettings: ParserSettings & CodeACSettings = { ...defaultParserSettings, ...defaultCodeACSettings };
 let globalSettings: ParserSettings & CodeACSettings = defaultSettings;
 
-interface DocumentCacheValue {
-  version: number;
-	result: {
-		common: any;
-		minified: any;
-		editorComment: any;
-	};
-  languageModes: LanguageModes | null;
-	documentSymbol: TreeSymbol[];
-  settings: { isLengthOverNotified: boolean } & ParserSettings;
-}
-export const documentCache = new Map<string, DocumentCacheValue>();
 const fileInitLocks = new Map<string, { promise: Promise<void>; resolve: () => void }>();
 
 function getFileInitLock(uri: string): Promise<void> {
@@ -84,19 +76,14 @@ connection.onInitialize(async (_params: InitializeParams) => {
 		capabilities.workspace && !!capabilities.workspace.configuration
 	);
 
-	documents.onDidClose(e => {
-		connection.sendDiagnostics({ uri: e.document.uri, diagnostics: [] });
-		// if (!languageModes) return
-		// languageModes.onDocumentRemoved();
-	});
-	// connection.onShutdown(() => {
-	// 	if (!languageModes) return
-	// 	languageModes.dispose();
-	// });
+	await initTreeSitter()
 
 	return {
 		capabilities: {
-			textDocumentSync: TextDocumentSyncKind.Full,
+			textDocumentSync: {
+				openClose: true,
+				change: TextDocumentSyncKind.Incremental	
+			},
 			// Tell the client that the server supports code completion
 			completionProvider: {
 				resolveProvider: false,
@@ -105,11 +92,14 @@ connection.onInitialize(async (_params: InitializeParams) => {
 			},
 			foldingRangeProvider: true,
 			documentSymbolProvider: true,
+			documentLinkProvider: {
+				resolveProvider: false
+			},
 			workspace: {
 				workspaceFolders: {
 					supported: true
 				}
-			}
+			},
 			// hoverProvider: true,
 			// definitionProvider: true,
 		}
@@ -148,205 +138,186 @@ connection.onDidChangeConfiguration(async (_change) => {
 		globalSettings = { ...globalParserSettings, ...globalCodeACSettings }
 	}
 
-	// Revalidate all open text documents
-	documents.all().forEach(async (document) => {
-		await fetchDocumentSymbol(document)
-		await validateTextDocument(document)
-	});
+	[...documents.values()].forEach(document => {
+		makeTree(document)
+	})
 });
+
+connection.onDidOpenTextDocument(async (params) => {
+    await initializationPromise;
+
+    const item = params.textDocument;
+    const document = TextDocument.create(
+        item.uri,
+        item.languageId,
+        item.version,
+        item.text,
+    );
+
+    documents.set(item.uri, document);
+
+    if (document.languageId === "namu") {
+        makeTree(document);
+    }
+});
+
 
 connection.onDidChangeWatchedFiles((change) => {
 	for (const event of change.changes) {
 		if (event.type === FileChangeType.Deleted) {
 			const deletedUri = event.uri;
-			if (documentCache.has(deletedUri)) {
-				console.log(`${deletedUri} 캐싱 삭제됨.`)
-				documentCache.delete(deletedUri)
+			if (documents.has(deletedUri)) {
+				documents.delete(deletedUri)
 			}
+			if (cache.has(deletedUri)) {
+				cache.delete(deletedUri)
+			}
+			console.log(`${deletedUri} 캐싱 삭제됨.`)
 		}
 	}
 })
 
-// The content of a text document has changed. This event is emitted
-// when the text document first opened or when its content has changed.
-documents.onDidChangeContent(async (change) => {
+connection.onDidChangeTextDocument(async (params) => {
 	await initializationPromise;
-	await fetchDocumentSymbol(change.document);
-	await validateTextDocument(change.document);
+
+	const uri = params.textDocument.uri;
+	const oldDocument = documents.get(uri);
+
+	if (!oldDocument) return;
+
+	const document = TextDocument.update(
+			oldDocument,
+			params.contentChanges,
+			params.textDocument.version,
+	);
+
+	documents.set(uri, document);
+	updateTree(params);
+})
+
+connection.onDidCloseTextDocument((params) => {
+    const uri = params.textDocument.uri;
+
+    documents.delete(uri);
+    cache.delete(uri);
+
+    connection.sendDiagnostics({
+        uri,
+        diagnostics: [],
+    });
 });
 
-async function fetchDocumentSymbol(document: TextDocument, isEditorComment: boolean = false, isMinified: boolean = true) {
-	const settings = { editorComment: isEditorComment, minified: isMinified, maxParsingDepth: globalSettings.maxParsingDepth };
-	const isLengthOver = document.getText().length > globalSettings.maxParsingCharacter
+connection.onCompletion(async (params, _token) => {
+	await initializationPromise;
 	
-	const target = documentCache.get(document.uri)
+	const document = documents.get(params.textDocument.uri);
+	if (!document) return [];
 
-	let isLengthOverNotified = target?.settings?.isLengthOverNotified ?? false;
-	
-	if (isLengthOver) {
-    if (!isLengthOverNotified) {
-      connection.window.showWarningMessage(
-        `코드 분석 및 자동 완성 최대 글자 수인 ${globalSettings.maxParsingCharacter}자가 넘어가 코드 분석과 자동 완성이 중지되었습니다.`,
-      );
-    }
-    isLengthOverNotified = true;
-    documentCache.set(document.uri, {
-      version: document.version,
-			result: {
-				common: null,
-				editorComment: null,
-				minified: null
-			},
-      languageModes: null,
-			documentSymbol: [],
-      settings: { ...globalSettings, isLengthOverNotified },
-    });
-		return;
-  }
-
-	if (!isLengthOver && isLengthOverNotified) {
-    isLengthOverNotified = false;
-  }
-
-	if (target && isEditorComment && !isMinified) {
-		let editorCommentParsedResult = target.result.editorComment;
-		if (!editorCommentParsedResult) {
-			editorCommentParsedResult = parser(document.getText(), settings);
-			documentCache.set(document.uri, { ...target, result: { ...target.result, editorComment: editorCommentParsedResult } })
-		}
-		return editorCommentParsedResult
-	}
-
-	if (target && !isMinified) {
-		let commonResult = target.result.common;
-		if (!commonResult) {
-			commonResult = parser(document.getText(), settings);
-			documentCache.set(document.uri, { ...target, result: { ...target.result, common: commonResult } })
-		}
-		return commonResult
-	}
-
-	const isConfigurationUnchanged = (
-		target &&
-		target.version === document.version &&
-		target.settings.maxParsingDepth === globalSettings.maxParsingDepth &&
-		target.settings.maxParsingCharacter === globalSettings.maxParsingCharacter
-	)
-
-	if (isConfigurationUnchanged) {
-		return;
-	}
-
-	const result = parser(document.getText(), settings);
-  documentCache.set(document.uri, {
-    version: document.version,
-		result: {
-			common: null,
-			minified: result,
-			editorComment: null
-		},
-    languageModes: getLanguageModes(result, document),
-		documentSymbol: provideDocumentSymbol(document, result),
-    settings: { ...globalSettings, isLengthOverNotified },
-  });
-
-	if (fileInitLocks.has(document.uri)) {
-		fileInitLocks.get(document.uri)!.resolve();
-	} else {
-		const promise = Promise.resolve();
-		fileInitLocks.set(document.uri, { promise, resolve: () => {} });
-	}
-
-	
-}
-
-async function validateTextDocument(textDocument: TextDocument) {
-	if (globalSettings.disableCodeAnalysis) {
-		connection.sendDiagnostics({ uri: documents.get(textDocument.uri).uri, diagnostics: [] })
-		return;
-	}
-
-	const languageModes = documentCache.get(textDocument.uri)?.languageModes;
-	if (!languageModes) return;
-
-	try {
-		const version = textDocument.version;
-		const diagnostics: Diagnostic[] = [];
-		if (textDocument.languageId === 'namu') {
-			const modes = languageModes.getAllModesInDocument();
-			const latestTextDocument = documents.get(textDocument.uri);
-			if (latestTextDocument && latestTextDocument.version === version) {
-				// check no new version has come in after in after the async op
-				modes.forEach(mode => {
-					if (mode.doValidation) {
-						mode.doValidation(textDocument).forEach(d => {
-							diagnostics.push(d);
-						});
-					}
-				});
-				// console.log(diagnostics)
-				connection.sendDiagnostics({ uri: latestTextDocument.uri, diagnostics });
-			}
-		}
-	} catch (e) {
-		connection.console.error(`Error while validating ${textDocument.uri}`);
-		connection.console.error(String(e));
-	}
-}
-
-connection.onCompletion(async (textDocumentPosition, _token) => {
-	if (globalSettings.disableCompletion) {
-		return null;
-	}
-
-	const document = documents.get(textDocumentPosition.textDocument.uri);
-	if (!document) {
-		return null;
-	}
-
-	await getFileInitLock(document.uri)
-	
-	return provideCompletionSupport(document, textDocumentPosition.position, textDocumentPosition.context)
+	return provideCompletion(document, params.position, params.context)
 });
 
 connection.onFoldingRanges(async (params) => {
-	const document = documents.get(params.textDocument.uri)
-	await getFileInitLock(document.uri)
+	await initializationPromise;
 
-	const ranges = [];
-	const minified = documentCache.get(document.uri)?.result?.minified;
-	const headings = minified.data.headings;
-	for (let index = 0; index < headings.length; index++) {
-    const heading = headings[index];
-    const nextHeading = headings[index + 1];
+	const tree = cache.get(params.textDocument.uri)?.tree;
+	const matches = foldingQuery.matches(tree.rootNode);
 
-    const startLine = heading.line - 1;
-    const endLine = nextHeading ? nextHeading.line - 2 : document.lineCount - 1;
+	const result = [];
 
-    ranges.push({ startLine, endLine });
-  }
-	return [...ranges, ...minified.data.foldingRanges]
+	for (const match of matches) {
+		const node = match.captures[0].node;
+		const startLine = node.startPosition.row;
+		const endLine = node.type === "section" ? node.endPosition.row : node.endPosition.row - 1;
+
+		if (endLine - startLine < 1) {
+				continue;
+		}
+
+		result.push({ startLine, endLine });
+	}
+
+	return result;
+	// const document = documents.get(params.textDocument.uri)
+	// await getFileInitLock(document.uri)
+
+	// const ranges = [];
+	// const minified = documentCache.get(document.uri)?.result?.minified;
+	// const headings = minified.data.headings;
+	// for (let index = 0; index < headings.length; index++) {
+  //   const heading = headings[index];
+  //   const nextHeading = headings[index + 1];
+
+  //   const startLine = heading.line - 1;
+  //   const endLine = nextHeading ? nextHeading.line - 2 : document.lineCount - 1;
+
+  //   ranges.push({ startLine, endLine });
+  // }
+	// return [...ranges, ...minified.data.foldingRanges]
 })
 
 connection.onDocumentSymbol(async (params) => {
-	const document = documents.get(params.textDocument.uri)
-	await getFileInitLock(document.uri)
-	return documentCache.get(document.uri).documentSymbol
+	return null
+	// const document = documents.get(params.textDocument.uri)
+	// await getFileInitLock(document.uri)
+	// return documentCache.get(document.uri).documentSymbol
 })
 
-connection.onRequest("namucode/getParsedResult", async (params: { uri: string, isEditorComment: boolean; }) => {
-	await getFileInitLock(params.uri)
-	return params.isEditorComment ? fetchDocumentSymbol(documents.get(params.uri), true, false) : fetchDocumentSymbol(documents.get(params.uri), false, false)
+// connection.onRequest("namucode/getParsedResult", async (params: { uri: string, isEditorComment: boolean; }) => {
+// 	await getFileInitLock(params.uri)
+// 	return params.isEditorComment ? fetchDocumentSymbol(documents.get(params.uri), true, false) : fetchDocumentSymbol(documents.get(params.uri), false, false)
+// })
+
+connection.onDocumentLinks(async (params) => {
+	await initializationPromise;
+
+	const document = documents.get(params.textDocument.uri)
+	const tree = cache.get(document.uri)?.tree;
+		
+	if (!tree) {
+		return [];
+	}
+
+	const result: DocumentLink[] = []
+	for (const { name, node } of linkQuery.captures(tree.rootNode)) {
+		if (name === "link") {
+			if (node.children.find(child => child.type === "argument")) continue;
+
+			const start = document.positionAt(node.startIndex);
+			const end = document.positionAt(node.endIndex);
+
+			const isExternalLink = /^(http(s)?|ftp)/.test(node.text);
+			result.push({ range: { start, end }, target: isExternalLink ? node.text : "https://namu.wiki/w/" + node.text })
+			continue;
+		}
+		if (name === "macro") {
+			if (node.children.find(child => child.type === "argument")) continue;
+
+			const macroContent = node.namedChild(2);
+			
+			const firstCommaRegex = /(?<!\\)(?:\\\\)*,/;
+
+			const match = macroContent.text.match(firstCommaRegex)
+
+			const start = document.positionAt(macroContent.startIndex)
+			const end = document.positionAt(
+				match ? macroContent.startIndex + match.index : macroContent.endIndex
+			)
+			const target = "https://namu.wiki/w/" + (match ? macroContent.text.slice(0, match.index) : macroContent.text)
+
+			result.push({ range: { start, end }, target })
+
+			continue;
+		}
+	}
+
+	return result;
 })
 
 connection.onRequest("namucode/getDocumentSymbol", async (params: { uri: string }) => {
-	await getFileInitLock(params.uri)
-	return documentCache.get(params.uri).documentSymbol
+	return null
+	// await getFileInitLock(params.uri)
+	// return documentCache.get(params.uri).documentSymbol
 })
-
-// Make the text document manager listen on the connection
-// for open, change and close text document events
-documents.listen(connection);
 
 // Listen on the connection
 connection.listen();

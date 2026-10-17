@@ -12,11 +12,6 @@ import { LinkDefinitionProvider } from "./providers/LinkDefinitionProvider";
 import { MarkPreview, getWebviewOptions } from './preview';
 import { WikiCodeActionProvider } from './providers/CodeActionProvider';
 import { sortParagraph } from './sortParagraph';
-import { registerCompletionProviders, serverCompletionMiddleware } from './providers/CompletionProvider';
-import { initTreeSitter, makeTree, updateTree } from './parser';
-import { FoldingProvider } from './providers/FoldingProvider';
-import { LinkProvider } from './providers/LinkProvider';
-import { diagnostics } from './diagnostics';
 
 export let client: LanguageClient;
 let activeRules: vscode.Disposable[] = [];
@@ -27,22 +22,6 @@ enum Level {
 let oldDomain = vscode.workspace.getConfiguration("namucode").get<string>("editor.internalLinkDomain", "https://namu.wiki")
 
 export async function activate(context: ExtensionContext) {
-  context.subscriptions.push(diagnostics);
-
-  await initTreeSitter(context);
-
-  for (const document of vscode.workspace.textDocuments) {
-    makeTree(document);
-  }
-
-  context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(makeTree))
-  context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(updateTree))
-  context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(document => {
-    diagnostics.delete(document.uri);
-  }))
-
-  // provideLink(context);
-
   // namucode.editor.internalLinkDomain 변경 감지
   const linkDomainChangeListener = vscode.workspace.onDidChangeConfiguration((event) => {
     if (event.affectsConfiguration("namucode")) {
@@ -279,8 +258,6 @@ export async function activate(context: ExtensionContext) {
 
   context.subscriptions.push(preview, retryPreview, previewEditorComment, openPreviewInWeb, sort, wrapCommand);
 
-  registerCompletionProviders(context);
-
   context.subscriptions.push(
     vscode.languages.registerCodeActionsProvider(
       { language: 'namu' },
@@ -289,45 +266,43 @@ export async function activate(context: ExtensionContext) {
     )
   );
 
-  context.subscriptions.push(
-    vscode.languages.registerFoldingRangeProvider(
-      { language: 'namu' },
-      new FoldingProvider()
-    )
-  )
-
-  context.subscriptions.push(
-    vscode.languages.registerDocumentLinkProvider(
-      { language: 'namu' },
-      new LinkProvider()
-    )
-  )
-
   // // Code to connect to sever
-  // const serverModule = context.asAbsolutePath(path.join("dist", "server.js"));
+  const serverModule = context.asAbsolutePath(path.join("dist", "server.js"));
 
-  // const serverOptions: ServerOptions = {
-  //   run: { module: serverModule, transport: TransportKind.ipc },
-  //   debug: {
-  //     module: serverModule,
-  //     transport: TransportKind.ipc,
-  //   },
-  // };
+  const serverOptions: ServerOptions = {
+    run: { 
+      module: serverModule, 
+      transport: TransportKind.ipc,
+      options: {
+        env: {
+          ...process.env,
+          NAMUCODE_EXTENSION_PATH: context.extensionPath
+        }
+      }
+     },
+    debug: {
+      module: serverModule,
+      transport: TransportKind.ipc,
+      options: {
+        env: {
+          ...process.env,
+          NAMUCODE_EXTENSION_PATH: context.extensionPath
+        }
+      }
+    },
+  };
 
-  // const clientOptions: LanguageClientOptions = {
-  //   documentSelector: [
-  //     { scheme: "file", language: "namu" },
-  //     { scheme: "untitled", language: "namu" },
-  //   ],
-  //   middleware: {
-  //     provideCompletionItem: serverCompletionMiddleware,
-  //   },
-  //   synchronize: {
-  //     fileEvents: workspace.createFileSystemWatcher("**/*.namu"),
-  //   },
-  // };
-  // client = new LanguageClient("Namucode", serverOptions, clientOptions);
-  // await client.start();
+  const clientOptions: LanguageClientOptions = {
+    documentSelector: [
+      { scheme: "file", language: "namu" },
+      { scheme: "untitled", language: "namu" },
+    ],
+    synchronize: {
+      fileEvents: workspace.createFileSystemWatcher("**/*.namu"),
+    },
+  };
+  client = new LanguageClient("Namucode", serverOptions, clientOptions);
+  await client.start();
 }
 
 export function deactivate(): Thenable<void> | undefined {
