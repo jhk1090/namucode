@@ -49,7 +49,7 @@
   ],
   "repository": {
     "brackets-scaleText": {
-      "begin": "\\{\\{\\{((?:\\+|\\-)[1-5]) ",
+      "begin": "\\{\\{\\{((?:\\+|\\-)[1-5])( |$)",
       "beginCaptures": {
         "1": { "name": "support.constant.color.namu" }
       },
