@@ -17,6 +17,8 @@ let language: Language;
 export let foldingQuery: Query;
 export let linkQuery: Query;
 export let diagnosticsQuery: Query;
+export let jsCompletionQuery: Query;
+export let classCompletionQuery: Query;
 export async function initTreeSitter() {
   await Parser.init();
 
@@ -63,8 +65,9 @@ export async function initTreeSitter() {
         (file_link_link) @link
         (link_end))
       (macro 
-        (required_arg_macro_name ("include"))
-        (macro_end)) @macro
+        (required_arg_macro_name) @_macro_name
+        (macro_end)
+        (#any-of? @_macro_name "youtube" "kakaotv" "vimeo" "nicovideo" "navertv" "include")) @macro
 	`);
   diagnosticsQuery = new Query(language, `
     (_ (argument_implicit_end)) @argument_implicit_end
@@ -84,6 +87,7 @@ export async function initTreeSitter() {
     (_ (table_argument_implicit_end)) @table_argument_implicit_end
     (horizontal_line_implicit) @horizontal_line_implicit
     (table_argument) @table_argument
+    (if_block (if_block_header) @if_block_header)
     (wiki_block (block_header) @wiki_block_header)
     (macro_without_args) @macro_without_args
     (macro) @macro
@@ -99,6 +103,19 @@ export async function initTreeSitter() {
     (scale_fallback_block (bracket_end)) @scale_fallback_block
     (color_fallback_block (bracket_end)) @color_fallback_block
     (file_link (file_link_attribute) @file_link_attribute)
+    `);
+  jsCompletionQuery = new Query(language, `
+    (if_block (if_block_header) @if_block_header)
+    (table_argument (table_argument_required_value_name "rowif") (table_argument_value) @table_argument_rowif_value)
+    (argument_name) @argument_name
+  `)
+  classCompletionQuery = new Query(language, `
+    (table_argument
+        (table_argument_required_value_name) @_name
+        (table_argument_value) @table_argument_class_value
+        (#any-of? @_name "tableclass" "rowclass" "class"))
+    (wiki_block (block_header) @wiki_block_header)
+    (style_block (nowiki_content) @style_block_content)
     `)
 }
 

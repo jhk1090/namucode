@@ -12,8 +12,7 @@ const quickjsPackages = [
   '@jitl/quickjs-wasmfile-release-asyncify',
   '@jitl/quickjs-wasmfile-release-sync',
   'quickjs-emscripten',
-  'quickjs-emscripten-core',
-  'web-tree-sitter'
+  'quickjs-emscripten-core'
 ];
 
 const serverExceptionModules = [
@@ -22,6 +21,7 @@ const serverExceptionModules = [
   '@vscode/l10n',
   'vscode-languageserver-types',
   'vscode-uri',
+  'web-tree-sitter'
 ]
 
 /**

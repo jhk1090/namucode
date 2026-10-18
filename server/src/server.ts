@@ -18,12 +18,10 @@ import {
 	TextDocuments,
 	TextDocumentSyncKind
 } from 'vscode-languageserver/node';
-import { getLanguageModes, LanguageModes } from './languageModes';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { provideDocumentSymbol, TreeSymbol } from './documentSymbolSupport';
-import { provideCompletionSupport } from './completionSupport';
 import { cache, foldingQuery, initTreeSitter, linkQuery, makeTree, updateTree } from './parser';
-import { provideCompletion } from './completion';
+import { provideCompletion, registerClassSymbols, registerJSSymbols } from './completion';
 const parser = require("../../client/media/parser/core/parser.js");
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
@@ -87,7 +85,9 @@ connection.onInitialize(async (_params: InitializeParams) => {
 			// Tell the client that the server supports code completion
 			completionProvider: {
 				resolveProvider: false,
-				triggerCharacters: ['.', ':', '@', '\"', ';', ',', ' ', '='],
+				triggerCharacters: [
+					'.', ':', '@', '\"', ';', ',', ' ', '=', '|', '&', '[', "+", "-", "#", "!", '<', "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"
+				],
 
 			},
 			foldingRangeProvider: true,
@@ -213,6 +213,8 @@ connection.onCompletion(async (params, _token) => {
 	const document = documents.get(params.textDocument.uri);
 	if (!document) return [];
 
+	registerClassSymbols(document)
+	registerJSSymbols(document)
 	return provideCompletion(document, params.position, params.context)
 });
 
@@ -237,22 +239,6 @@ connection.onFoldingRanges(async (params) => {
 	}
 
 	return result;
-	// const document = documents.get(params.textDocument.uri)
-	// await getFileInitLock(document.uri)
-
-	// const ranges = [];
-	// const minified = documentCache.get(document.uri)?.result?.minified;
-	// const headings = minified.data.headings;
-	// for (let index = 0; index < headings.length; index++) {
-  //   const heading = headings[index];
-  //   const nextHeading = headings[index + 1];
-
-  //   const startLine = heading.line - 1;
-  //   const endLine = nextHeading ? nextHeading.line - 2 : document.lineCount - 1;
-
-  //   ranges.push({ startLine, endLine });
-  // }
-	// return [...ranges, ...minified.data.foldingRanges]
 })
 
 connection.onDocumentSymbol(async (params) => {
@@ -292,6 +278,7 @@ connection.onDocumentLinks(async (params) => {
 		if (name === "macro") {
 			if (node.children.find(child => child.type === "argument")) continue;
 
+			const macroName = node.namedChild(1);
 			const macroContent = node.namedChild(2);
 			
 			const firstCommaRegex = /(?<!\\)(?:\\\\)*,/;
@@ -302,7 +289,16 @@ connection.onDocumentLinks(async (params) => {
 			const end = document.positionAt(
 				match ? macroContent.startIndex + match.index : macroContent.endIndex
 			)
-			const target = "https://namu.wiki/w/" + (match ? macroContent.text.slice(0, match.index) : macroContent.text)
+
+			const urls = {
+				youtube: "https://youtube.com/watch?v=",
+				kakaotv: "https://tv.kakao.com/v/",
+				nicovideo: "https://www.nicovideo.jp/watch/",
+				vimeo: "https://vimeo.com/",
+				navertv: "https://tv.naver.com/v/",
+				include: "https://namu.wiki/w/",
+			}
+			const target = urls[macroName.text] + (match ? macroContent.text.slice(0, match.index) : macroContent.text)
 
 			result.push({ range: { start, end }, target })
 

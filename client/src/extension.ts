@@ -7,35 +7,17 @@ import * as path from "path";
 import { workspace, ExtensionContext } from "vscode";
 import * as vscode from "vscode";
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from "vscode-languageclient/node";
-import { getConfig } from "./config";
-import { LinkDefinitionProvider } from "./providers/LinkDefinitionProvider";
 import { MarkPreview, getWebviewOptions } from './preview';
 import { WikiCodeActionProvider } from './providers/CodeActionProvider';
 import { sortParagraph } from './sortParagraph';
 
 export let client: LanguageClient;
-let activeRules: vscode.Disposable[] = [];
 enum Level {
   UP,
   DOWN,
 }
-let oldDomain = vscode.workspace.getConfiguration("namucode").get<string>("editor.internalLinkDomain", "https://namu.wiki")
 
 export async function activate(context: ExtensionContext) {
-  // namucode.editor.internalLinkDomain 변경 감지
-  const linkDomainChangeListener = vscode.workspace.onDidChangeConfiguration((event) => {
-    if (event.affectsConfiguration("namucode")) {
-      const config = vscode.workspace.getConfiguration("namucode");
-      const newDomain = config.get<string>("editor.internalLinkDomain", "https://namu.wiki");
-      if (oldDomain !== newDomain) {
-        oldDomain = newDomain;
-        provideLink(context)
-      }
-    }
-  })
-
-  context.subscriptions.push(linkDomainChangeListener)
-  
   vscode.commands.registerCommand("namucode.linkify", () => {
     const editor = vscode.window.activeTextEditor;
     if (!editor || editor.document.languageId !== 'namu') {
@@ -391,27 +373,6 @@ const tryUnwrapChar = (prefix, postfix) => {
       editBuilder.replace(selection, matched[1]);
     });
     return true;
-  }
-};
-
-// Code to provide URL
-
-const provideLink = (context: vscode.ExtensionContext): void => {
-  const config = getConfig();
-
-  for (const rule of activeRules) {
-    rule.dispose();
-  }
-
-  activeRules = config.rules.map((rule) => {
-    return vscode.languages.registerDocumentLinkProvider(
-      rule.languages.map((language) => ({ language })),
-      new LinkDefinitionProvider(rule.linkPattern, rule.linkPatternFlags, rule.linkTarget)
-    );
-  });
-
-  for (const rule of activeRules) {
-    context.subscriptions.push(rule);
   }
 };
 
