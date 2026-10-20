@@ -244,10 +244,11 @@ connection.onDocumentSymbol(async (params) => {
 	return provideDocumentSymbol(params);
 })
 
-// connection.onRequest("namucode/getParsedResult", async (params: { uri: string, isEditorComment: boolean; }) => {
-// 	await getFileInitLock(params.uri)
-// 	return params.isEditorComment ? fetchDocumentSymbol(documents.get(params.uri), true, false) : fetchDocumentSymbol(documents.get(params.uri), false, false)
-// })
+connection.onRequest("namucode/getParsedResult", async (params: { uri: string, isEditorComment: boolean; }) => {
+	await initializationPromise;
+
+	return parser(documents.get(params.uri).getText(), { editorComment: params.isEditorComment, maxParsingDepth: 30 })
+})
 
 connection.onDocumentLinks(async (params) => {
 	await initializationPromise;
