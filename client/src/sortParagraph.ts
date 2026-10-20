@@ -1,5 +1,6 @@
 import * as vscode from "vscode"
 import { client } from './extension';
+import { DocumentSymbolRequest } from 'vscode-languageclient';
 
 interface TreeSymbol {
 	name: string;
@@ -69,9 +70,14 @@ export async function sortParagraph() {
     return;
   }
 
-  const documentSymbol = (await client.sendRequest("namucode/getDocumentSymbol", {
-    uri: vscode.window.activeTextEditor.document.uri.toString(),
-  })) as TreeSymbol[];
+  const documentSymbol = await client.sendRequest(
+    DocumentSymbolRequest.type,
+    {
+      textDocument: {
+        uri: vscode.window.activeTextEditor.document.uri.toString()
+      }
+    }
+  ) as TreeSymbol[];
 
   if (documentSymbol.length === 0) {
     vscode.window.showErrorMessage(`문서 내에 문단이 없습니다.`);

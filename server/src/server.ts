@@ -4,24 +4,19 @@
  * ------------------------------------------------------------------------------------------ */
 
 import {
-	CompletionItemKind,
-	CompletionList,
-	CompletionTriggerKind,
 	createConnection,
-	Diagnostic,
 	DidChangeConfigurationNotification,
 	DidChangeWatchedFilesNotification,
 	DocumentLink,
 	FileChangeType,
 	InitializeParams,
 	ProposedFeatures,
-	TextDocuments,
 	TextDocumentSyncKind
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { provideDocumentSymbol, TreeSymbol } from './documentSymbolSupport';
 import { cache, foldingQuery, initTreeSitter, linkQuery, makeTree, updateTree } from './parser';
 import { provideCompletion, registerClassSymbols, registerJSSymbols } from './completion';
+import { provideDocumentSymbol } from './documentSymbol';
 const parser = require("../../client/media/parser/core/parser.js");
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
@@ -222,6 +217,8 @@ connection.onFoldingRanges(async (params) => {
 	await initializationPromise;
 
 	const tree = cache.get(params.textDocument.uri)?.tree;
+	if (!tree) return [];
+	
 	const matches = foldingQuery.matches(tree.rootNode);
 
 	const result = [];
@@ -242,10 +239,9 @@ connection.onFoldingRanges(async (params) => {
 })
 
 connection.onDocumentSymbol(async (params) => {
-	return null
-	// const document = documents.get(params.textDocument.uri)
-	// await getFileInitLock(document.uri)
-	// return documentCache.get(document.uri).documentSymbol
+	await initializationPromise;
+
+	return provideDocumentSymbol(params);
 })
 
 // connection.onRequest("namucode/getParsedResult", async (params: { uri: string, isEditorComment: boolean; }) => {
@@ -307,12 +303,6 @@ connection.onDocumentLinks(async (params) => {
 	}
 
 	return result;
-})
-
-connection.onRequest("namucode/getDocumentSymbol", async (params: { uri: string }) => {
-	return null
-	// await getFileInitLock(params.uri)
-	// return documentCache.get(params.uri).documentSymbol
 })
 
 // Listen on the connection
