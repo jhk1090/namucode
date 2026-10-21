@@ -4,6 +4,9 @@
  * ------------------------------------------------------------------------------------------ */
 
 import {
+	CodeAction,
+	CodeActionKind,
+	Command,
 	createConnection,
 	DidChangeConfigurationNotification,
 	DidChangeWatchedFilesNotification,
@@ -11,6 +14,7 @@ import {
 	FileChangeType,
 	InitializeParams,
 	ProposedFeatures,
+	Range,
 	TextDocumentSyncKind
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -95,6 +99,11 @@ connection.onInitialize(async (_params: InitializeParams) => {
 					supported: true
 				}
 			},
+			codeActionProvider: {
+				codeActionKinds: [
+					CodeActionKind.RefactorRewrite
+				]
+			}
 			// hoverProvider: true,
 			// definitionProvider: true,
 		}
@@ -306,5 +315,75 @@ connection.onDocumentLinks(async (params) => {
 	return result;
 })
 
+connection.onCodeAction(async (params) => {
+	await initializationPromise;
+
+	const document = documents.get(params.textDocument.uri)
+	const tree = cache.get(document.uri)?.tree;
+		
+	if (!tree) {
+		return [];
+	}
+
+	const result: (Command | CodeAction)[] = [];
+
+	if (
+		params.range.start.line !== params.range.end.line ||
+		params.range.start.character !== params.range.end.character
+	) {
+		result.push({
+			title: "선택 영역 구문 감싸기",
+			kind: CodeActionKind.RefactorRewrite,
+			command: {
+				command: 'namucode.wrapSelection',
+				title: "선택 영역 구문 감싸기",
+				arguments: [document.uri, params.range]
+			}
+    })
+	}
+
+	const positionIndex = document.offsetAt(params.range.start);
+
+	let currentNode = tree.rootNode.descendantForIndex(positionIndex);
+	const blockTypeLabels = {
+		"if_block": "#!if",
+		"folding_block": "#!folding",
+		"syntax_block": "#!syntax",
+		"wiki_block": "#!wiki",
+		"html_block": "#!html",
+		"style_block": "#!style",
+		"latex_block": "#!latex",
+		"scale_block": "크기",
+		"color_block": "색상",
+		"nowiki": "삼중괄호",
+	}
+	while (currentNode.parent) {
+		currentNode = currentNode.parent;
+
+		if (!(currentNode.type in blockTypeLabels) || currentNode.children.at(-1)?.type !== "bracket_end") continue;
+
+		const contentNode = currentNode.childForFieldName("content") ?? { text: "" }
+
+		result.push({
+			title: `선택 영역 구문 벗기기: ${blockTypeLabels[currentNode.type]} 구문`,
+			kind: CodeActionKind.RefactorRewrite,
+			edit: {
+				changes: {
+					[document.uri]: [{
+						range: Range.create(
+							document.positionAt(currentNode.startIndex),
+							document.positionAt(currentNode.endIndex)
+						),
+						newText: contentNode.text
+					}]
+				}
+			}
+		})
+
+		break;
+	}
+
+	return result
+})
 // Listen on the connection
 connection.listen();

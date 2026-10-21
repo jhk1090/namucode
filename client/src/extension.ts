@@ -8,7 +8,6 @@ import { workspace, ExtensionContext } from "vscode";
 import * as vscode from "vscode";
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from "vscode-languageclient/node";
 import { MarkPreview, getWebviewOptions } from './preview';
-import { WikiCodeActionProvider } from './providers/CodeActionProvider';
 import { sortParagraph } from './sortParagraph';
 
 export let client: LanguageClient;
@@ -209,9 +208,16 @@ export async function activate(context: ExtensionContext) {
 
   const sort = vscode.commands.registerCommand("namucode.paragraphSort", async () => { await sortParagraph() });
 
-  const wrapCommand = vscode.commands.registerCommand("namucode.wrapSelection", async (document: vscode.TextDocument, range: vscode.Range) => {
-    const editor = vscode.window.activeTextEditor;
-    if (!editor) return;
+  const wrapCommand = vscode.commands.registerCommand("namucode.wrapSelection", async (uriString: string, rangeData: vscode.Range) => {
+    const uri = vscode.Uri.parse(uriString);
+    const document = await vscode.workspace.openTextDocument(uri);
+
+    const range = new vscode.Range(
+      rangeData.start.line,
+      rangeData.start.character,
+      rangeData.end.line,
+      rangeData.end.character
+    );
 
     const selected = document.getText(range);
     const options = [
@@ -222,6 +228,8 @@ export async function activate(context: ExtensionContext) {
       { label: "#!syntax 구문", description: "{{{#!syntax }}}", code: `{{{#!syntax \n${selected}\n}}}` },
       { label: "#!html 구문", description: "{{{#!html }}}", code: `{{{#!html ${selected}}}}` },
       { label: "#!latex 구문", description: "{{{#!latex }}}", code: `{{{#!latex\n${selected}}}}` },
+      { label: "크기 구문", description: "{{{+1 }}}", code: `{{{+1 ${selected}}}}` },
+      { label: "색상 구문", description: "{{{#fff }}}", code: `{{{#fff ${selected}}}}` },
       { label: "삼중괄호 구문", description: "{{{ }}}", code: `{{{${selected}}}}` },
     ];
 
@@ -230,23 +238,12 @@ export async function activate(context: ExtensionContext) {
       matchOnDescription: true,
     });
 
-    if (picked) {
-      // 선택한 구문으로 텍스트 치환
-      editor.edit((editBuilder) => {
-        editBuilder.replace(range, picked.code);
-      });
-    }
+    const edit = new vscode.WorkspaceEdit();
+    edit.replace(uri, range, picked.code);
+    await vscode.workspace.applyEdit(edit);
   });
 
   context.subscriptions.push(preview, retryPreview, previewEditorComment, openPreviewInWeb, sort, wrapCommand);
-
-  context.subscriptions.push(
-    vscode.languages.registerCodeActionsProvider(
-      { language: 'namu' },
-      new WikiCodeActionProvider(),
-      { providedCodeActionKinds: [vscode.CodeActionKind.RefactorRewrite] }
-    )
-  );
 
   // // Code to connect to sever
   const serverModule = context.asAbsolutePath(path.join("dist", "server.js"));
