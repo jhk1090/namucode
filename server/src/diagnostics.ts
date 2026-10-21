@@ -28,15 +28,11 @@ function makeDiagnostic(range: Range, message: string, severity: DiagnosticSever
 	return { range, message, severity }
 }
 
-function makeRange(start: Position, end: Position): Range {
-	return { start, end }
-}
-
 function getRangeByIndex(document: TextDocument, startIndex: number, endIndex: number) {
 	const startPos = document.positionAt(startIndex);
 	const endPos = document.positionAt(endIndex);
 
-	return makeRange(startPos, endPos);
+	return Range.create(startPos, endPos);
 }
 
 function getNodeRange(document: TextDocument, node: Node) {
@@ -109,21 +105,21 @@ function handleTableArgument(document: TextDocument, node: Node): Diagnostic[] {
 				const startPos = document.positionAt(valueFieldNode.startIndex);
 				const endPos = document.positionAt(valueFieldNode.startIndex + color1.length);
 				
-				return [makeDiagnostic(makeRange(startPos, endPos), `${color1}은/는 유효한 색상이 아닙니다. 다음을 사용하세요: CSS 색상 키워드, 16진수 코드`, DiagnosticSeverity.Error)]
+				return [makeDiagnostic(Range.create(startPos, endPos), `${color1}은/는 유효한 색상이 아닙니다. 다음을 사용하세요: CSS 색상 키워드, 16진수 코드`, DiagnosticSeverity.Error)]
 			}
 			
 			if (color2 !== undefined && color2.length === 0) {
 				const startPos = document.positionAt(valueFieldNode.startIndex + color1.length + ",".length);
 				const endPos = document.positionAt(valueFieldNode.startIndex + color1.length + ",".length);
 				
-				return [makeDiagnostic(makeRange(startPos, endPos), `두 번째 색상이 입력되지 않았습니다.`, DiagnosticSeverity.Error)]
+				return [makeDiagnostic(Range.create(startPos, endPos), `두 번째 색상이 입력되지 않았습니다.`, DiagnosticSeverity.Error)]
 			}
 			
 			if (color2 !== undefined && !colorRegex.test(color2)) {
 				const startPos = document.positionAt(valueFieldNode.startIndex + color1.length + ",".length);
 				const endPos = document.positionAt(valueFieldNode.startIndex + color1.length + ",".length + color2.length);
 				
-				return [makeDiagnostic(makeRange(startPos, endPos), `${color2}은/는 유효한 색상이 아닙니다. 다음을 사용하세요: CSS 색상 키워드, 16진수 코드`, DiagnosticSeverity.Error)]
+				return [makeDiagnostic(Range.create(startPos, endPos), `${color2}은/는 유효한 색상이 아닙니다. 다음을 사용하세요: CSS 색상 키워드, 16진수 코드`, DiagnosticSeverity.Error)]
 			}
 
 			if (
@@ -133,7 +129,7 @@ function handleTableArgument(document: TextDocument, node: Node): Diagnostic[] {
 				const startPos = document.positionAt(valueFieldNode.startIndex + color1.length + ",".length + color2.length);
 				const endPos = document.positionAt(valueFieldNode.endIndex);
 
-				return [makeDiagnostic(makeRange(startPos, endPos), `올바르지 않은 후행 값입니다.`, DiagnosticSeverity.Error)]
+				return [makeDiagnostic(Range.create(startPos, endPos), `올바르지 않은 후행 값입니다.`, DiagnosticSeverity.Error)]
 			}
 		}
 		
@@ -178,7 +174,7 @@ function handleTableArgument(document: TextDocument, node: Node): Diagnostic[] {
 
 					diagnostics.push(
 						makeDiagnostic(
-							makeRange(startPos, endPos),
+							Range.create(startPos, endPos),
 							`${token}은/는 올바른 클래스 형식이 아닙니다.`,
 							DiagnosticSeverity.Warning
 						)
@@ -248,7 +244,7 @@ function handleWikiBlockHeader(document: TextDocument, node: Node): Diagnostic[]
 					const end = virtualDoc.offsetAt(diagnostic.range.end);
 
 					return makeDiagnostic(
-						makeRange(
+						Range.create(
 							document.positionAt(offset + start - prefix.length),
 							document.positionAt(offset + end - prefix.length)
 						),
@@ -288,7 +284,7 @@ function handleWikiBlockHeader(document: TextDocument, node: Node): Diagnostic[]
 
 					result.push(
 						makeDiagnostic(
-							makeRange(startPos, endPos),
+							Range.create(startPos, endPos),
 							`${token}은/는 올바른 클래스 형식이 아닙니다.`,
 							DiagnosticSeverity.Warning
 						)
@@ -306,7 +302,7 @@ function handleWikiBlockHeader(document: TextDocument, node: Node): Diagnostic[]
 				try {
 					Intl.getCanonicalLocales(match.value)
 				} catch {
-					result.push(makeDiagnostic(makeRange(startPos, endPos), `${match.value}은/는 올바른 언어 코드가 아닙니다.`, DiagnosticSeverity.Warning))
+					result.push(makeDiagnostic(Range.create(startPos, endPos), `${match.value}은/는 올바른 언어 코드가 아닙니다.`, DiagnosticSeverity.Warning))
 				}
 			}
 		}
@@ -315,7 +311,7 @@ function handleWikiBlockHeader(document: TextDocument, node: Node): Diagnostic[]
 			const endPos = document.positionAt(match.endIndex);
 
 			if (match.value.length > 0 && !common.wikiBlockTagAttributes.includes(match.value)) {
-				result.push(makeDiagnostic(makeRange(startPos, endPos), `${match.value}은/는 허용되는 HTML 태그가 아닙니다. 허용 태그: ${common.wikiBlockTagAttributes.join(", ")}`, DiagnosticSeverity.Warning))
+				result.push(makeDiagnostic(Range.create(startPos, endPos), `${match.value}은/는 허용되는 HTML 태그가 아닙니다. 허용 태그: ${common.wikiBlockTagAttributes.join(", ")}`, DiagnosticSeverity.Warning))
 			}
 		}
 		if (match.name === "onclick") {
@@ -335,7 +331,7 @@ function handleWikiBlockHeader(document: TextDocument, node: Node): Diagnostic[]
 						const endPos = document.positionAt(match.valueStartIndex + startOffset + 1);
 						result.push(
 							makeDiagnostic(
-								makeRange(startPos, endPos),
+								Range.create(startPos, endPos),
 								`함수가 누락되었습니다. 허용 함수: ${allowedFunctions.join(", ")}`,
 								DiagnosticSeverity.Warning
 							)
@@ -346,7 +342,7 @@ function handleWikiBlockHeader(document: TextDocument, node: Node): Diagnostic[]
 						const endPos = document.positionAt(match.valueStartIndex + startOffset + 1);
 						result.push(
 							makeDiagnostic(
-								makeRange(startPos, endPos),
+								Range.create(startPos, endPos),
 								`클래스 매개변수는 빈 값이 올 수 없습니다.`,
 								DiagnosticSeverity.Warning
 							)
@@ -364,7 +360,7 @@ function handleWikiBlockHeader(document: TextDocument, node: Node): Diagnostic[]
 						const endPos = document.positionAt(match.valueStartIndex + startOffset + 1);
 						result.push(
 							makeDiagnostic(
-								makeRange(startPos, endPos),
+								Range.create(startPos, endPos),
 								`함수가 누락되었습니다. 허용 함수: ${allowedFunctions.join(", ")}`,
 								DiagnosticSeverity.Warning
 							)
@@ -375,7 +371,7 @@ function handleWikiBlockHeader(document: TextDocument, node: Node): Diagnostic[]
 						const endPos = document.positionAt(match.valueStartIndex + startOffset + 1);
 						result.push(
 							makeDiagnostic(
-								makeRange(startPos, endPos),
+								Range.create(startPos, endPos),
 								`함수의 클래스 매개변수는 2개여야 합니다.`,
 								DiagnosticSeverity.Warning
 							)
@@ -409,7 +405,7 @@ function handleWikiBlockHeader(document: TextDocument, node: Node): Diagnostic[]
 					const endPos = document.positionAt(match.valueStartIndex + endOffset);
 					result.push(
 						makeDiagnostic(
-							makeRange(startPos, endPos),
+							Range.create(startPos, endPos),
 							`${token.trim()}은/는 올바른 클래스 형식이 아닙니다.`,
 							DiagnosticSeverity.Warning
 						)
@@ -420,7 +416,7 @@ function handleWikiBlockHeader(document: TextDocument, node: Node): Diagnostic[]
 					const endPos = document.positionAt(match.valueStartIndex + endOffset);
 					result.push(
 						makeDiagnostic(
-							makeRange(startPos, endPos),
+							Range.create(startPos, endPos),
 							`함수의 클래스 매개변수는 2개여야 합니다.`,
 							DiagnosticSeverity.Warning
 						)
@@ -431,7 +427,7 @@ function handleWikiBlockHeader(document: TextDocument, node: Node): Diagnostic[]
 					const endPos = document.positionAt(match.valueStartIndex + endOffset);
 					result.push(
 						makeDiagnostic(
-							makeRange(startPos, endPos),
+							Range.create(startPos, endPos),
 							`${token.trim()}은/는 올바른 함수가 아닙니다. 허용 함수: ${allowedFunctions.join(", ")}`,
 							DiagnosticSeverity.Warning
 						)
@@ -462,7 +458,7 @@ function handleColorFallbackBlock(document: TextDocument, node: Node): Diagnosti
 		const startPos = document.positionAt(offset);
 		const endPos = document.positionAt(offset + color1.length);
 
-		return makeDiagnostic(makeRange(startPos, endPos), `첫 번째 색상이 입력되지 않았습니다.`, DiagnosticSeverity.Warning)
+		return makeDiagnostic(Range.create(startPos, endPos), `첫 번째 색상이 입력되지 않았습니다.`, DiagnosticSeverity.Warning)
 	}
 
 	offset += color1.length;
@@ -471,14 +467,14 @@ function handleColorFallbackBlock(document: TextDocument, node: Node): Diagnosti
 		const startPos = document.positionAt(offset);
 		const endPos = document.positionAt(offset);
 
-		return makeDiagnostic(makeRange(startPos, endPos), `${color1}은/는 유효한 색상이 아닙니다. 다음을 사용하세요: CSS 색상 키워드, 16진수 코드`, DiagnosticSeverity.Warning)
+		return makeDiagnostic(Range.create(startPos, endPos), `${color1}은/는 유효한 색상이 아닙니다. 다음을 사용하세요: CSS 색상 키워드, 16진수 코드`, DiagnosticSeverity.Warning)
 	}
 
 	if (color2 !== undefined && color2.length === 0) {
 		const startPos = document.positionAt(offset + ",".length);
 		const endPos = document.positionAt(offset + ",".length);
 		
-		return makeDiagnostic(makeRange(startPos, endPos), `두 번째 색상이 입력되지 않았습니다.`, DiagnosticSeverity.Warning)
+		return makeDiagnostic(Range.create(startPos, endPos), `두 번째 색상이 입력되지 않았습니다.`, DiagnosticSeverity.Warning)
 	}
 
 	offset += ",".length
@@ -487,7 +483,7 @@ function handleColorFallbackBlock(document: TextDocument, node: Node): Diagnosti
 		const startPos = document.positionAt(offset);
 		const endPos = document.positionAt(offset + color2.length);
 		
-		return makeDiagnostic(makeRange(startPos, endPos), `${color2}은/는 유효한 색상이 아닙니다. 다음을 사용하세요: CSS 색상 키워드, 16진수 코드`, DiagnosticSeverity.Warning)
+		return makeDiagnostic(Range.create(startPos, endPos), `${color2}은/는 유효한 색상이 아닙니다. 다음을 사용하세요: CSS 색상 키워드, 16진수 코드`, DiagnosticSeverity.Warning)
 	}
 
 	const separator = node.text[offset]
@@ -618,7 +614,7 @@ export function updateDiagnostics(document: TextDocument) {
 					const end = virtualDoc.offsetAt(diagnostic.range.end);
 
 					return makeDiagnostic(
-						makeRange(
+						Range.create(
 							document.positionAt(node.startIndex + start),
 							document.positionAt(node.startIndex + end)
 						),
