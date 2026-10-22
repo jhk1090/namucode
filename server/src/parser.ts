@@ -1,8 +1,8 @@
 import { Edit, Language, Parser, Query, Tree } from "web-tree-sitter";
 import path from "path";
 import { updateDiagnostics } from "./diagnostics";
-import { DidChangeTextDocumentParams } from "vscode-languageserver";
-import { documents } from "./server";
+import { DidChangeTextDocumentParams, DidOpenTextDocumentParams } from "vscode-languageserver";
+import { documents, globalSettings } from "./server";
 import { Position, TextDocument, TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
 
 interface Cache {
@@ -210,7 +210,7 @@ function convertToTreeSitterEdit(oldText: string, change: TextDocumentContentCha
   };
 }
 
-function canApplyChangesIncrementally(text: string, changes: readonly TextDocumentContentChangeEvent[]): boolean {
+function canApplyChangesIncrementally(changes: readonly TextDocumentContentChangeEvent[]): boolean {
   if (changes.length !== 1) return false;
 
   const change = changes[0];
@@ -220,40 +220,37 @@ function canApplyChangesIncrementally(text: string, changes: readonly TextDocume
   return true;
 }
 
-export function makeTree(document: TextDocument) {
-  const key = document.uri.toString();
-  if (document.languageId !== "namu") return;
-
-  if (!cache.has(key)) {
-    const text = document.getText();
-    const tree = parser.parse(text);
-    const version = document.version;
-
-    cache.set(key, { tree, version, text });
-
-    updateDiagnostics(document);
-  }
-}
-
-export function updateTree(params: DidChangeTextDocumentParams) {
+export function updateTree(params: DidOpenTextDocumentParams | DidChangeTextDocumentParams) {
   const document = documents.get(params.textDocument.uri);
   const key = document.uri.toString();
   const version = document.version;
+  const text = document.getText();
 
   if (document.languageId !== "namu") return;
+
+  if (text.length > globalSettings.maxParsingCharacter) {
+    cache.delete(key);
+    return;
+  }
+
+  if (!cache.has(key)) {
+    const tree = parser.parse(text);
+    cache.set(key, { tree, version, text });
+    return;
+  }
+
+  if (!("contentChanges" in params)) return;
 
   const cached = cache.get(key);
   if (cached?.version === version) return;
 
   let oldTree: Tree | undefined;
-  if (cached && cached.version === version - 1 && canApplyChangesIncrementally(cached.text, params.contentChanges)) {
+  if (cached && cached.version === version - 1 && canApplyChangesIncrementally(params.contentChanges)) {
     oldTree = cached.tree;
     const change = params.contentChanges[0];
     oldTree.edit(new Edit(convertToTreeSitterEdit(cached.text, change)));
   }
 
   const newTree = parser.parse(document.getText(), oldTree);
-  cache.set(key, { tree: newTree, version, text: document.getText() });
-
-  updateDiagnostics(document);
+  cache.set(key, { tree: newTree, version, text });
 }

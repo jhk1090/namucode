@@ -18,7 +18,7 @@ import {
 	TextDocumentSyncKind
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { cache, foldingQuery, initTreeSitter, linkQuery, makeTree, updateTree } from './parser';
+import { cache, foldingQuery, initTreeSitter, linkQuery, updateTree } from './parser';
 import { provideCompletion, registerClassSymbols, registerJSSymbols } from './completion';
 import { provideDocumentSymbol } from './documentSymbol';
 import { updateDiagnostics } from './diagnostics';
@@ -131,26 +131,28 @@ connection.onDidChangeConfiguration(async (_change) => {
 	}
 
 	[...documents.values()].forEach(document => {
+		updateTree({ textDocument: { languageId: document.languageId, text: document.getText(), uri: document.uri, version: document.version } });
 		updateDiagnostics(document);
 	})
 });
 
 connection.onDidOpenTextDocument(async (params) => {
-    await initializationPromise;
+	await initializationPromise;
 
-    const item = params.textDocument;
-    const document = TextDocument.create(
-        item.uri,
-        item.languageId,
-        item.version,
-        item.text,
-    );
+	const item = params.textDocument;
+	const document = TextDocument.create(
+			item.uri,
+			item.languageId,
+			item.version,
+			item.text,
+	);
 
-    documents.set(item.uri, document);
+	documents.set(item.uri, document);
 
-    if (document.languageId === "namu") {
-        makeTree(document);
-    }
+	if (document.languageId === "namu") {
+		updateTree({ textDocument: params.textDocument })
+		updateDiagnostics(document);
+	}
 });
 
 
@@ -185,6 +187,7 @@ connection.onDidChangeTextDocument(async (params) => {
 
 	documents.set(uri, document);
 	updateTree(params);
+	updateDiagnostics(document);
 })
 
 connection.onDidCloseTextDocument((params) => {
@@ -245,7 +248,7 @@ connection.onDocumentSymbol(async (params) => {
 connection.onRequest("namucode/getParsedResult", async (params: { uri: string, isEditorComment: boolean; }) => {
 	await initializationPromise;
 
-	return parser(documents.get(params.uri).getText(), { editorComment: params.isEditorComment, maxParsingDepth: 30 })
+	return parser(documents.get(params.uri).getText(), { editorComment: params.isEditorComment, maxParsingDepth: globalSettings.maxParsingDepth })
 })
 
 connection.onDocumentLinks(async (params) => {
