@@ -1,7 +1,7 @@
 import { cache, diagnosticsQuery } from './parser';
 import { Node } from 'web-tree-sitter';
 import { CompletionItemKind, Diagnostic, DiagnosticSeverity, Position, Range, TextDocument, getCSSLanguageService } from 'vscode-css-languageservice';
-import { connection } from './server';
+import { connection, globalSettings } from './server';
 import * as common from "./common";
 
 export const cssLanguageService = getCSSLanguageService({
@@ -552,10 +552,16 @@ function handleFileLinkAttribute(document: TextDocument, text: string, startInde
 
 export function updateDiagnostics(document: TextDocument) {
 	const diagnostics: Diagnostic[] = [];
+
+	if (globalSettings.disableCodeAnalysis) {
+		connection.sendDiagnostics({ uri: document.uri, diagnostics: [] });
+		return;
+	}
 	
 	const tree = cache.get(document.uri.toString())?.tree;
 	if (!tree) {
-		return [];
+		connection.sendDiagnostics({ uri: document.uri, diagnostics: [] });
+		return;
 	}
 
 	for (const { name, node } of diagnosticsQuery.captures(tree.rootNode)) {

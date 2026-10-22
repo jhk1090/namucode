@@ -21,6 +21,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { cache, foldingQuery, initTreeSitter, linkQuery, makeTree, updateTree } from './parser';
 import { provideCompletion, registerClassSymbols, registerJSSymbols } from './completion';
 import { provideDocumentSymbol } from './documentSymbol';
+import { updateDiagnostics } from './diagnostics';
 const parser = require("../../client/media/parser/core/parser.js");
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
@@ -44,20 +45,7 @@ const defaultParserSettings = { maxParsingCharacter: 1500000, maxParsingDepth: 3
 const defaultCodeACSettings = { disableCodeAnalysis: false, disableCompletion: false };
 
 let defaultSettings: ParserSettings & CodeACSettings = { ...defaultParserSettings, ...defaultCodeACSettings };
-let globalSettings: ParserSettings & CodeACSettings = defaultSettings;
-
-const fileInitLocks = new Map<string, { promise: Promise<void>; resolve: () => void }>();
-
-function getFileInitLock(uri: string): Promise<void> {
-	if (!fileInitLocks.has(uri)) {
-		let resolveFunc!: () => void;
-		const promise = new Promise<void>((resolve) => {
-			resolveFunc = resolve;
-		});
-		fileInitLocks.set(uri, { promise, resolve: resolveFunc });
-	}
-	return fileInitLocks.get(uri)!.promise;
-}
+export let globalSettings: ParserSettings & CodeACSettings = defaultSettings;
 
 let hasConfigurationCapability = false;
 let resolveInitialization: () => void;
@@ -143,7 +131,7 @@ connection.onDidChangeConfiguration(async (_change) => {
 	}
 
 	[...documents.values()].forEach(document => {
-		makeTree(document)
+		updateDiagnostics(document);
 	})
 });
 
@@ -213,7 +201,8 @@ connection.onDidCloseTextDocument((params) => {
 
 connection.onCompletion(async (params, _token) => {
 	await initializationPromise;
-	
+	if (globalSettings.disableCompletion) return [];
+
 	const document = documents.get(params.textDocument.uri);
 	if (!document) return [];
 
