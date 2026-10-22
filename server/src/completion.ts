@@ -303,8 +303,8 @@ export function provideCompletion(document: TextDocument, position: Position, co
 		}
 	}
 	else if ((node.type === "block_header" && node.parent?.type === "if_block") || node.type === "if_block") {
-		const allowedTriggerCharacter = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
-		if (context.triggerKind === CompletionTriggerKind.TriggerCharacter && !allowedTriggerCharacter.includes(context.triggerCharacter)) return [];
+		const disallowedTriggerCharacter = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+		if (context.triggerKind === CompletionTriggerKind.TriggerCharacter && !disallowedTriggerCharacter.includes(context.triggerCharacter)) return [];
 
 		const headerNode = node.type === "if_block" ? node.childForFieldName("expression") : node;
 
