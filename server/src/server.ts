@@ -33,27 +33,33 @@ export const connection = createConnection(ProposedFeatures.all);
 // supports full document sync only
 export const documents = new Map<string, TextDocument>();
 
-interface PreviewSettings {
+interface Settings {
+	// 전역 설정
 	internalLinkDomain: string;
+	maxParsingCharacter: number;
+
+	// 코드 분석 및 자동 완성 설정
+	disableCodeAnalysis: boolean;
+	disableCompletion: boolean;
+
+	// 미리보기 설정
+	maxParsingDepth: number;
 	workspaceReference: boolean;
 	maxLength: number;
 	maxRenderingTimeout: number;
 }
-interface ParserSettings {
-	maxParsingCharacter: number;
-	maxParsingDepth: number;
-}
-interface CodeACSettings {
-	disableCodeAnalysis: boolean;
-	disableCompletion: boolean;
-}
 
-const defaultPreviewSettings = { internalLinkDomain: "https://namu.wiki", workspaceReference: true, maxLength: 5000000, maxRenderingTimeout: 10 };
-const defaultParserSettings = { maxParsingCharacter: 1500000, maxParsingDepth: 30 };
-const defaultCodeACSettings = { disableCodeAnalysis: false, disableCompletion: false };
-
-let defaultSettings: ParserSettings & CodeACSettings & PreviewSettings = { ...defaultParserSettings, ...defaultCodeACSettings, ...defaultPreviewSettings };
-export let globalSettings: ParserSettings & CodeACSettings & PreviewSettings = defaultSettings;
+let defaultSettings: Settings = {
+	internalLinkDomain: "https://namu.wiki",
+	maxParsingCharacter: 1500000,
+	disableCodeAnalysis: false,
+	disableCompletion: false,
+	maxParsingDepth: 30,
+	workspaceReference: true,
+	maxLength: 5000000,
+	maxRenderingTimeout: 10
+}
+export let globalSettings: Settings = defaultSettings;
 
 let hasConfigurationCapability = false;
 let resolveInitialization: () => void;
@@ -118,7 +124,7 @@ connection.onInitialized(async () => {
 			]
 		})
 		const latestSettings = await connection.workspace.getConfiguration("namucode")
-		globalSettings = { ...latestSettings.parser, ...latestSettings.codeAnalysisCompletion, ...latestSettings.preview }
+		globalSettings = { ...latestSettings.global, ...latestSettings.codeAnalysisCompletion, ...latestSettings.preview }
 	}
 
 	resolveInitialization()
@@ -127,15 +133,13 @@ connection.onInitialized(async () => {
 connection.onDidChangeConfiguration(async (_change) => {
 	if (hasConfigurationCapability) {
 		const latestSettings = (await connection.workspace.getConfiguration("namucode"));
-		globalSettings = { ...latestSettings.parser, ...latestSettings.codeAnalysisCompletion, ...latestSettings.preview }
+		globalSettings = { ...latestSettings.global, ...latestSettings.codeAnalysisCompletion, ...latestSettings.preview }
 	} else {
-		const globalParserSettings = (
-			_change.settings.namucode.parser || defaultParserSettings
-		)
-		const globalCodeACSettings = (
-			_change.settings.namucode.codeAnalysisCompletion || defaultCodeACSettings
-		)
-		globalSettings = { ...globalParserSettings, ...globalCodeACSettings }
+		globalSettings = { 
+			..._change.settings.namucode.global, 
+			..._change.settings.namucode.codeAnalysisCompletion, 
+			..._change.settings.namucode.preview
+		}
 	}
 
 	[...documents.values()].forEach(document => {
@@ -289,7 +293,7 @@ connection.onDocumentLinks(async (params) => {
 			const end = document.positionAt(node.endIndex);
 
 			const isExternalLink = /^(http(s)?|ftp)/.test(node.text);
-			result.push({ range: { start, end }, target: isExternalLink ? node.text : "https://namu.wiki/w/" + node.text })
+			result.push({ range: { start, end }, target: isExternalLink ? node.text : globalSettings.internalLinkDomain + "/w/" + node.text })
 			continue;
 		}
 		if (name === "macro") {
@@ -313,7 +317,7 @@ connection.onDocumentLinks(async (params) => {
 				nicovideo: "https://www.nicovideo.jp/watch/",
 				vimeo: "https://vimeo.com/",
 				navertv: "https://tv.naver.com/v/",
-				include: "https://namu.wiki/w/",
+				include: globalSettings.internalLinkDomain + "/w/",
 			}
 			const target = urls[macroName.text] + (match ? macroContent.text.slice(0, match.index) : macroContent.text)
 

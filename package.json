@@ -498,38 +498,26 @@
     },
     "configuration": [
       {
-        "title": "편집기 설정",
+        "title": "전역 설정",
         "order": 1,
         "properties": {
-          "namucode.editor.internalLinkDomain": {
+          "namucode.global.internalLinkDomain": {
             "type": "string",
             "default": "https://namu.wiki",
-            "title": "내부 링크 도메인 주소 (편집기)",
-            "markdownDescription": "**내부 링크 도메인 주소 (편집기)**. **편집기**에서 내부 링크가 걸릴 때 도메인 주소를 설정합니다. 예를 들어, `[[나무코드]]`가 입력되면 링크 처리되어, `<도메인 주소>/w/나무코드`로 링크가 걸립니다."
-          }
-        }
-      },
-      {
-        "title": "파서 설정",
-        "order": 2,
-        "properties": {
-          "namucode.parser.maxParsingCharacter": {
+            "title": "내부 링크 도메인 주소",
+            "markdownDescription": "**내부 링크 도메인 주소**. 편집기 및 미리보기에서 내부 링크가 걸릴 때 기본 도메인 주소를 설정합니다. 예를 들어, `[[나무코드]]`가 입력되면 링크 처리되어, `<도메인 주소>/w/나무코드`로 링크가 걸립니다."
+          },
+          "namucode.global.maxParsingCharacter": {
             "type": "number",
             "default": 1500000,
             "title": "파싱 허용 문서 최대 글자 수",
-            "markdownDescription": "**파싱 허용 문서 최대 글자 수**. 파서 입력값으로 들어가는 문서의 최대 글자 수 입니다. 문서 글자 수가 이 글자 수를 넘기면 목차 표시 · 문단 접기 · 미리보기 · 코드 분석 · 일부 자동 완성을 사용할 수 없습니다."
-          },
-          "namucode.parser.maxParsingDepth": {
-            "type": "number",
-            "default": 30,
-            "title": "파싱 최대 깊이",
-            "markdownDescription": "**파싱 최대 깊이**. 목차 표시 · 문단 접기 · 미리보기 · 코드 분석 · 일부 자동 완성 파서에서 문서 파싱 시 최대 얼마나 깊이 파싱될지 설정합니다. `{{{#!wiki style=\"\" }}}`과 같은 bracket 문법이 얼마나 겹쳐있는 지에 따라 깊이가 깊어집니다."
+            "markdownDescription": "**파싱 허용 문서 최대 글자 수**. 파서 입력값으로 들어가는 문서의 최대 글자 수 입니다. 문서 글자 수가 이 글자 수를 넘기면 목차 표시 · 문단 접기 · 미리보기 · 코드 분석 · 자동 완성을 사용할 수 없습니다."
           }
         }
       },
       {
         "title": "코드 분석 및 자동 완성 설정",
-        "order": 3,
+        "order": 2,
         "properties": {
           "namucode.codeAnalysisCompletion.disableCodeAnalysis": {
             "type": "boolean",
@@ -547,13 +535,13 @@
       },
       {
         "title": "미리보기 설정",
-        "order": 4,
+        "order": 3,
         "properties": {
-          "namucode.preview.internalLinkDomain": {
-            "type": "string",
-            "default": "https://namu.wiki",
-            "title": "내부 링크 도메인 주소 (미리보기)",
-            "markdownDescription": "**내부 링크 도메인 주소 (미리보기)**. **미리보기**에서 내부 링크가 걸릴 때 도메인 주소를 설정합니다. `[[나무코드]]`가 미리보기에서 표시된다면 `<도메인 주소>/w/나무코드`로 링크가 걸립니다."
+          "namucode.preview.maxParsingDepth": {
+            "type": "number",
+            "default": 30,
+            "title": "파싱 최대 깊이",
+            "markdownDescription": "**파싱 최대 깊이**. 미리보기에서 얼마나 깊이 파싱될지 설정합니다. `{{{#!wiki style=\"\" }}}`과 같은 bracket 문법이 얼마나 겹쳐있는 지에 따라 깊이가 깊어집니다."
           },
           "namucode.preview.workspaceReference": {
             "type": "boolean",

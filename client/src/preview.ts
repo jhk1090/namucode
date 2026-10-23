@@ -303,18 +303,9 @@ export class MarkPreview {
 
     private _getConfig() {
         const rootConfig = vscode.workspace.getConfiguration("namucode");
-        const maxLength = rootConfig.get<number>("preview.maxLength", 5000000);
-        const maxRenderingTimeout = rootConfig.get<number>("preview.maxRenderingTimeout", 10) * 1000;
-        const maxParsingDepth = rootConfig.get<number>("parser.maxParsingDepth", 30);
-        const maxParsingCharacter = rootConfig.get<number>("parser.maxParsingCharacter", 1500000);
-        const internalLinkDomain = rootConfig.get<string>("preview.internalLinkDomain", "https://namu.wiki");
+        const maxParsingCharacter = rootConfig.get<number>("global.maxParsingCharacter", 1500000);
         return {
-          maxLength,
-          maxRenderingTimeout,
-          maxParsingDepth,
           maxParsingCharacter,
-          internalLinkDomain,
-          extensionPath: this.extensionUri.fsPath,
           isEditorComment: MarkPreview.currentPanels[this.panelId]?.isEditorComment ?? false,
         };
     }
