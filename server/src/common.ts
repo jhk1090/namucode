@@ -340,9 +340,9 @@ export const allTSVariables = new Set<string>();
 
 export function getTSCompletions(text: string, isArgumentCompletion: boolean = false): CompletionItem[] {
   if (isArgumentCompletion) {
+    allTSVariables.add("calleeTitle");
     return [
-      ...allTSVariables,
-      "calleeTitle",
+      ...allTSVariables
     ].map((symbol) => ({
       label: symbol,
       kind: CompletionItemKind.Variable,
