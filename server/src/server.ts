@@ -18,7 +18,7 @@ import {
 	TextDocumentSyncKind
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { cache, foldingQuery, initTreeSitter, linkQuery, updateTree } from './parser';
+import { parserCache, foldingQuery, initTreeSitter, linkQuery, updateTree } from './parser';
 import { provideCompletion, registerClassSymbols, registerJSSymbols } from './completion';
 import { provideDocumentSymbol } from './documentSymbol';
 import { updateDiagnostics } from './diagnostics';
@@ -163,8 +163,8 @@ connection.onDidChangeWatchedFiles((change) => {
 			if (documents.has(deletedUri)) {
 				documents.delete(deletedUri)
 			}
-			if (cache.has(deletedUri)) {
-				cache.delete(deletedUri)
+			if (parserCache.has(deletedUri)) {
+				parserCache.delete(deletedUri)
 			}
 			console.log(`${deletedUri} 캐싱 삭제됨.`)
 		}
@@ -194,7 +194,7 @@ connection.onDidCloseTextDocument((params) => {
     const uri = params.textDocument.uri;
 
     documents.delete(uri);
-    cache.delete(uri);
+    parserCache.delete(uri);
 
     connection.sendDiagnostics({
         uri,
@@ -217,7 +217,7 @@ connection.onCompletion(async (params, _token) => {
 connection.onFoldingRanges(async (params) => {
 	await initializationPromise;
 
-	const tree = cache.get(params.textDocument.uri)?.tree;
+	const tree = parserCache.get(params.textDocument.uri)?.tree;
 	if (!tree) return [];
 	
 	const matches = foldingQuery.matches(tree.rootNode);
@@ -255,7 +255,7 @@ connection.onDocumentLinks(async (params) => {
 	await initializationPromise;
 
 	const document = documents.get(params.textDocument.uri)
-	const tree = cache.get(document.uri)?.tree;
+	const tree = parserCache.get(document.uri)?.tree;
 		
 	if (!tree) {
 		return [];
@@ -311,7 +311,7 @@ connection.onCodeAction(async (params) => {
 	await initializationPromise;
 
 	const document = documents.get(params.textDocument.uri)
-	const tree = cache.get(document.uri)?.tree;
+	const tree = parserCache.get(document.uri)?.tree;
 		
 	if (!tree) {
 		return [];

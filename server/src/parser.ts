@@ -10,7 +10,7 @@ interface Cache {
   tree: Tree;
   text: string;
 }
-export let cache = new Map<string, Cache>();
+export let parserCache = new Map<string, Cache>();
 
 let parser: Parser;
 let language: Language;
@@ -229,19 +229,19 @@ export function updateTree(params: DidOpenTextDocumentParams | DidChangeTextDocu
   if (document.languageId !== "namu") return;
 
   if (text.length > globalSettings.maxParsingCharacter) {
-    cache.delete(key);
+    parserCache.delete(key);
     return;
   }
 
-  if (!cache.has(key)) {
+  if (!parserCache.has(key)) {
     const tree = parser.parse(text);
-    cache.set(key, { tree, version, text });
+    parserCache.set(key, { tree, version, text });
     return;
   }
 
   if (!("contentChanges" in params)) return;
 
-  const cached = cache.get(key);
+  const cached = parserCache.get(key);
   if (cached?.version === version) return;
 
   let oldTree: Tree | undefined;
@@ -252,5 +252,5 @@ export function updateTree(params: DidOpenTextDocumentParams | DidChangeTextDocu
   }
 
   const newTree = parser.parse(document.getText(), oldTree);
-  cache.set(key, { tree: newTree, version, text });
+  parserCache.set(key, { tree: newTree, version, text });
 }

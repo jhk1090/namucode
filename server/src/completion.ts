@@ -1,6 +1,6 @@
 import { Position, TextDocument } from 'vscode-languageserver-textdocument';
 import { CompletionContext, CompletionItem, CompletionItemKind, CompletionList, CompletionTriggerKind, InsertTextFormat, Range } from 'vscode-languageserver/node';
-import { cache, classCompletionQuery, jsCompletionQuery } from './parser';
+import { parserCache, classCompletionQuery, jsCompletionQuery } from './parser';
 import { cssLanguageService } from './diagnostics';
 import * as common from './common';
 import * as ts from "typescript";
@@ -8,7 +8,7 @@ import * as ts from "typescript";
 const classSymbols = new Set<string>();
 
 export function registerClassSymbols(document: TextDocument) {
-	const tree = cache.get(document.uri.toString())?.tree;
+	const tree = parserCache.get(document.uri.toString())?.tree;
 	if (!tree) return [];
 
 	classSymbols.clear()
@@ -69,7 +69,7 @@ function parseNode(node: ts.Node) {
 }
 
 export function registerJSSymbols(document: TextDocument) {
-	const tree = cache.get(document.uri.toString())?.tree;
+	const tree = parserCache.get(document.uri.toString())?.tree;
 	if (!tree) return [];
 
 	common.allTSVariables.clear()
@@ -92,7 +92,7 @@ export function registerJSSymbols(document: TextDocument) {
 }
 
 export function provideCompletion(document: TextDocument, position: Position, context: CompletionContext): CompletionList | CompletionItem[] {
-	const tree = cache.get(document.uri.toString())?.tree;
+	const tree = parserCache.get(document.uri.toString())?.tree;
 	if (!tree) return [];
 
 	const positionIndex = document.offsetAt(position);

@@ -1,5 +1,5 @@
 import { DocumentSymbol, DocumentSymbolParams, Range, SymbolKind } from 'vscode-languageserver';
-import { cache, documentSymbolQuery } from './parser';
+import { parserCache, documentSymbolQuery } from './parser';
 import { Node } from 'web-tree-sitter';
 
 interface TreeSymbol extends DocumentSymbol {
@@ -57,7 +57,7 @@ function makeDocumentSymbol(node: Node, isRoot: boolean = false) {
 }
 
 export function provideDocumentSymbol(params: DocumentSymbolParams) {
-	const tree = cache.get(params.textDocument.uri)?.tree;
+	const tree = parserCache.get(params.textDocument.uri)?.tree;
 	if (!tree) return [];
 	
 	return makeDocumentSymbol(tree.rootNode, true);

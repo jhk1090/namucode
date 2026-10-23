@@ -1,4 +1,4 @@
-import { cache, diagnosticsQuery } from './parser';
+import { parserCache, diagnosticsQuery } from './parser';
 import { Node } from 'web-tree-sitter';
 import { CompletionItemKind, Diagnostic, DiagnosticSeverity, Position, Range, TextDocument, getCSSLanguageService } from 'vscode-css-languageservice';
 import { connection, globalSettings } from './server';
@@ -558,7 +558,7 @@ export function updateDiagnostics(document: TextDocument) {
 		return;
 	}
 	
-	const tree = cache.get(document.uri.toString())?.tree;
+	const tree = parserCache.get(document.uri.toString())?.tree;
 	if (!tree) {
 		connection.sendDiagnostics({ uri: document.uri, diagnostics: [] });
 		return;
