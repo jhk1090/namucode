@@ -22,7 +22,8 @@ import { parserCache, foldingQuery, initTreeSitter, linkQuery, updateTree } from
 import { provideCompletion, registerClassSymbols, registerJSSymbols } from './completion';
 import { provideDocumentSymbol } from './documentSymbol';
 import { updateDiagnostics } from './diagnostics';
-const parser = require("../../client/media/parser/core/parser.js");
+import { getPreviewData, previewParserCache, previewRendererCache, previewWorkspaceDocumentsCache } from './preview';
+import path from "node:path";
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -32,6 +33,12 @@ export const connection = createConnection(ProposedFeatures.all);
 // supports full document sync only
 export const documents = new Map<string, TextDocument>();
 
+interface PreviewSettings {
+	internalLinkDomain: string;
+	workspaceReference: boolean;
+	maxLength: number;
+	maxRenderingTimeout: number;
+}
 interface ParserSettings {
 	maxParsingCharacter: number;
 	maxParsingDepth: number;
@@ -41,11 +48,12 @@ interface CodeACSettings {
 	disableCompletion: boolean;
 }
 
+const defaultPreviewSettings = { internalLinkDomain: "https://namu.wiki", workspaceReference: true, maxLength: 5000000, maxRenderingTimeout: 10 };
 const defaultParserSettings = { maxParsingCharacter: 1500000, maxParsingDepth: 30 };
 const defaultCodeACSettings = { disableCodeAnalysis: false, disableCompletion: false };
 
-let defaultSettings: ParserSettings & CodeACSettings = { ...defaultParserSettings, ...defaultCodeACSettings };
-export let globalSettings: ParserSettings & CodeACSettings = defaultSettings;
+let defaultSettings: ParserSettings & CodeACSettings & PreviewSettings = { ...defaultParserSettings, ...defaultCodeACSettings, ...defaultPreviewSettings };
+export let globalSettings: ParserSettings & CodeACSettings & PreviewSettings = defaultSettings;
 
 let hasConfigurationCapability = false;
 let resolveInitialization: () => void;
@@ -105,12 +113,12 @@ connection.onInitialized(async () => {
 		connection.client.register(DidChangeWatchedFilesNotification.type, {
 			watchers: [
 				{
-					globPattern: "**/*.namu"
+					globPattern: "{**/*.namu,**/*.png,**/*.jpg,**/*.jpeg,**/*.svg,**/*.gif,**/*.webp}"
 				}
 			]
 		})
 		const latestSettings = await connection.workspace.getConfiguration("namucode")
-		globalSettings = { ...latestSettings.parser, ...latestSettings.codeAnalysisCompletion }
+		globalSettings = { ...latestSettings.parser, ...latestSettings.codeAnalysisCompletion, ...latestSettings.preview }
 	}
 
 	resolveInitialization()
@@ -119,7 +127,7 @@ connection.onInitialized(async () => {
 connection.onDidChangeConfiguration(async (_change) => {
 	if (hasConfigurationCapability) {
 		const latestSettings = (await connection.workspace.getConfiguration("namucode"));
-		globalSettings = { ...latestSettings.parser, ...latestSettings.codeAnalysisCompletion }
+		globalSettings = { ...latestSettings.parser, ...latestSettings.codeAnalysisCompletion, ...latestSettings.preview }
 	} else {
 		const globalParserSettings = (
 			_change.settings.namucode.parser || defaultParserSettings
@@ -158,15 +166,23 @@ connection.onDidOpenTextDocument(async (params) => {
 
 connection.onDidChangeWatchedFiles((change) => {
 	for (const event of change.changes) {
-		if (event.type === FileChangeType.Deleted) {
+		if (event.type === FileChangeType.Deleted && path.extname(event.uri) === ".namu") {
 			const deletedUri = event.uri;
-			if (documents.has(deletedUri)) {
-				documents.delete(deletedUri)
+			documents.delete(deletedUri)
+			parserCache.delete(deletedUri)
+			previewParserCache.delete(deletedUri)
+			previewRendererCache.delete(deletedUri)
+		}
+
+		// previewWorkspaceDocumentsCache는 감시되는 파일의 변동 시 캐싱을 삭제함
+		if (event.type === FileChangeType.Changed && path.extname(event.uri) === ".namu") {
+			// A 파일에서 내용 변경 없는 단순 저장이 이뤄지더라도 A 파일만 캐싱이 수정되지 않도록
+			for (const key of previewWorkspaceDocumentsCache.keys()) {
+				if (key === event.uri) continue;
+				previewWorkspaceDocumentsCache.delete(key)
 			}
-			if (parserCache.has(deletedUri)) {
-				parserCache.delete(deletedUri)
-			}
-			console.log(`${deletedUri} 캐싱 삭제됨.`)
+		} else {
+			previewWorkspaceDocumentsCache.clear()
 		}
 	}
 })
@@ -195,6 +211,9 @@ connection.onDidCloseTextDocument((params) => {
 
     documents.delete(uri);
     parserCache.delete(uri);
+		previewParserCache.delete(uri);
+		previewRendererCache.delete(uri);
+		previewWorkspaceDocumentsCache.delete(uri);
 
     connection.sendDiagnostics({
         uri,
@@ -245,10 +264,10 @@ connection.onDocumentSymbol(async (params) => {
 	return provideDocumentSymbol(params);
 })
 
-connection.onRequest("namucode/getParsedResult", async (params: { uri: string, isEditorComment: boolean; }) => {
+connection.onRequest("namucode/getPreviewData", async (params: { uri: string, isEditorComment: boolean; includeData: Record<string, string> }) => {
 	await initializationPromise;
 
-	return parser(documents.get(params.uri).getText(), { editorComment: params.isEditorComment, maxParsingDepth: globalSettings.maxParsingDepth })
+	return getPreviewData(params.uri, params.isEditorComment, params.includeData)
 })
 
 connection.onDocumentLinks(async (params) => {

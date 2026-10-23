@@ -2,12 +2,9 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { promises as fs } from "fs";
 import { ExtensionContext } from "vscode";
-import imageSize from "image-size";
 import { performance } from 'perf_hooks';
 import { Server, createServer } from 'http';
-import { logger } from './logger';
 import { client } from './extension';
-const renderer = require("../media/parser/core/toHtmlWorker.js")
 
 export function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptions {
     return {
@@ -288,12 +285,8 @@ export class MarkPreview {
                     }
                     return
                 }
-                const parsedResult = await this._runParsing(document) as any;
 
-                const currentFolder = vscode.workspace.getWorkspaceFolder(this.panelUri)
-                const workspaceDocuments = await this._loadWorkspaceResources(currentFolder);
-
-                this._runRendering(document, webview, currentFolder, parsedResult, workspaceDocuments)
+                this._runRendering(document, webview)
             } catch (error) {
                 this.dispose(this.panelId);
                 const errorMessage = await vscode.window.showErrorMessage(`미리보기 렌더링 중 오류 발생: ${error instanceof Error ? error.message : String(error)}`, "제보하기", "재시도");
@@ -402,112 +395,31 @@ export class MarkPreview {
         );
     }
 
-    private async _runParsing(document: vscode.TextDocument) {
-        const config = this._getConfig()
-
-        const result = await client.sendRequest("namucode/getParsedResult", { uri: document.uri.toString(), isEditorComment: config.isEditorComment })
-
-        return result;
-    }
-
-    private async _loadWorkspaceResources(currentFolder: vscode.WorkspaceFolder) {
-        const rootConfig = vscode.workspace.getConfiguration("namucode");
-        const workspaceReference = rootConfig.get<boolean>("preview.workspaceReference", true);
-        const isFolderOpen = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0;
-        const startTime = performance.now();
-
-        let workspaceDocuments = [];
-        if (isFolderOpen && workspaceReference && currentFolder) {
-          const namuFiles = await vscode.workspace.findFiles("**/*.namu");
-          const decoder = new TextDecoder("utf-8");
-
-          workspaceDocuments.push(
-            ...(await Promise.all(
-              namuFiles.map(async (file) => {
-                const { namespace, title } = getNamespaceAndTitle(currentFolder.uri.fsPath, file.fsPath);
-                const content = decoder.decode(await vscode.workspace.fs.readFile(file));
-
-                return {
-                  namespace,
-                  title,
-                  content,
-                };
-              }),
-            )),
-          );
-
-          const mediaFiles = await vscode.workspace.findFiles("{**/*.png,**/*.jpg,**/*.jpeg,**/*.svg,**/*.gif,**/*.webp}");
-          const mappedMediaFiles = await Promise.all(
-            mediaFiles.map(async (file) => {
-              try {
-                let title = path.relative(currentFolder.uri.fsPath, file.fsPath);
-                let namespace = "문서";
-
-                title = title.replace(/\\/g, "/");
-                const fileKey = await imageUriToDataUri(file);
-                const { fileHeight, fileWidth, fileSize } = await getImageInfo(file);
-
-                return {
-                  namespace,
-                  title: "파일:" + title,
-                  content: {
-                    fileKey,
-                    fileWidth,
-                    fileHeight,
-                    fileSize,
-                  },
-                };
-              } catch (err) {
-                console.error(err.message);
-                return null;
-              }
-            }),
-          );
-
-          workspaceDocuments.push(...mappedMediaFiles.filter((v) => v !== null));
-        }
-
-        const endTime = performance.now();
-        const duration = (endTime - startTime).toFixed(2);
-        logger.debug(`[Workspace Resource] ▶️ ${duration}ms 걸림`)
-
-        workspaceDocuments.sort((a, b) => a.namespace.localeCompare(b.namespace));
-        workspaceDocuments.sort((a, b) => a.title.localeCompare(b.title));
-        return workspaceDocuments;
-    }
-
-    private async _runRendering(document: vscode.TextDocument, webview: vscode.Webview, currentFolder: vscode.WorkspaceFolder, parsedResult, workspaceDocuments) {
+    private async _runRendering(document: vscode.TextDocument, webview: vscode.Webview) {
         const unescape = (s: string): string => s.replace(/\\(.)/g, "$1");
 
         const config = this._getConfig();
-        const baseParentPath = currentFolder ? currentFolder.uri.fsPath : path.dirname(document.uri.fsPath);
-        const { namespace, title } = getNamespaceAndTitle(baseParentPath, document.uri.fsPath);
 
         // includeData 이스케이프 처리
         const rawIncludeData = this.context.workspaceState.get("includeData") ?? {};
         const cleanedEntries = Object.entries(rawIncludeData).map(([key, value]) => [key, unescape(value)]);
         const includeData = cleanedEntries.length === 0 ? null : Object.fromEntries(cleanedEntries)
 
-        let timeout: NodeJS.Timeout | null = null;
-        if (config.maxRenderingTimeout && config.maxRenderingTimeout > 0) {
-            timeout = setTimeout(() => {
-              this.workerTerminator.abort();
-            }, config.maxRenderingTimeout);
-        }
-
-        let { html, categories, error, errorCode, errorMessage } = await RendererProvider.createRendererPromise(document, {
-          parsedResult: structuredClone(parsedResult),
-          document: { namespace, title, forceShowNamespace: namespace === "문서" ? false : null },
-          workspaceDocuments,
-          config,
+        const { 
+            html, 
+            categories, 
+            error, 
+            errorCode, 
+            errorMessage, 
+            workspaceDocuments
+        } = (await client.sendRequest("namucode/getPreviewData", {
+          uri: document.uri.toString(),
+          isEditorComment: this.isEditorComment,
           includeData,
-          signal: this.workerTerminator.signal,
-        });
-        clearTimeout(timeout);
+        })) as any;
 
         if (error) {
           this.dispose(this.panelId);
-          RendererProvider.removeRendererPromise(document);
           const errorQuestion = await vscode.window.showErrorMessage(
             errorCode === "aborted"
               ? "렌더링에 실패했습니다: 렌더링이 중단되었습니다.\n이 문제가 발생하는 원인 중에는 시간 초과가 있을 수 있습니다. 설정을 누른 후, 파싱 최대 대기 시간 / 렌더링 최대 대기 시간을 적절히 조정해 시간 초과 문제를 해결할 수 있습니다. 문제를 해결하지 못했다면 제보하기를 누른 후 이슈트래커로 제보해주세요."
@@ -569,165 +481,4 @@ function getNonce() {
         text += possible.charAt(Math.floor(Math.random() * possible.length));
     }
     return text;
-}
-
-const getNamespaceAndTitle = (parentPath: string, childPath: string) => {
-    const extension = ".namu";
-    const normalizedParent = parentPath.replace(/\\/g, "/");
-    const normalizedChild = childPath.replace(/\\/g, "/");
-    const relativePath = path.posix.relative(normalizedParent, normalizedChild);
-
-    const title = relativePath.endsWith(extension) ? relativePath.slice(0, -extension.length) : relativePath;
-
-    return {
-        namespace: "문서",
-        title,
-    };
-};
-
-function getMimeType(uri: vscode.Uri): string {
-    const extension = path.extname(uri.fsPath).toLowerCase();
-    switch (extension) {
-        case '.png': return 'image/png';
-        case '.jpg':
-        case '.jpeg': return 'image/jpeg';
-        case '.gif': return 'image/gif';
-        case '.svg': return 'image/svg+xml';
-        case '.webp': return 'image/webp';
-        default: return 'application/octet-stream'; // 알 수 없는 타입
-    }
-}
-
-async function imageUriToDataUri(imageUri: vscode.Uri): Promise<string> {
-    const filePath = imageUri.fsPath;
-    const mimeType = getMimeType(imageUri);
-
-    if (mimeType === 'application/octet-stream') {
-        throw new Error('Unsupported image file type.');
-    }
-
-    return new Promise(async (resolve, reject) => {
-        try {
-            const data = await fs.readFile(filePath);
-            const base64Data = data.toString('base64');
-            const dataUri = `data:${mimeType};base64,${base64Data}`;
-            
-            resolve(dataUri);
-        } catch (err) {
-            reject(new Error(`Failed to read file: ${err.message}`));
-        }
-    });
-}
-
-async function getImageInfo(imageUri: vscode.Uri) {
-    const path = imageUri.fsPath;
-    
-    const stats = await fs.stat(path);
-    const buffer = await fs.readFile(path);
-    const { width, height } = imageSize(buffer);
-
-    return {
-        fileWidth: width,
-        fileHeight: height,
-        fileSize: stats.size,
-    };
-}
-
-interface IRendererParams {
-    parsedResult: any;
-    document: { namespace: string; title: string; forceShowNamespace: boolean | null };
-    workspaceDocuments: any[];
-    config: { maxParsingDepth: number; extensionPath: string; isEditorComment: boolean; maxLength: number; maxRenderingTimeout: number; internalLinkDomain: string; };
-    includeData: { [key: string]: string } | null;
-    signal: AbortSignal;
-}
-
-interface IRendererReturn {
-    html: string;
-    categories: any[];
-    error: boolean;
-    errorCode?: "render_timeout" | "render_failed" | "render_too_long" | "aborted";
-    errorMessage?: string;
-}
-
-export class RendererProvider {
-    static cache = new Map<string, { version: number; params: IRendererParams; promise: Promise<any> }>();
-
-    static async createRendererPromise(document: vscode.TextDocument, params: IRendererParams): Promise<IRendererReturn> {
-        const key = document.uri.toString();
-        const version = document.version;
-
-        const cached = RendererProvider.cache.get(key);
-        if (
-            cached &&
-            cached.version === version &&
-            deepEqual(params.workspaceDocuments, cached.params.workspaceDocuments) &&
-            params.config.extensionPath === cached.params.config.extensionPath &&
-            JSON.stringify(params.includeData) === JSON.stringify(cached.params.includeData) &&
-            params.config.maxParsingDepth === cached.params.config.maxParsingDepth &&
-            params.config.isEditorComment === cached.params.config.isEditorComment &&
-            params.config.maxLength === cached.params.config.maxLength &&
-            params.config.internalLinkDomain === cached.params.config.internalLinkDomain &&
-            params.config.maxRenderingTimeout === cached.params.config.maxRenderingTimeout
-        ) {
-            return cached.promise;
-        }
-
-        const promise: Promise<IRendererReturn> = new Promise(async (resolve, reject) => {
-            let result!: IRendererReturn;
-            try {
-                result = await renderer([params.parsedResult, { document: params.document, workspaceDocuments: params.workspaceDocuments, config: params.config, includeData: params.includeData, signal: params.signal }])
-            } catch (err) {
-                const isTimeout = err.message == "Timeout";
-                const isTooLong = err.message == "render_too_long";
-                const isAborted = err.message == "Abort";
-                if (!isTimeout) console.error(err);
-
-                return resolve({
-                    html: "",
-                    categories: [],
-                    error: true,
-                    errorCode: isAborted ? "aborted" : isTimeout ? "render_timeout" : isTooLong ? "render_too_long" : "render_failed",
-                    errorMessage: err.stack,
-                });
-            }
-
-            resolve(result);
-        });
-
-        RendererProvider.cache.set(key, { ...cached, version, promise, params });
-        return promise;
-    }
-
-    static removeRendererPromise(document: vscode.TextDocument) {
-        const key = document.uri.toString();
-        RendererProvider.cache.delete(key)
-    }
-}
-
-type WorkspaceItem = {
-  title: string;
-  namespace: string;
-  content:
-    | string
-    | {
-        fileKey: string;
-        fileWidth: number;
-        fileHeight: number;
-        fileSize: number;
-      };
-};
-
-function deepEqual(x: WorkspaceItem[], y: WorkspaceItem[]) {
-  if (x.length !== y.length) return false
-  for (let i = 0; i < x.length; i++) {
-    let xv = x[i], yv = y[i]
-
-    if (xv.title !== yv.title) return false
-    if (xv.namespace !== yv.namespace) return false
-    if (typeof xv.content !== typeof yv.content) return false
-    if (typeof xv.content === "string" && xv.content !== yv.content) return false
-    if (typeof xv.content === "object" && JSON.stringify(xv.content) !== JSON.stringify(yv.content)) return false
-  }
-  return true
 }

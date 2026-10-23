@@ -20,6 +20,7 @@ export let diagnosticsQuery: Query;
 export let jsCompletionQuery: Query;
 export let classCompletionQuery: Query;
 export let documentSymbolQuery: Query;
+export let previewQuery: Query;
 export async function initTreeSitter() {
   await Parser.init();
 
@@ -135,6 +136,17 @@ export async function initTreeSitter() {
     `
     (text_inline) @text_inline
     (escape) @escape
+    `
+  )
+  previewQuery = new Query(
+    language,
+    `
+    (file_link 
+      (file_link_link) @file_link
+      (link_end))
+    (macro 
+      (required_arg_macro_name "include")
+      (macro_end)) @include_macro
     `
   )
 }
