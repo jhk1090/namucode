@@ -12,8 +12,17 @@
     "url": "https://github.com/jhk1090/namucode.git"
   },
   "dependencies": {
+    "@babel/parser": "^7.28.4",
+    "@babel/traverse": "^7.28.4",
+    "chevrotain": "^10.5.0",
+    "css-tree": "^3.1.0",
+    "highlight.js": "^11.10.0",
     "image-size": "^2.0.4",
+    "katex": "^0.16.21",
+    "quickjs-emscripten": "^0.31.0",
+    "sanitize-html": "^2.13.1",
     "typescript": "^6.0.3",
+    "validate-color": "^2.2.4",
     "vscode-css-languageservice": "^6.3.10",
     "vscode-html-languageservice": "^5.6.2",
     "vscode-languageserver": "^9.0.1",

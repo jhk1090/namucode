@@ -6,8 +6,8 @@ import fs from "node:fs/promises"
 import imageSize from 'image-size';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
-const previewParser = require("../../client/media/parser/core/parser.js");
-const renderer = require("../../client/media/parser/core/toHtmlWorker.js");
+const previewParser = require("../media/parser/core/parser.js");
+const renderer = require("../media/parser/core/toHtmlWorker.js");
 
 interface PreviewParser {
 	value: any,
@@ -212,7 +212,7 @@ async function getRendered(document: TextDocument, includeData: Record<string, s
 		if (globalSettings.maxRenderingTimeout && globalSettings.maxRenderingTimeout > 0) {
 			timeout = setTimeout(() => {
 				terminator.abort();
-			}, globalSettings.maxRenderingTimeout)
+			}, globalSettings.maxRenderingTimeout * 1000)
 		}
 
 		let result;

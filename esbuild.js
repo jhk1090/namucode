@@ -5,7 +5,13 @@ const path = require('path');
 const production = process.argv.includes('--production');
 const watch = process.argv.includes('--watch');
 
-const quickjsPackages = [
+const serverExceptionModules = [
+  'vscode-css-languageservice',
+  'vscode-html-languageservice',
+  '@vscode/l10n',
+  'vscode-languageserver-types',
+  'vscode-uri',
+  'web-tree-sitter',
   '@jitl/quickjs-ffi-types',
   '@jitl/quickjs-wasmfile-debug-asyncify',
   '@jitl/quickjs-wasmfile-debug-sync',
@@ -13,15 +19,6 @@ const quickjsPackages = [
   '@jitl/quickjs-wasmfile-release-sync',
   'quickjs-emscripten',
   'quickjs-emscripten-core'
-];
-
-const serverExceptionModules = [
-  'vscode-css-languageservice',
-  'vscode-html-languageservice',
-  '@vscode/l10n',
-  'vscode-languageserver-types',
-  'vscode-uri',
-  'web-tree-sitter'
 ]
 
 /**
@@ -65,7 +62,7 @@ async function buildProject(entry, outfile, extraOptions = {}) {
       sourcesContent: false,
       platform: "node",
       outfile,
-      external: ["vscode", ...(extraOptions.external || []), ...quickjsPackages, ...serverExceptionModules],
+      external: ["vscode", ...(extraOptions.external || []), ...serverExceptionModules],
       logLevel: "warning",
       plugins: [esbuildProblemMatcherPlugin]
   });
@@ -82,7 +79,7 @@ async function buildProject(entry, outfile, extraOptions = {}) {
  * dist/parser/utils, dist/parser/syntax 폴더 복사
  */
 function copyParserAssets() {
-  const srcParserDir = path.resolve(__dirname, 'client/media/parser/core');
+  const srcParserDir = path.resolve(__dirname, 'server/media/parser/core');
   const distParserDir = path.resolve(__dirname, 'dist/parser');
   const foldersToCopy = ['utils', 'syntax'];
 
@@ -99,23 +96,8 @@ function copyParserAssets() {
   });
 }
 
-const nodeModulesDir = path.resolve(__dirname, 'client/node_modules');
 const serverNodeModulesDir = path.resolve(__dirname, 'server/node_modules');
 const distNodeModulesDir = path.resolve(__dirname, 'dist/node_modules');
-
-async function copyQuickJS() {
-  for (const pkg of quickjsPackages) {
-    const src = path.join(nodeModulesDir, pkg);
-    const dest = path.join(distNodeModulesDir, pkg);
-
-    try {
-      await fs.copy(src, dest, { overwrite: true });
-      console.log(`✅ Copied ${pkg} to dist`);
-    } catch (err) {
-      console.error(`❌ Failed to copy ${pkg}:`, err);
-    }
-  }
-}
 
 async function copyServerExceptionModules() {
   for (const pkg of serverExceptionModules) {
@@ -132,14 +114,18 @@ async function copyServerExceptionModules() {
 }
 
 // 복사할 파일 목록
-const mediaFiles = [
+const clientMediaFiles = [
   'script.js',
   'reset.css',
-  'tree-sitter-namumark.wasm'
 ];
 
+const serverMediaFiles = [
+  'tree-sitter-namumark.wasm'
+]
+
 // 원본 경로
-const srcDir = path.resolve(__dirname, 'client/media');
+const clientMediaDir = path.resolve(__dirname, 'client/media');
+const serverMediaDir = path.resolve(__dirname, 'server/media');
 // 복사 대상 경로
 const destDir = path.resolve(__dirname, 'dist/media');
 
@@ -148,8 +134,16 @@ async function copyMedia() {
     // dist/media 폴더 생성
     await fs.ensureDir(destDir);
 
-    for (const file of mediaFiles) {
-      const src = path.join(srcDir, file);
+    for (const file of clientMediaFiles) {
+      const src = path.join(clientMediaDir, file);
+      const dest = path.join(destDir, file);
+
+      await fs.copy(src, dest, { overwrite: true });
+      console.log(`✅ Copied ${file} to dist/media`);
+    }
+
+    for (const file of serverMediaFiles) {
+      const src = path.join(serverMediaDir, file);
       const dest = path.join(destDir, file);
 
       await fs.copy(src, dest, { overwrite: true });
@@ -181,12 +175,11 @@ async function main() {
   await buildProject('server/src/server.ts', 'dist/server.js');
 
   // Parser Workers & Core
-  await buildProject('client/media/parser/core/parser.js', 'dist/parser/parser.js');
-  await buildProject('client/media/parser/core/toHtmlWorker.js', 'dist/parser/toHtmlWorker.js');
+  // await buildProject('client/media/parser/core/parser.js', 'dist/parser/parser.js');
+  // await buildProject('client/media/parser/core/toHtmlWorker.js', 'dist/parser/toHtmlWorker.js');
 
   // 빌드 끝나면 utils, syntax 폴더 복사
   copyParserAssets();
-  copyQuickJS();
   copyServerExceptionModules();
   copyMedia();
   copyFrontendDist();
