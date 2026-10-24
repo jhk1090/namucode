@@ -19,8 +19,6 @@ function makeDocumentSymbol(node: Node, isRoot: boolean = false) {
 
 	for (const section of sections) {
 		const headingNode = section.firstChild.firstChild;
-
-		const contentNode = headingNode.childForFieldName("content")
 		const level = parseInt(headingNode.type.at(-1))
 
 		headings.fill(0, level);
@@ -30,14 +28,19 @@ function makeDocumentSymbol(node: Node, isRoot: boolean = false) {
 		while (currentHeadings.at(-1) === 0) {
 			currentHeadings.pop()
 		}
-		
-		const text = documentSymbolQuery.matches(contentNode).map(match => {
-			const { node, name } = match.captures[0]
-			if (name === "text_inline") return node.text
-			return node.text.at(-1)
-		}).join("");
 
-		const name = currentHeadings.slice(startOffset).join(".") + ". " + text;
+		const contentNode = headingNode.childForFieldName("content")
+		let name = currentHeadings.slice(startOffset).join(".") + ". ";
+		if (contentNode) {	
+			const text = documentSymbolQuery.matches(contentNode).map(match => {
+				const { node, name } = match.captures[0]
+				if (name === "text_inline") return node.text
+				return node.text.at(-1)
+			}).join("");
+
+			name += text;
+		}
+		
 		const range = Range.create(
 			{ line: headingNode.startPosition.row, character: headingNode.startPosition.column },
 			{ line: headingNode.endPosition.row, character: headingNode.endPosition.column },
