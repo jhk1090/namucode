@@ -106,7 +106,8 @@ export function provideCompletion(document: TextDocument, position: Position, co
 		return common.getTSCompletions("", true)
 	}
 
-	if ((node.type === "wiki_block" || (node.type === "block_header" && node.parent?.type === "wiki_block"))) {
+	if ((node.type === "wiki_block" || (node.type === "block_header" && node.parent?.type === "wiki_block")) ||
+	 (node.type === "wiki_fallback_block" || node.parent?.type === "wiki_fallback_block")) {
 		const startIndex = line.indexOf("{{{#!wiki ");
 		const quoteRegex = /"/g;
 		if (startIndex !== -1) {
@@ -145,10 +146,11 @@ export function provideCompletion(document: TextDocument, position: Position, co
 		}
 	}
 
-	if (node.type === "block_header" && node.parent?.type === "wiki_block") {
+	if ((node.type === "block_header" && node.parent?.type === "wiki_block") ||
+	 (node.type === "nowiki_content" && node.parent?.type === "wiki_fallback_block")) {
 		const regex = /(style|dark-style|lang|class|tag|onclick)="([^"]*)(")?/g;
 
-		const matches = [...node.text.matchAll(regex)].map(match => ({
+		const matches = [...node.text.split(/\r?\n/)[0].matchAll(regex)].map(match => ({
 				name: match[1],
 				value: match[2],
 				endToken: match[3],
