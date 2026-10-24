@@ -134,6 +134,7 @@ export async function initTreeSitter() {
   documentSymbolQuery = new Query(
     language,
     `
+    (link_inline) @link_inline
     (text_inline) @text_inline
     (escape) @escape
     `

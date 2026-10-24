@@ -34,6 +34,13 @@ function makeDocumentSymbol(node: Node, isRoot: boolean = false) {
 		if (contentNode) {	
 			const text = documentSymbolQuery.matches(contentNode).map(match => {
 				const { node, name } = match.captures[0]
+				if (name === "link_inline") {
+					if (node.childForFieldName("display")) return ""
+
+					const link = node.childForFieldName("link");
+					if (link) return link.text;
+					return ""
+				}
 				if (name === "text_inline") return node.text
 				return node.text.at(-1)
 			}).join("");
