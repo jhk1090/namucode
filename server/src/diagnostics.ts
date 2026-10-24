@@ -75,6 +75,7 @@ function handleImplicitEnd(document: TextDocument, name: string, node: Node): Di
 
 function handleTableArgument(document: TextDocument, node: Node): Diagnostic[] {
 	const nameFieldNode = node.childForFieldName("name")
+	const hasEqual = node.child(2).text === "="
 	const valueFieldNode = node.childForFieldName("value")
 
 	if (!nameFieldNode) return []
@@ -188,9 +189,14 @@ function handleTableArgument(document: TextDocument, node: Node): Diagnostic[] {
 		}
 	}
 	else if (nameFieldNode.type === "table_argument_no_value_name") {
-		if (!valueFieldNode) return [];
+		if (!hasEqual) return [];
 
 		return [makeDiagnostic(nameFieldRange, `${nameFieldNode.text}은/는 값을 받지 않는 매개변수입니다.`, DiagnosticSeverity.Error)]
+	}
+	else if (nameFieldNode.type === "table_argument_color_name") {
+		if (!hasEqual) return [];
+
+		return [makeDiagnostic(nameFieldRange, `색상을 지정하는 테이블 매개변수는 값을 받지 않습니다.`, DiagnosticSeverity.Error)]
 	}
 
 	return [];
