@@ -5,6 +5,7 @@
 - 편집기에 Tree-sitter 기반 증분 파싱을 도입하여 기존의 지연 시간을 대폭 줄여 반응 속도를 개편
 - 오류 및 경고 표시, 자동완성 표시가 이제 1초를 넘어가지 않음
 - 새로 사용된 Tree-sitter 증분 파서에 대한 내용은 https://github.com/jhk1090/tree-sitter-namumark 참고
+- **기여 시 주의사항**: 이 버전부터 git submodule 기능을 사용합니다. `git pull` 후 `git submodule update --init --recursive`를 입력해 submodule을 동기화해야 합니다.
 
 ### ⛏️ 더 강화된 자동완성과 코드 분석
 - 기존 자동완성의 발동 범위를 더 강화
