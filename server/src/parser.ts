@@ -109,6 +109,14 @@ export async function initTreeSitter() {
     (latex_fallback_block (bracket_end)) @latex_fallback_block
     (scale_fallback_block (bracket_end)) @scale_fallback_block
     (color_fallback_block (bracket_end)) @color_fallback_block
+    (if_fallback_block_inline (bracket_end)) @if_fallback_block
+    (folding_fallback_block_inline (bracket_end)) @folding_fallback_block
+    (syntax_fallback_block_inline (bracket_end)) @syntax_fallback_block
+    (wiki_fallback_block_inline (bracket_end)) @wiki_fallback_block
+    (style_fallback_block_inline (bracket_end)) @style_fallback_block
+    (latex_fallback_block_inline (bracket_end)) @latex_fallback_block
+    (scale_fallback_block_inline (bracket_end)) @scale_fallback_block
+    (color_fallback_block_inline (bracket_end)) @color_fallback_block
     (file_link (file_link_attribute) @file_link_attribute)
     `,
   );

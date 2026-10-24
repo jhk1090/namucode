@@ -106,8 +106,11 @@ export function provideCompletion(document: TextDocument, position: Position, co
 		return common.getTSCompletions("", true)
 	}
 
-	if ((node.type === "wiki_block" || (node.type === "block_header" && node.parent?.type === "wiki_block")) ||
-	 (node.type === "wiki_fallback_block" || node.parent?.type === "wiki_fallback_block")) {
+	if (
+		(node.type === "wiki_block" || (node.type === "block_header" && node.parent?.type === "wiki_block")) ||
+	 	(node.type === "wiki_fallback_block" || node.parent?.type === "wiki_fallback_block") ||
+	 	(node.type === "wiki_fallback_block_inline" || node.parent?.type === "wiki_fallback_block_inline")
+	) {
 		const startIndex = line.indexOf("{{{#!wiki ");
 		const quoteRegex = /"/g;
 		if (startIndex !== -1) {
@@ -146,8 +149,11 @@ export function provideCompletion(document: TextDocument, position: Position, co
 		}
 	}
 
-	if ((node.type === "block_header" && node.parent?.type === "wiki_block") ||
-	 (node.type === "nowiki_content" && node.parent?.type === "wiki_fallback_block")) {
+	if (
+		(node.type === "block_header" && node.parent?.type === "wiki_block") ||
+	 	(node.type === "nowiki_content" && node.parent?.type === "wiki_fallback_block") ||
+		(node.type === "nowiki_content_inline" && node.parent?.type === "wiki_fallback_block_inline")
+	) {
 		const regex = /(style|dark-style|lang|class|tag|onclick)="([^"]*)(")?/g;
 
 		const matches = [...node.text.split(/\r?\n/)[0].matchAll(regex)].map(match => ({
@@ -506,7 +512,7 @@ export function provideCompletion(document: TextDocument, position: Position, co
 			}))
 		}
 	}
-	else if (node.parent?.type === "syntax_fallback_block") {
+	else if (node.parent?.type === "syntax_fallback_block" || node.parent?.type === "syntax_fallback_block_inline") {
 		if (line.endsWith("{{{#!syntax ")) {
 			return common.syntaxBlockLanguages.map(language => ({
 				label: language,
@@ -514,7 +520,7 @@ export function provideCompletion(document: TextDocument, position: Position, co
 			}))
 		}
 	}
-	else if (node.parent?.type === "scale_fallback_block") {
+	else if (node.parent?.type === "scale_fallback_block" || node.parent?.type === "scale_fallback_block_inline") {
 		if (line.endsWith("{{{+")) {
 			return ["1", "2", "3", "4", "5"].map(size => ({
 				label: `{{{+${size}`,
@@ -531,7 +537,7 @@ export function provideCompletion(document: TextDocument, position: Position, co
 			}))
 		}
 	}
-	else if (node.parent?.type === "color_fallback_block") {
+	else if (node.parent?.type === "color_fallback_block" || node.parent?.type === "color_fallback_block_inline") {
 		if (line.endsWith("{{{#")) {
 			return [
 				...common.CSSColorKeywords.map(color => ({
