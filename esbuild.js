@@ -119,13 +119,8 @@ const clientMediaFiles = [
   'reset.css',
 ];
 
-const serverMediaFiles = [
-  'tree-sitter-namumark.wasm'
-]
-
 // 원본 경로
 const clientMediaDir = path.resolve(__dirname, 'client/media');
-const serverMediaDir = path.resolve(__dirname, 'server/media');
 // 복사 대상 경로
 const destDir = path.resolve(__dirname, 'dist/media');
 
@@ -142,13 +137,12 @@ async function copyMedia() {
       console.log(`✅ Copied ${file} to dist/media`);
     }
 
-    for (const file of serverMediaFiles) {
-      const src = path.join(serverMediaDir, file);
-      const dest = path.join(destDir, file);
-
-      await fs.copy(src, dest, { overwrite: true });
-      console.log(`✅ Copied ${file} to dist/media`);
-    }
+    await fs.copy(
+      path.join(path.resolve(__dirname, "server/media/tree-sitter-namumark"), "tree-sitter-namumark.wasm"),
+      path.join(destDir, "tree-sitter-namumark.wasm"),
+      { overwrite: true }
+    )
+    console.log(`✅ Copied tree-sitter-namumark.wasm to dist/media`);
   } catch (err) {
     console.error('❌ Failed to copy media files:', err);
   }

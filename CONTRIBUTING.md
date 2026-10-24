@@ -25,9 +25,13 @@
 ##### 2. 포크한 저장소 클론하기
 이제 포크한 저장소를 로컬로 옮겨 아래의 명령어를 실행합니다.
 ```sh
-git clone https://github.com/<id>/namucode.git
+git clone --recurse-submodules https://github.com/<id>/namucode.git
 ```
-축하합니다. `namucode` 폴더가 생성되었습니다!
+축하합니다. `namucode` 폴더가 생성되었습니다!\
+**주의**: recurse-submodules는 필수 매개변수이며, 입력하지 않았을 경우 아래의 명령어로 서브모듈을 불러와야 합니다.
+```sh
+git submodule update --init --recursive
+```
 
 ##### 3. 빌드 전 사전 준비
 먼저, 아래의 환경이 구축되어 있는지 확인하세요!

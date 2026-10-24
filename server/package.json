@@ -31,6 +31,8 @@
     "web-tree-sitter": "^0.27.1"
   },
   "scripts": {
-    "build": "tsc -p ./"
+    "build": "yarn run build:src && yarn run build:tree-sitter-namumark",
+    "build:src": "tsc -p ./",
+    "build:tree-sitter-namumark": "cd media/tree-sitter-namumark && npm install && npm run generate && npm run build"
   }
 }

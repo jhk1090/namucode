@@ -567,11 +567,12 @@
   },
   "scripts": {
     "vscode:prepublish": "yarn run build:production",
-    "build:production": "yarn run build:client && yarn run build:server && yarn run build:frontend && yarn run build:bundle --production",
-    "build": "yarn run build:client && yarn run build:server && yarn run build:frontend && yarn run build:bundle",
+    "build:production": "yarn run build:client && yarn run build:server && yarn run build:frontend && yarn run build:tree-sitter && yarn run build:bundle --production",
+    "build": "yarn run build:client && yarn run build:server && yarn run build:frontend && yarn run build:tree-sitter && yarn run build:bundle",
     "build:client": "cd client && yarn install",
     "build:server": "cd server && yarn install",
     "build:frontend": "cd client/media/frontend && yarn install && rm -rf dist node_modules/.vite && yarn run build",
+    "build:tree-sitter": "cd server/media/tree-sitter-namumark && npm install && npm run generate && npm run build",
     "build:bundle": "node esbuild.js",
     "build:frontend-bundle": "yarn run build:frontend && yarn run build:bundle",
     "watch": "yarn run build:bundle --watch"

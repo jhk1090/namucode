@@ -1,0 +1,3 @@
+[submodule "server/media/tree-sitter-namumark"]
+	path = server/media/tree-sitter-namumark
+	url = https://github.com/jhk1090/tree-sitter-namumark
