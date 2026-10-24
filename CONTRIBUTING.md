@@ -71,7 +71,8 @@ git push -u origin main
 포크 저장소에서 변경 사항 대조로 Pull Request를 보낼 수 있습니다.
 
 ### 코드 구조
-- `client/media/parser` - 나무코드의 미리보기 기능 중 파싱을 위한 코드입니다.
+- `client/src` - 미리보기, 커맨드 등이 구현된 코드입니다.
 - `client/media/frontend` - 프론트엔드를 담당하는 Vue.js 코드로, 미리보기 파싱 후 렌더링 시 활용됩니다.
-- `client/src` - Linting 외 타 기능의 집합입니다.
-- `server/src` - Linting을 담당합니다.
+- `server/src` - 나무코드의 자동완성, 코드 분석, 문단 분석 등 LSP 구현체입니다.
+- `server/media/parser` - 나무코드의 미리보기 기능 중 파싱을 위한 코드입니다.
+- `server/media/tree-sitter-namumark` - 나무코드의 파서를 담당하는 코드입니다. https://github.com/jhk1090/tree-sitter-namumark 참고.
