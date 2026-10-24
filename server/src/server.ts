@@ -313,7 +313,6 @@ connection.onDocumentLinks(async (params) => {
 
 			const urls = {
 				youtube: "https://youtube.com/watch?v=",
-				kakaotv: "https://tv.kakao.com/v/",
 				nicovideo: "https://www.nicovideo.jp/watch/",
 				vimeo: "https://vimeo.com/",
 				navertv: "https://tv.naver.com/v/",

@@ -155,7 +155,7 @@ export const CSSColorKeywords = [
   "transparent",
 ];
 
-export const macrosArgumentRequired = ["anchor", "age", "dday", "youtube", "kakaotv", "vimeo", "nicovideo", "navertv", "math", "include", "ruby"];
+export const macrosArgumentRequired = ["anchor", "age", "dday", "youtube", "vimeo", "nicovideo", "navertv", "math", "include", "ruby"];
 export const macrosArgumentOptional = ["pagecount", "목차", "tableofcontents"];
 export const macrosArgumentNone = ["clearfix", "date", "datetime", "각주", "footnote", "br"];
 

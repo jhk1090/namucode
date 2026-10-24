@@ -71,7 +71,7 @@ export async function initTreeSitter() {
       (macro 
         (required_arg_macro_name) @_macro_name
         (macro_end)
-        (#any-of? @_macro_name "youtube" "kakaotv" "vimeo" "nicovideo" "navertv" "include")) @macro
+        (#any-of? @_macro_name "youtube" "vimeo" "nicovideo" "navertv" "include")) @macro
 	`,
   );
   diagnosticsQuery = new Query(
