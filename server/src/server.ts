@@ -359,7 +359,7 @@ connection.onCodeAction(async (params) => {
 
 	const positionIndex = document.offsetAt(params.range.start);
 
-	let currentNode = tree.rootNode.descendantForIndex(positionIndex);
+	let currentNode = tree.rootNode.namedDescendantForIndex(positionIndex);
 	const blockTypeLabels = {
 		"if_block": "#!if",
 		"folding_block": "#!folding",

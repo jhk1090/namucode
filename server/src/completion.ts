@@ -96,7 +96,7 @@ export function provideCompletion(document: TextDocument, position: Position, co
 	if (!tree) return [];
 
 	const positionIndex = document.offsetAt(position);
-	const node = tree.rootNode.descendantForIndex(positionIndex);
+	const node = tree.rootNode.namedDescendantForIndex(positionIndex);
 	if (!node) return []
 
 	const line = document.getText({ start: { line: position.line, character: 0 }, end: position });
