@@ -17,13 +17,14 @@
     - [커맨드 기능](#커맨드-기능)
     - [목차 표시 기능](#목차-표시-기능)
   - [설정](#설정)
-    - [파서 설정](#파서-설정)
+    - [전역 설정](#전역-설정)
     - [코드 분석 및 자동 완성 설정](#코드-분석-및-자동-완성-설정)
     - [미리보기 설정](#미리보기-설정)
   - [저작권 고지](#저작권-고지)
   - [기여](#기여)
   - [업데이트 로그](#업데이트-로그)
-  - [참고](#참고)
+  - [사용된 프로젝트](#사용된-프로젝트)
+  - [참조한 문서 및 프로젝트](#참조한-문서-및-프로젝트)
 
 ![namucode_oneditor](./images/namucode_oneditor.png)
 
@@ -253,8 +254,12 @@
 ## 업데이트 로그
 **▶ 업데이트 로그는 [여기](./CHANGELOG.md)를 참고하세요.**
 
-## 참고
+## 사용된 프로젝트
+- [tree-sitter-namumark](https://github.com/jhk1090/tree-sitter-namumark)
+- [the tree](https://github.com/wjdgustn/thetree)
+- [the tree frontend](https://github.com/wjdgustn/thetree-frontend)
 
+## 참조한 문서 및 프로젝트
 - [나무위키 문법 도움말](https://namu.wiki/w/나무위키:문법%20도움말)
 - [Textmate Grammar](https://macromates.com/manual/en/language_grammars)
 - [VSCode Extension Sample](https://github.com/microsoft/vscode-extension-samples)
